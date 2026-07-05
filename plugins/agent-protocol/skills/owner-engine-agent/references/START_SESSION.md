@@ -54,6 +54,9 @@ bindings live in ITS memory, not here.)*
    claimed state. Also `git fetch` and compare against the remote: local↔remote
    divergence is investigated BEFORE acting, same as a memory mismatch. Prior
    close-out notes name intentional leftovers.
+5. The round ledger (`INDEX.md`) tail — reconcile its last row FOR YOUR SIDE
+   against memory's claimed round state. Any mismatch: investigate BEFORE
+   acting.
 
 ## 2. Channel integrity check
 

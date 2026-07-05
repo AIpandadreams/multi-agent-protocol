@@ -3,13 +3,17 @@
 # The self-improvement protocol's hard rails (agent-core/references/
 # self-improvement-protocol.md) require that no agent-authored change may touch
 # the authorization/gate rules, the auth-record mechanism, the data-hygiene /
-# embargo rules, or the rails themselves. This file is the mechanical backstop:
-# GitHub requires the listed owner's review before any PR touching these paths
-# can merge, so an agent PR against a locked path cannot self-merge.
+# embargo rules, or the rails themselves. This file is the mechanical backstop.
 #
-# DEPLOYERS: replace @AIpandadreams with YOUR GitHub handle or team. The owner
-# here should be the human principal (or a human-only team) — never an
-# automation account, or the lock is hollow.
+# IMPORTANT: CODEOWNERS by itself only auto-REQUESTS the listed owner as a
+# reviewer — it does NOT block merge. To make the lock bite, enable branch
+# protection (or a ruleset) on your default branch with "Require review from
+# Code Owners" (and "Require a pull request before merging"). Only then can an
+# agent PR against a locked path not self-merge.
+#
+# DEPLOYERS: replace @AIpandadreams with YOUR GitHub handle or team, and turn on
+# the branch-protection rule above. The owner here should be the human principal
+# (or a human-only team) — never an automation account, or the lock is hollow.
 
 # Default: the principal reviews everything by default.
 *                                                                   @AIpandadreams

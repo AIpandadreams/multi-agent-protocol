@@ -33,7 +33,9 @@ agent ever being able to quietly rewrite its own rules.
 - **No agent-authored change may touch:** authorization/gate rules, the
   auth-record mechanism, embargoes/data-hygiene rules, or this rails section.
   Those change only when the principal authors or explicitly dictates the
-  change. Enforce via CODEOWNERS on the protected paths + a standing reviewer
+  change. Enforce via CODEOWNERS on the protected paths — which only bites when
+  branch protection / a ruleset has "Require review from Code Owners" enabled
+  (CODEOWNERS alone merely requests reviewers); back it with a standing reviewer
   checklist item ("does this PR touch a principal-locked section?").
 - **Version-stamp discipline:** no session runs "local amendments" ahead of a
   merged version bump (channel-core, Untrusted-input rule #2).

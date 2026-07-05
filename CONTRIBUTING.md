@@ -32,7 +32,7 @@ problem:        <the defect or gap, ideally with a reproduced example>
 files touched:  <list>
 principal-locked paths touched: <none | list + justification>
 version impact: <none | bump to vX.Y because …>
-fingerprint:    <output of: git diff main...HEAD | sha256sum>
+fingerprint:    <output of: git diff main..HEAD | sha256sum>
 ```
 
 The fingerprint pins what was reviewed — if you push more commits after a
