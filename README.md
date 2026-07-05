@@ -25,6 +25,22 @@ An optional third agent, the **orchestrator**, becomes your single point of
 contact: it runs the task queue, dispatches the workers, briefs you, and
 carries your approvals as auditable log events (never as its own authority).
 
+## Two properties that make it a platform, not a script
+
+- **Autonomy.** Sessions are disposable. Everything a session knows lives in
+  git before it matters, so the team keeps working *between* your sittings:
+  `/sleep` checkpoints and hands off, `/wake` resumes cold with zero context
+  pasting, scheduled ticks drain the queue unattended, and the orchestrator
+  runs its standing duties (briefings, queue triage) on a cadence you set.
+  You give direction and hold the gates; the agents carry the work forward on
+  their own between those touchpoints. See [AUTONOMY.md](docs/AUTONOMY.md).
+- **Self-improvement.** The protocol can amend *itself* — through its own
+  review discipline. An agent that hits a rough edge proposes an amendment;
+  it goes through an independent review round and a version bump, and **you**
+  merge it. The system that runs the work also evolves the rules of the work,
+  and no agent can quietly rewrite its own gates. The repo eats its own
+  dogfood ([self-improvement protocol](plugins/agent-protocol/skills/agent-core/references/self-improvement-protocol.md)).
+
 ## Five load-bearing principles
 
 Everything else in the protocol derives from these:
@@ -43,6 +59,13 @@ Everything else in the protocol derives from these:
 5. **Bindings over examples.** The skills define ROLES and PROTOCOL; each
    deployment binds its specifics (paths, cadences, models, gates) in one
    contract file, `BINDINGS.md`.
+6. **The team runs itself between your touchpoints.** Sessions are cattle,
+   not pets; continuity is the ⚡ working-state block in git, not a live
+   context window. This is what makes unattended operation safe rather than
+   hopeful.
+7. **The protocol improves under its own discipline.** Rule changes ride the
+   same reviewed-PR-to-human-merge loop as any other work — agents can
+   propose, only the principal can adopt.
 
 ## Sixty seconds to a running team
 
@@ -97,6 +120,7 @@ examples/                   a worked end-to-end cycle you can read like a story
 
 - [QUICKSTART](docs/QUICKSTART.md) — zero to a running team
 - [ARCHITECTURE](docs/ARCHITECTURE.md) — the model, the workspace anatomy, why each piece exists
+- [AUTONOMY](docs/AUTONOMY.md) — unattended operation + self-improvement, the two core platform properties
 - [CONFIGURATIONS](docs/CONFIGURATIONS.md) — 2-agent vs 3-agent vs combined, from live deployments
 - [PROTOCOL](docs/PROTOCOL.md) — channel rules, review rounds, verdicts, memory discipline
 - [ADVANCED](docs/ADVANCED.md) — proxy authorization, integrity CI, reviewer bridge, model presets

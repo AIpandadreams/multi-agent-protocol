@@ -108,6 +108,23 @@ The test that keeps this honest (run it on your own deployment): kill a
 session mid-unit, open a fresh one, `/wake` — it must resume with zero
 questions the repo could have answered.
 
+This disposability is what makes **autonomy** safe: because a scheduled
+headless wake resumes from committed state exactly as a human-opened session
+would, the team can drain its queue between your sittings without risking
+state loss — and any gate it reaches, it surfaces rather than crosses. The
+mechanisms and the "how much rope" dial are in [AUTONOMY.md](AUTONOMY.md).
+
+## 5a. The protocol evolves itself
+
+The same review discipline that gates work also gates changes to the
+protocol. An agent that finds a rough edge drafts an amendment; it rides a
+reviewed PR to a human merge and a version bump
+(`agent-core/references/self-improvement-protocol.md`). Agents propose; only
+the principal adopts; and the authorization/gate rules are principal-locked
+so no agent can amend the constraints that bind it. `tools/mirror_check.py`
+keeps the growing ruleset internally consistent. See
+[AUTONOMY.md](AUTONOMY.md#self-improvement).
+
 ## 6. Integrity CI
 
 Every stamped workspace ships `.github/workflows/integrity.yml`:

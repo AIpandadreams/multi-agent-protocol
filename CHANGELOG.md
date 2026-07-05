@@ -18,14 +18,19 @@ developed and hardened on live production work.
 ### Included
 - `agent-protocol` plugin: `agent-core` shared normative references +
   three role skills (owner, builder, orchestrator).
-- `/sleep` and `/wake <role>` session-lifecycle commands.
+- `/sleep` and `/wake <role>` session-lifecycle commands — the basis for
+  unattended, cross-session **autonomy**.
+- Self-improvement loop: the protocol amends itself through reviewed PRs to a
+  human merge (`agent-core/references/self-improvement-protocol.md`), with
+  principal-locked gates and `mirror_check.py` keeping the ruleset coherent.
 - `tools/new_project.py` — stamps a dedicated agent workspace
   (`2agent.local` / `3agent.local` profiles), including the integrity CI
   workflow and the auth-log chain validator.
 - `tools/mirror_check.py` — consistency CI over the skill tree.
 - `tools/reviewer_poller.py` — optional bridge to a local Codex reviewer.
 - `tools/wave_coverage_check.py` — coverage checker for builder read-waves.
-- Documentation suite + a worked end-to-end example.
+- Documentation suite (incl. `docs/AUTONOMY.md` covering the two core
+  platform properties) + a worked end-to-end example.
 
 ### Not included (deliberately — see README roadmap)
 - The cloud transport (scheduled cold-successor wakes, integrity-gated
