@@ -116,6 +116,8 @@ tools/
   mirror_check.py           consistency CI over the skill tree
   reviewer_poller.py        optional bridge to a local Codex reviewer
   wave_coverage_check.py    coverage checker for builder read-waves
+  conformance_check.py      point-in-time workspace readiness check
+  validate_auth_log.py      auth-log chain validator (also stamped per workspace)
 docs/                       quickstart · architecture · configurations ·
                             protocol · advanced · design · FAQ
 examples/                   a worked end-to-end cycle you can read like a story
@@ -149,7 +151,6 @@ examples/                   a worked end-to-end cycle you can read like a story
 - Cloud transport (scheduled cold-successor wakes over git, integrity-gated
   automerge of state PRs) — running upstream, will be released once the
   platform surface it depends on stabilizes.
-- A protocol conformance suite deployments can self-run.
 
 ## License
 

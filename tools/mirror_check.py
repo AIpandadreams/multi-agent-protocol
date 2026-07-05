@@ -98,6 +98,26 @@ DISCLAIMER = "Nothing in this entry is or carries the principal's authorization.
 check(DISCLAIMER in text(CORE / "channel-core.md"),
       "canonical disclaimer missing from channel-core.md")
 
+# 8. The standalone auth-log validator (used by conformance_check as the
+# trusted copy) must byte-match the string new_project.py stamps into
+# workspaces — two copies that drift would validate differently.
+STANDALONE = ROOT / "tools" / "validate_auth_log.py"
+NEW_PROJECT = ROOT / "tools" / "new_project.py"
+if STANDALONE.is_file() and NEW_PROJECT.is_file():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("_np", NEW_PROJECT)
+    _np = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(_np)
+    embedded = getattr(_np, "AUTH_LOG_VALIDATOR", None)
+    check(embedded is not None,
+          "new_project.py no longer defines AUTH_LOG_VALIDATOR")
+    if embedded is not None:
+        check(embedded == text(STANDALONE),
+              "tools/validate_auth_log.py has drifted from new_project.py's "
+              "embedded AUTH_LOG_VALIDATOR (regenerate one from the other)")
+else:
+    check(STANDALONE.is_file(), "tools/validate_auth_log.py missing")
+
 if findings:
     print(f"MIRROR CHECK: {len(findings)} finding(s)")
     for f in findings:

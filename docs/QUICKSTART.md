@@ -125,6 +125,23 @@ myproject-ws/
   .claude/settings.json             installs the plugin at session start
 ```
 
+## Check your workspace is sound
+
+Any time after stamping — and especially after filling `BINDINGS.md` — run
+the conformance check to confirm the deployment is structurally sound before
+waking an agent. Run it **from your protocol checkout** (where you cloned this
+repo — the checker lives there, not inside the workspace) and point
+`--workspace` at the workspace:
+
+```bash
+cd path/to/multi-agent-protocol   # your clone of this repo
+python tools/conformance_check.py --workspace path/to/myproject-ws
+```
+
+A fresh stamp passes with `WARN`s for the slots you haven't filled yet; once
+every slot is resolved, `--strict` should come back clean. Details:
+[ADVANCED.md](ADVANCED.md#conformance-suite--is-this-workspace-sound).
+
 ## Troubleshooting
 
 - **`/wake` says a binding is unfilled** — answer it once in-session; the

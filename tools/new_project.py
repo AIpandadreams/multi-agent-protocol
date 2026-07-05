@@ -83,15 +83,16 @@ memory/<role>/auth-log.md in this workspace:
 
   - no duplicate CONSUMED for the same consumption id (relay id or
     grant-id[/D<k>]) — a second CONSUMED for the same id is a violation
-  - a relayed CONSUMED (id contains /R) must follow a RECEIVED block for
-    that relay id in the SAME log
+  - a relayed CONSUMED (id contains /R) must follow a COMPLETE RECEIVED
+    block for that relay id in the SAME log — the consume must come after
+    the block's source: provenance line, not merely after its header
   - a RECEIVED block must reference a relay id actually RELAY-SENT in some
     log (fabricated relays fail) and must carry a source: provenance line
   - RELAY-SENT only for grants defined in the SAME log; direct CONSUMED
     only of grants defined in the SAME log (unknown ids fail — nothing is
     consumable that was never granted)
-  - RELAY-SENT count per grant never exceeds the grant's scope
-  - distinct direct CONSUMED ids per grant never exceed the grant's scope
+  - relay and direct spends of the SAME grant TOGETHER never exceed its
+    scope (a grant spent once by relay and once directly is a double-spend)
 
 This is the CI layer; the reviewer's semantic audit (words in scope, gate
 class on the list, provenance) remains on top. Run from the workspace root.
@@ -127,6 +128,10 @@ def parse_log(log: Path) -> dict:
             cur, in_recv = m.group(1), None
             d["grants"][cur] = 1
             continue
+        if line.startswith("## "):
+            # any other heading closes an open RECEIVED block so a later
+            # source:/CONSUMED cannot be mis-attributed to it
+            in_recv = None
         m = SCOPE_RE.match(line)
         if m and cur:
             d["grants"][cur] = int(m.group(2)) if m.group(2) else 1
@@ -138,10 +143,12 @@ def parse_log(log: Path) -> dict:
         m = RECV_RE.match(line)
         if m and in_recv is not None:
             in_recv = m.group(1)
-            d["received"][in_recv] = {"line": n, "has_source": False}
+            d["received"][in_recv] = {"line": n, "has_source": False,
+                                      "source_line": None}
             continue
         if SOURCE_RE.match(line) and in_recv and in_recv != "PENDING":
             d["received"][in_recv]["has_source"] = True
+            d["received"][in_recv]["source_line"] = n
             continue
         m = CONS_RE.match(line)
         if m:
@@ -167,7 +174,7 @@ def check(parsed: list, bad: list) -> None:
             global_consumed.setdefault(cid, []).append(d["log"])
     for cid, where in sorted(global_consumed.items()):
         if len(where) > 1:
-            locs = ", ".join(str(w) for w in where)
+            locs = ", ".join(sorted({str(w) for w in where}))
             bad.append(f"duplicate CONSUMED {cid} - {len(where)} events "
                        f"across: {locs} (exactly-one landed CONSUMED per "
                        "action, global)")
@@ -175,9 +182,14 @@ def check(parsed: list, bad: list) -> None:
         log = d["log"]
         for cid, n in d["cons_lines"]:
             if "/R" in cid:
-                if cid not in d["received"]:
+                rec = d["received"].get(cid)
+                if rec is None:
                     bad.append(f"{log}:{n}: CONSUMED {cid} has no RECEIVED "
                                "block in this log (record before reserve)")
+                elif rec["source_line"] is not None and n < rec["source_line"]:
+                    bad.append(f"{log}:{n}: CONSUMED {cid} appears before its "
+                               "RECEIVED provenance completes (source: at line "
+                               f"{rec['source_line']}) — record before reserve")
             elif cid.split("/")[0] not in d["grants"]:
                 bad.append(f"{log}:{n}: direct CONSUMED {cid} of a grant not "
                            "defined in this log (direct consumes live in the "
@@ -186,9 +198,6 @@ def check(parsed: list, bad: list) -> None:
             if gid not in d["grants"]:
                 bad.append(f"{log}: RELAY-SENT for unknown grant {gid} "
                            "(relays are appended only to the granting log)")
-            elif len(rids) > d["grants"][gid]:
-                bad.append(f"{log}: grant {gid} scope {d['grants'][gid]} but "
-                           f"{len(rids)} distinct RELAY-SENT ids")
         for rid, info in d["received"].items():
             if rid not in all_sent:
                 bad.append(f"{log}:{info['line']}: RECEIVED {rid} matches no "
@@ -196,10 +205,16 @@ def check(parsed: list, bad: list) -> None:
             if not info["has_source"]:
                 bad.append(f"{log}:{info['line']}: RECEIVED {rid} lacks a "
                            "source: provenance line")
-        for gid, cids in d["direct"].items():
-            if gid in d["grants"] and len(cids) > d["grants"][gid]:
-                bad.append(f"{log}: grant {gid} scope {d['grants'][gid]} but "
-                           f"{len(cids)} distinct direct CONSUMED ids")
+        # Combined scope: relay + direct spends of the SAME grant together may
+        # not exceed its scope — a single grant spent once by relay AND once
+        # directly is a double-spend that the separate per-kind checks missed.
+        for gid, scope in d["grants"].items():
+            nrelay = len(d["relays"].get(gid, set()))
+            ndirect = len(d["direct"].get(gid, set()))
+            if nrelay + ndirect > scope:
+                bad.append(f"{log}: grant {gid} scope {scope} but "
+                           f"{nrelay + ndirect} spends "
+                           f"({nrelay} relay + {ndirect} direct)")
 
 
 def main() -> int:
