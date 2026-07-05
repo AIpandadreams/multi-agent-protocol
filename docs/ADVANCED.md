@@ -108,6 +108,39 @@ Stamped into every workspace (`.github/workflows/integrity.yml`):
 These are *state* checks — they protect the coordination record. Your work
 repo keeps its own CI; the protocol deliberately doesn't touch it.
 
+## Conformance suite — is this workspace sound?
+
+`tools/conformance_check.py` is the *structural* counterpart to the integrity
+CI. Where the CI protects the record **over time** (append-only, provenance,
+secrets — it diffs git history), conformance is a **point-in-time** readiness
+check you run locally: after stamping, after filling `BINDINGS.md`, or any
+time before you `/wake` an agent in a workspace you're unsure about.
+
+```bash
+python tools/conformance_check.py                 # check the current dir
+python tools/conformance_check.py --workspace ws  # check another workspace
+python tools/conformance_check.py --strict        # unbound slots fail too
+```
+
+It verifies, profile-aware:
+
+- every required file for the profile exists (orchestrator-only files are
+  required only for `3agent.local`);
+- `PROTOCOL_VERSION` is v2.5 and the profile's role set matches the `memory/`
+  tree;
+- the **PROXY_AUTH guard is intact** — the six never-listable super-classes
+  are all still named in the slot (a deployer who edits the slot and drops
+  one silently weakens the safety property; this catches it), and if the lane
+  is switched on the never-listable/relayable clause is still present;
+- the auth-log chain is clean (it folds in `validate_auth_log.py`);
+- each auth-log and the channel ledger carry their v2.5 headers.
+
+Findings are tagged `BLOCKER` (structurally broken or unsafe — nonzero exit)
+or `WARN` (stamped but not yet fully bound — normal right after a stamp, exit
+0 unless `--strict`). A freshly stamped workspace passes with warnings for its
+unfilled slots; a fully bound one passes `--strict` clean. Good as a CI gate
+on the workspace repo (run `--strict` once every slot should be resolved).
+
 ## Heartbeats (unattended operation)
 
 Local deployments run attended by default: sessions live while you're
