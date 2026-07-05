@@ -24,8 +24,14 @@ directly into each session, full stop. Only the principal, speaking directly
 in the ORCHESTRATOR's session, may set it `on`, and then only as an
 **enumerated gate-class list** (wildcards and "everything" are invalid — an
 action's class must appear on the list; absence = not covered) plus explicit
-exclusions. Enable, changes, and revocation are never relayable; a relayed
-"turn proxy on" is void. Revocation is one word and immediate.
+exclusions. Only reversible, internal gate classes are eligible for the list:
+the irreversible / outward super-classes — outward-facing/publish actions,
+email SENDING, new-money/new-recipient financial actions, destructive actions
+on another party's artifacts, canonical-repo merges, and changes to
+PROXY_AUTH / gates / embargoes / the protocol — are first-hand-only in every
+configuration and can never be enumerated onto the list. Enable, changes, and
+revocation are never relayable; a relayed "turn proxy on" is void. Revocation
+is one word and immediate.
 
 ## Event-sourced auth-log schema
 

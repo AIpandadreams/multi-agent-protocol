@@ -426,12 +426,25 @@ def main() -> int:
     (dest / "start").mkdir()
     for role in roles:
         (dest / "memory" / role).mkdir(parents=True)
-        (dest / "memory" / role / "MEMORY.md").write_text(
-            f"# {args.name} — {role} memory index\n\n"
-            f"ROLE_LOCK: this workspace's {role.upper()} sessions only.\n"
-            f"Next channel entry: 1 · Next review round: 1 · Gated queue: empty\n"
-            f"Next auth-record id: {role}-0001\n",
-            encoding="utf-8")
+        # Orchestrator gets its own richer index below; owner/builder get the
+        # standard ⚡ working-state block + an initial Next Step so a cold
+        # /wake reads a well-formed state from the very first session.
+        if role != "orchestrator":
+            (dest / "memory" / role / "MEMORY.md").write_text(
+                f"# {args.name} — {role} memory index\n\n"
+                f"ROLE_LOCK: this workspace's {role.upper()} sessions only.\n\n"
+                "## ⚡ working state\n"
+                "last unit: none (fresh stamp — never run)\n"
+                "next channel entry: 1 · per-peer last-seen: none\n"
+                "next review round: 1 · in-flight units: none\n"
+                "gated/parked queue: empty\n"
+                f"next auth-record id: {role}-0001 · auth-log tail: header\n\n"
+                "## Next Step\n"
+                "First session on this workspace: resolve any unbound slots in\n"
+                "BINDINGS.md (ask the principal once), confirm ROLE_LOCK, then\n"
+                "poll the channel and pick up the first task. Overwrite this\n"
+                "line with the concrete next action before /sleep.\n",
+                encoding="utf-8")
         (dest / "memory" / role / "auth-log.md").write_text(
             f"# AUTH-RECORD — {args.name} / {role} [PROTOCOL v2.5]\n\n"
             "Append-only, event-sourced. Single-writer: this role's sessions\n"
@@ -455,7 +468,12 @@ def main() -> int:
             "in-flight dispatches: none\n"
             "briefings: last sent none · next due first-morning\n"
             "decision menu: 0 items\n"
-            "active preset: balanced · ledger tail: header\n",
+            "active preset: balanced · ledger tail: header\n\n"
+            "## Next Step\n"
+            "First orchestrator session: resolve any unbound BINDINGS slots\n"
+            "(PROXY_AUTH + EMBARGOES confirmed by the principal directly),\n"
+            "confirm ROLE_LOCK, then greet the principal and drain TASKQUEUE.\n"
+            "Overwrite this line with the concrete next action before /sleep.\n",
             encoding="utf-8")
         (dest / "memory" / "orchestrator" / "dispatch-log.md").write_text(
             f"# DISPATCH LOG — {args.name} [PROTOCOL v2.5]\n\n"

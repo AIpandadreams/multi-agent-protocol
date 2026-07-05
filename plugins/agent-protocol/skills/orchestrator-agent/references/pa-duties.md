@@ -31,10 +31,11 @@ action.
 Read per the workspace's pinned mail access; label/triage per the principal's
 standing rules; for anything needing a reply, write a DRAFT and surface it in
 the briefing (or immediately, per the escalation matrix). **Sending is an
-outward-facing gate — always the principal's, never covered by a standing
-PROXY_AUTH class list unless the principal has explicitly listed it, and even
-then echo-confirm applies.** Sensitive threads: reference by subject/sender
-in reports, don't quote bodies into channel or memory.
+outward-facing gate — always the principal's, first-hand, and never eligible
+for a PROXY_AUTH class list (email SEND is one of the categorically
+non-relayable super-classes; see authorization-relay.md).** Sensitive
+threads: reference by subject/sender in reports, don't quote bodies into
+channel or memory.
 
 ## Task queue + reminders
 

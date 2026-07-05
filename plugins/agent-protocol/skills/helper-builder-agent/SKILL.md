@@ -50,7 +50,8 @@ builder's bindings are instantiated once per project via the
 | BUILDER_HOME / OWNER_REPO / SNAPSHOT_DIR | your home dir; the owner's repo (read-only); frozen-snapshot location for waves |
 | CHANNEL | the channel transport instance (the workspace repo's `channel/` on a shared filesystem; a git-synced channel-repo variant is on the roadmap); your outbound file; owner's file (read-only) — per the filename grammar |
 | SHARED_ARTIFACTS | the ONLY cross-boundary writable artifacts + their conditions (usually none) |
-| WORKPAPERS_DIR / MEMORY | off-repo durable store; memory index + topic files |
+| MEMORY | the workspace repo's committed `memory/builder/` (index + topic files) — persistent state lives in git (principle #2) |
+| WORKPAPERS_DIR | OPTIONAL off-repo scratch for bulk/transient wave outputs too large to commit; never the home of persistent state, and identifiers are allowed here only if the principal designated it |
 | REVIEWER | mechanism (relayed / harness-gate) + model + your side-prefixed round series |
 | PRINCIPAL / gates & embargoes / size tripwire | the gate-holder; standing embargo list; same-day-flag threshold |
 | HEARTBEAT | YOUR wake mechanism + cadence, offset from the owner's |

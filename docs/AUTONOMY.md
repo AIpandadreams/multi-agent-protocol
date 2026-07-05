@@ -88,9 +88,13 @@ Self-improvement adds rules over time; two guards keep the set from drifting
 into contradiction:
 
 - **`tools/mirror_check.py`** (CI) — the role skills are thin deltas over the
-  shared `agent-core`; the checker fails the build if a role file
-  contradicts the core or duplicates a normative block. Every amendment must
-  pass it.
+  shared `agent-core`. The checker fails the build on the structural
+  drift that produced the protocol's original defects: a role file
+  duplicating a normative core block (the dedup guard), banned legacy
+  vocabulary, missing cross-references between a role file and the core it
+  refines, or a missing `[PROTOCOL vX.Y]` version stamp. It is a structural
+  guard, not a semantic prover — deeper contradiction-checking is on the
+  roadmap — but every amendment must pass it.
 - **Version stamps** — every protocol file carries `[PROTOCOL vX.Y]`; a
   session that finds a skill/workspace version mismatch parks
   protocol-sensitive actions until the human resolves the pin.

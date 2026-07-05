@@ -122,7 +122,8 @@ reviewed PR to a human merge and a version bump
 (`agent-core/references/self-improvement-protocol.md`). Agents propose; only
 the principal adopts; and the authorization/gate rules are principal-locked
 so no agent can amend the constraints that bind it. `tools/mirror_check.py`
-keeps the growing ruleset internally consistent. See
+guards the growing ruleset against structural drift (dedup, banned vocab,
+version stamps, cross-references). See
 [AUTONOMY.md](AUTONOMY.md#self-improvement).
 
 ## 6. Integrity CI

@@ -1,12 +1,14 @@
-# BUILDER AGENT — session start / handover TEMPLATE [PROTOCOL v2.5]
+# BUILDER AGENT — session start / handover contract [PROTOCOL v2.5]
 
-This file is a TEMPLATE. To deploy the builder agent on a project, copy it into
-the project as its start-session/handover file, fill §0, and keep it current.
-Follow the instantiated copy top to bottom at the start of every builder
-session (fresh start, restart after compaction, or successor session). Do not
-skip steps because the session "looks" continuous — the checklist is cheap and
-a missed step is not. For mid-session resumes, `references/session-card.md` is
-the condensed form — this full contract runs at every true session boundary.
+`new_project.py` stamps this into each workspace as
+`start/START_SESSION.builder.md`. It carries no per-project values inline —
+§0 resolves every slot from the workspace's `BINDINGS.md`, so there is
+nothing to hand-fill here. Follow it top to bottom at the start of every
+builder session (fresh start, restart after compaction, or successor
+session). Do not skip steps because the session "looks" continuous — the
+checklist is cheap and a missed step is not. For mid-session resumes,
+`references/session-card.md` is the condensed form — this full contract runs
+at every true session boundary.
 
 ## Before anything (unattended wakes): verify the workspace exists
 
@@ -21,23 +23,28 @@ sessions: the workspace is already on disk; skip.
 
 | binding | value |
 |---|---|
-| ROLE_LOCK | this session is the BUILDER on `{{PROJECT}}` (if memory names another role or is unbound: stop, ask the principal) |
-| SIDE_NAMES | `{{OWNER_SIDE}}` / `{{BUILDER_SIDE}}` (same pair the owner binds; used in filenames + entries) |
-| Builder home directory | `{{BUILDER_HOME}}` (the directory the builder session starts in) |
-| Owner's canonical repo | `{{OWNER_REPO}}` — READ-ONLY to the builder, always (SHARED_ARTIFACTS below are the only exception) |
-| Frozen-snapshot location | `{{SNAPSHOT_DIR}}` (pinned extracts waves read from) |
-| CHANNEL inbox | `{{CHANNEL}}` (shared; holds channel files, review requests/verdicts, synced deliverables, the round ledger `INDEX.md`) |
-| Builder channel file | `{{BUILDER_SIDE}}_to_{{OWNER_SIDE}}_YYYY-MM-DD.md` (yours; rotate per day or ~64KB) |
-| Owner channel file | `{{OWNER_SIDE}}_to_{{BUILDER_SIDE}}_YYYY-MM-DD.md` (read-only to you) |
-| SHARED_ARTIFACTS | `{{LIST or "none": cross-boundary writable artifacts + conditions (out of commit surface; principal per-batch go; re-read before edit; writes announced)}}` |
-| Canonical working papers | `{{WORKPAPERS_DIR}}` (off-repo durable store; identifiers allowed here ONLY if the principal designated it) |
-| Project memory | `{{MEMORY_DIR}}/MEMORY.md` (+ topic files it indexes) |
-| Reviewer | `{{REVIEWER}}` (mechanism relayed/harness-gate + model), serialized lane, side-prefixed series `review_request_{{BUILDER_SIDE}}_rNN.md` |
-| Principal | `{{PRINCIPAL_NAME}}` — all gates; authorization only first-hand, affirmative first-person, in this session |
-| Standing gates & embargoes | `{{LIST: what may never be written/named/sent without a go}}` |
-| Size tripwire | `{{N}}` rows → same-day principal flag |
-| HEARTBEAT | `{{MECHANISM + cadence}}`, offset from the owner's (+ when to delete it) |
-| MODEL | you=`{{MODEL}}`, owner=`{{MODEL}}`, reviewer=`{{MODEL}}`, wave subagents=`{{MODEL}}` |
+Resolve every slot below from the workspace's `BINDINGS.md` (the single
+deployment contract) plus this workspace's memory — do NOT expect values
+inline here. If a slot is unbound on a new project, ask the principal once
+and record the answer in BINDINGS.md.
+
+| slot | resolve to |
+|---|---|
+| ROLE_LOCK | confirm memory names THIS session the builder — if it names another role or is unbound: stop, ask the principal |
+| SIDE_NAMES | the two sides' short names (same pair the owner binds; used in filenames + entries) |
+| Builder home directory | the directory the builder session starts in |
+| CANONICAL_REPO | the owner's repo — READ-ONLY to the builder, always (SHARED_ARTIFACTS are the only exception) |
+| SNAPSHOT_DIR | pinned frozen extracts waves read from (if the deployment uses waves) |
+| CHANNEL | the workspace repo's `channel/` (channel files, review requests/verdicts, the round ledger `INDEX.md`); your outbound file `<builder_side>_to_<owner_side>_YYYY-MM-DD.md` (rotate per day or ~64KB); the owner's outbound is read-only to you |
+| SHARED_ARTIFACTS | cross-boundary writable artifacts + conditions (out of commit surface; principal per-batch go; re-read before edit; writes announced) — usually none |
+| MEMORY | the workspace repo's committed `memory/builder/MEMORY.md` (+ topic files it indexes) — persistent state lives in git |
+| WORKPAPERS_DIR | OPTIONAL off-repo scratch for bulk/transient wave outputs only; identifiers allowed there ONLY if the principal designated it; never the home of persistent state |
+| REVIEWER | mechanism (relayed / harness-gate) + model, serialized lane, side-prefixed series `review_request_<builder_side>_rNN.md` |
+| PRINCIPAL | all gates; authorization only first-hand, affirmative first-person, in this session |
+| Standing gates & embargoes | what may never be written/named/sent without a go |
+| Size tripwire | row count → same-day principal flag |
+| HEARTBEAT | your wake mechanism + cadence, offset from the owner's (+ when to delete it) |
+| MODEL | your model, owner's, reviewer's, wave-subagent default (see MODELS.md) |
 
 ## 1. Read state (in this order)
 
