@@ -416,9 +416,12 @@ def fill_wizard(bindings_text: str) -> str:
     print("\n— BINDINGS wizard —")
     print("Answer each slot, or press Enter to leave its {{FILL}} placeholder")
     print("for later. Ctrl-C stops and keeps what you've entered.\n")
+    # Split once and index by position: two slots can share identical
+    # placeholder text, so we must never look a line up by value.
+    lines = bindings_text.splitlines(keepends=True)
     out_lines = []
     filled = skipped = 0
-    for line in bindings_text.splitlines(keepends=True):
+    for i, line in enumerate(lines):
         m = FILL_RE.search(line)
         if not m:
             out_lines.append(line)
@@ -434,10 +437,9 @@ def fill_wizard(bindings_text: str) -> str:
             answer = input(f"  {slot}\n    [{hint}]\n  > ").strip()
         except (EOFError, KeyboardInterrupt):
             print("\n(wizard stopped — remaining slots left as {{FILL}})\n")
+            # keep this line and everything after it verbatim, by position
             out_lines.append(line)
-            # keep the rest verbatim
-            idx = bindings_text.splitlines(keepends=True).index(line)
-            out_lines.extend(bindings_text.splitlines(keepends=True)[idx + 1:])
+            out_lines.extend(lines[i + 1:])
             return "".join(out_lines)
         if answer:
             # repl is a callable → its return is substituted literally, so

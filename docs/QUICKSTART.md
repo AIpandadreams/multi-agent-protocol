@@ -55,8 +55,9 @@ python tools/new_project.py --name myproject --dest path/to/myproject-ws \
 
 ## 3. Fill BINDINGS.md
 
-Open `BINDINGS.md` in the stamped workspace (already filled if you used
-`--wizard`). Every `{{FILL}}` slot is a deployment decision; the glossary lives
+Open `BINDINGS.md` in the stamped workspace (with any `--wizard` answers
+already applied — Enter-skipped slots still show `{{FILL}}`). Every `{{FILL}}`
+slot is a deployment decision; the glossary lives
 at `plugins/agent-protocol/skills/agent-core/references/binding-slots.md`.
 The three that matter most on day one:
 
