@@ -170,9 +170,14 @@ def check(parsed: list, bad: list) -> None:
         log = d["log"]
         for cid, n in d["cons_lines"]:
             if "/R" in cid:
-                if cid not in d["received"]:
+                rec = d["received"].get(cid)
+                if rec is None:
                     bad.append(f"{log}:{n}: CONSUMED {cid} has no RECEIVED "
                                "block in this log (record before reserve)")
+                elif n < rec["line"]:
+                    bad.append(f"{log}:{n}: CONSUMED {cid} appears before its "
+                               f"RECEIVED block (line {rec['line']}) — a relay "
+                               "must be recorded before it is reserved")
             elif cid.split("/")[0] not in d["grants"]:
                 bad.append(f"{log}:{n}: direct CONSUMED {cid} of a grant not "
                            "defined in this log (direct consumes live in the "

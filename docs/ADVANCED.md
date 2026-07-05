@@ -116,10 +116,13 @@ secrets — it diffs git history), conformance is a **point-in-time** readiness
 check you run locally: after stamping, after filling `BINDINGS.md`, or any
 time before you `/wake` an agent in a workspace you're unsure about.
 
+Run it from a protocol checkout (the checker ships here, not inside a
+workspace) and point `--workspace` at the target:
+
 ```bash
-python tools/conformance_check.py                 # check the current dir
-python tools/conformance_check.py --workspace ws  # check another workspace
-python tools/conformance_check.py --strict        # unbound slots fail too
+python tools/conformance_check.py --workspace path/to/ws           # check a workspace
+python tools/conformance_check.py --workspace path/to/ws --strict  # unbound slots fail too
+python tools/conformance_check.py                                  # check cwd (only if cwd is itself a workspace)
 ```
 
 It verifies, profile-aware:
@@ -135,10 +138,21 @@ It verifies, profile-aware:
 - the auth-log chain is clean (it folds in `validate_auth_log.py`);
 - each auth-log and the channel ledger carry their v2.5 headers.
 
-Findings are tagged `BLOCKER` (structurally broken or unsafe — nonzero exit)
-or `WARN` (stamped but not yet fully bound — normal right after a stamp, exit
-0 unless `--strict`). A freshly stamped workspace passes with warnings for its
-unfilled slots; a fully bound one passes `--strict` clean.
+Findings are tagged by severity, and the split is deliberate:
+
+- **BLOCKER** (nonzero exit) — structurally broken or unsafe: a missing
+  required file, a wrong/unknown profile, a role set that disagrees with the
+  profile, a `PROTOCOL_VERSION` that isn't v2.5, a weakened PROXY_AUTH guard,
+  or a broken auth-log chain.
+- **WARN** (exit 0 unless `--strict`) — stamped but not yet fully bound, or
+  cosmetic drift: an unfilled `{{FILL}}` slot, or a missing per-file v2.5
+  stamp / header on an auth-log or the channel ledger. These don't make the
+  workspace unsafe, so they don't fail a plain run; `--strict` promotes them.
+
+So a freshly stamped workspace passes with warnings for its unfilled slots; a
+fully bound one passes `--strict` clean. (The load-bearing version signal —
+`PROTOCOL_VERSION` in BINDINGS — is a BLOCKER; the per-file stamps are the
+softer, cosmetic layer.)
 
 Run it from a protocol checkout pointed at the workspace
 (`--workspace path/to/ws`) — the checker ships here, not stamped into each

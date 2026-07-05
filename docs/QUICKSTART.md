@@ -119,9 +119,12 @@ myproject-ws/
 
 Any time after stamping — and especially after filling `BINDINGS.md` — run
 the conformance check to confirm the deployment is structurally sound before
-waking an agent:
+waking an agent. Run it **from your protocol checkout** (where you cloned this
+repo — the checker lives there, not inside the workspace) and point
+`--workspace` at the workspace:
 
 ```bash
+cd path/to/multi-agent-protocol   # your clone of this repo
 python tools/conformance_check.py --workspace path/to/myproject-ws
 ```
 

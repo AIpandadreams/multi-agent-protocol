@@ -10,13 +10,18 @@ guard is intact, and the auth-log chain is clean. Run it after stamping,
 after filling BINDINGS, and any time you want to confirm a deployment is
 sound before waking an agent in it.
 
-  python tools/conformance_check.py                 # check the current dir
-  python tools/conformance_check.py --workspace ws  # check another workspace
-  python tools/conformance_check.py --strict        # unbound slots also fail
+Run it from a protocol checkout (this file lives here, not inside a stamped
+workspace) and point --workspace at the workspace you want to check:
+
+  python tools/conformance_check.py --workspace path/to/ws           # check a ws
+  python tools/conformance_check.py --workspace path/to/ws --strict  # unbound slots fail too
+  python tools/conformance_check.py                                  # check cwd (only if cwd is itself a workspace)
 
 Exit 0 = conformant (no BLOCKER; and no WARN under --strict); 1 = findings.
-BLOCKER = structurally broken or unsafe. WARN = stamped but not yet fully
-bound (normal right after a stamp; resolve before relying on the workspace).
+BLOCKER = structurally broken or unsafe (missing required file, wrong/unknown
+profile, weakened PROXY_AUTH guard, broken auth-log chain). WARN = stamped but
+not yet fully bound, or cosmetic drift (unfilled slot, missing per-file v2.5
+stamp/header) — resolve before relying on the workspace, or gate with --strict.
 """
 import argparse
 import re
@@ -207,6 +212,8 @@ def check_channel(ws: Path, f: Findings):
     if not p.is_file():
         return  # reported by structure check
     t = p.read_text(encoding="utf-8", errors="replace")
+    if "[PROTOCOL v2.5]" not in t:
+        f.warn("channel/INDEX.md missing PROTOCOL v2.5 stamp")
     if "REVIEW-ROUND LEDGER" not in t:
         f.warn("channel/INDEX.md missing the REVIEW-ROUND LEDGER header")
     if "| round | side |" not in t:
