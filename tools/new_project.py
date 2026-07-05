@@ -46,7 +46,7 @@ Slot glossary: plugins/agent-protocol/skills/agent-core/references/binding-slots
 {orch_slots}"""
 
 ORCH_SLOTS = """| FLAVOR | {{FILL: global-pa or project:<name>}} |
-| PROXY_AUTH | off (default — only the principal, directly in the orchestrator session, may change this; if on, list ONLY enumerated reversible/internal gate classes plus explicit exclusions. The irreversible/outward super-classes — outward-facing/publish, email SEND, new-money/new-recipient, destructive-to-others, canonical-repo merge, PROXY_AUTH/gate/embargo/protocol changes — are never listable or relayable) |
+| PROXY_AUTH | off (default — only the principal, directly in the orchestrator session, may change this; if on, list ONLY enumerated reversible/internal gate classes plus explicit exclusions. The irreversible/outward super-classes — outward-facing/publish actions, email SEND, new-money/new-recipient financial actions, destructive operations on another party's artifacts, canonical-repo merges, and changes to PROXY_AUTH / gates / embargoes / the protocol — are never listable or relayable) |
 | AUTH_PROVENANCE | {{FILL: per-role-identity (+ commit .auth-provenance.json mapping role->author email; CI enforces) / single-identity (trust-based; principal acceptance recorded here)}} |
 | TASKQUEUE | TASKQUEUE.md (this workspace) |
 | SESSION_REGISTRY | memory/orchestrator/session-registry.md |

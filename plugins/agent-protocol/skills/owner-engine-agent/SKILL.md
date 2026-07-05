@@ -85,7 +85,10 @@ version bump). The spine:
    deciding or relaying, ask — never infer. Gated work goes to a visible queue
    and waits. Never chase. Sole exception: a workspace whose bindings set
    PROXY_AUTH on (principal-set, enumerated REVERSIBLE/internal gate classes
-   only — the irreversible/outward super-classes are never listable or
+   only — the irreversible/outward super-classes — outward-facing/publish
+   actions, email SEND, new-money/new-recipient financial actions, destructive
+   operations on another party's artifacts, canonical-repo merges, and changes
+   to PROXY_AUTH / gates / embargoes / the protocol — are never listable or
    relayable and stay first-hand) — then a relayed authorization is valid
    ONLY via the auth-log lane per
    `../agent-core/references/proxy-auth-core.md`: verify the grant AND its

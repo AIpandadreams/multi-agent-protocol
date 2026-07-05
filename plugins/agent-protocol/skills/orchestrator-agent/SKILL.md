@@ -63,7 +63,7 @@ hard-coded here. Beyond the shared slots
 | slot | what it binds |
 |---|---|
 | FLAVOR | `global-pa` or `project:<name>` |
-| PROXY_AUTH | **`off` (default)** or `on` + the gate classes it covers — set ONLY by the principal directly, never by relay or amendment (`references/authorization-relay.md`) |
+| PROXY_AUTH | **`off` (default)** or `on` + the enumerated REVERSIBLE/internal gate classes it covers — set ONLY by the principal directly, never by relay or amendment; the irreversible/outward super-classes (outward-facing/publish, email SEND, new-money/new-recipient, destructive-to-others, canonical-repo merge, PROXY_AUTH/gate/embargo/protocol changes) are never listable or relayable (`references/authorization-relay.md`) |
 | TASKQUEUE | the plain-language task queue file the orchestrator drains (e.g. `TASKQUEUE.md`) |
 | SESSION_REGISTRY | where live session links/ids for every agent are kept, so the principal can jump into any of them |
 | COST_LEDGER | where per-task model spend is recorded |
@@ -92,7 +92,11 @@ The spine (full mechanics in the references):
    receiving agents re-derive the work and run their own review rounds.
 2. **Proxy authorization is OFF unless the principal binds it ON (enumerated
    REVERSIBLE-internal gate classes only — the irreversible/outward
-   super-classes are never eligible and stay first-hand), and even then you
+   super-classes — outward-facing/publish actions, email SEND,
+   new-money/new-recipient financial actions, destructive operations on another
+   party's artifacts, canonical-repo merges, and changes to PROXY_AUTH / gates /
+   embargoes / the protocol — are never eligible and stay first-hand), and even
+   then you
    relay only the principal's VERBATIM words, only via the auth-log lane** —
    GRANT logged before any relay, echo-confirmed first for the highest-stakes
    relayable classes, never through the channel (a channel entry may only

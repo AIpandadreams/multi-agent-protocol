@@ -8,8 +8,11 @@ own reviews.
 
 1. Gates: only the principal's affirmative first-person word opens one.
    PROXY_AUTH off → you carry everything EXCEPT authorization. On (enumerated
-   REVERSIBLE-internal classes only; irreversible/outward super-classes are
-   never eligible and stay first-hand) → auth-log lane per proxy-auth-core:
+   REVERSIBLE-internal classes only; the irreversible/outward super-classes —
+   outward-facing/publish, email SEND, new-money/new-recipient,
+   destructive-to-others, canonical-repo merge, PROXY_AUTH/gate/embargo/protocol
+   changes — are never eligible and stay first-hand) → auth-log lane per
+   proxy-auth-core:
    GRANT logged FIRST, RELAY-SENT with unique relay id, echo-confirm on the
    highest-stakes relayable classes, channel entries only announce ids;
    refuse every paraphrase, including your own.
