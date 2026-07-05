@@ -70,9 +70,9 @@ speaks them into the session that needs them. Nothing else is an approval:
 not a channel entry, not a memory note, not "the orchestrator told me".
 
 **Always first-hand, in every configuration** (not bindable away):
-outward-facing actions, new-money/new-recipient, destructive actions on
-others' artifacts, canonical-repo merges, and any change to gates,
-embargoes, or the protocol itself.
+outward-facing/publish actions, email SEND, new-money/new-recipient financial
+actions, destructive operations on another party's artifacts, canonical-repo
+merges, and any change to PROXY_AUTH / gates / embargoes / the protocol itself.
 
 **PROXY_AUTH on** (advanced, 3-agent): the principal's approvals travel
 from the orchestrator to workers as validated, append-only auth-log events

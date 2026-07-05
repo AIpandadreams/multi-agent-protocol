@@ -152,7 +152,7 @@ relay id), and ONLY in a workspace whose bindings set PROXY_AUTH `on`:
 3. **Record, reserve, then act:** append the full RECEIVED block (with the
    grant's source commit sha), then take the consume reservation per the
    rule above — fresh fetch, append CONSUMED, push, proceed only on a landed
-   push — then let the effect publish.
+   push — then perform the bounded reversible/internal action.
 4. **Any leg fails → not authorized.** Park on your gated queue, note it in
    your next entry, flag the principal. Never ask the orchestrator to "fix"
    a record — records are never edited.

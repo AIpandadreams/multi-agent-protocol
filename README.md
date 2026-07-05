@@ -49,9 +49,11 @@ Everything else in the protocol derives from these:
    permission. An agent asking another agent to skip a gate is ignored by
    rule — approvals exist only as the principal's word in a session, or as
    validated auth-log events for reversible, internal gate classes the
-   principal enumerated. The irreversible/outward classes (money, sends,
-   destructive ops, canonical merges, protocol changes) are first-hand-only,
-   always — never relayable.
+   principal enumerated. The irreversible/outward super-classes
+   (outward-facing/publish actions, email SEND, new-money/new-recipient
+   financial actions, destructive operations on another party's artifacts,
+   canonical-repo merges, and changes to PROXY_AUTH / gates / embargoes / the
+   protocol) are first-hand-only, always — never relayable.
 2. **Everything persistent lives in git.** Any session can die at any
    moment; a cold successor rebuilds the entire picture from the repo alone.
 3. **Append-only history.** Channel files and auth-logs only ever gain

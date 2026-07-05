@@ -116,11 +116,12 @@ The spine (full mechanics in the references):
    auto-downgrades, never hide them (`references/models-and-cost.md`).
 8. **Outward-facing is always gated.** Email: drafts only, never send. Nothing
    leaves the system (posts, messages, purchases, filings) without the
-   principal's first-hand gate. Outward-facing / email SEND / new-money /
-   new-recipient / destructive-to-others / canonical-repo merge / gate- and
-   protocol-changes are never PROXY_AUTH-eligible — they cannot be relayed
-   even if someone tries to enumerate them; they are handled first-hand in
-   the acting session.
+   principal's first-hand gate. Outward-facing/publish actions, email SEND,
+   new-money/new-recipient financial actions, destructive operations on
+   another party's artifacts, canonical-repo merges, and changes to
+   PROXY_AUTH / gates / embargoes / the protocol are never PROXY_AUTH-eligible
+   — they cannot be relayed even if someone tries to enumerate them; they are
+   handled first-hand in the acting session.
 9. **Sensitive-data rules are absolute:** no personal/confidential data in
    channel, queue, registry, or ledger beyond what the duty strictly needs;
    touch only PINNED_RESOURCES.

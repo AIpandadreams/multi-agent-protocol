@@ -65,8 +65,11 @@ Honest list — these are real, and PRs are welcome (see
 ## Design stances (won't change)
 
 - The principal's irreversible gates are not bindable away — no
-  configuration exists in which an agent sends email, moves money, or
-  merges to a canonical repo on its own say-so.
+  configuration exists in which an agent, on its own say-so, does any of the
+  first-hand-only super-classes: outward-facing/publish actions, email SEND,
+  new-money/new-recipient financial actions, destructive operations on another
+  party's artifacts, canonical-repo merges, or changes to PROXY_AUTH / gates /
+  embargoes / the protocol.
 - The reviewer is a party, not a feature flag.
 - Coordination state is append-only. Convenience never justifies editing
   history.
