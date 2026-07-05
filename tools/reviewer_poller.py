@@ -198,7 +198,13 @@ def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
     periodic fallback sweep — the poller never reads it half-written; it adds
     at most one watch_interval of latency. (For a hard guarantee regardless of
     watch_interval, have the producer publish atomically: write a temp file
-    and rename it into place.)"""
+    and rename it into place.)
+
+    Corollary: a channel is rescued from the dirty set only by *settling*, not
+    by the fallback timer — a pathological producer that rewrites the channel
+    on every single tick would be excluded from every sweep and never reviewed.
+    That is by design (better late than a half-read verdict) and harmless for
+    real producers, which stop writing once a request is complete."""
     pairs = [(w, Path(w) / "channel") for w in workspaces]
     print(f"[poller] watch mode: local changes trigger within ~{watch_interval*2:.0f}s "
           f"(one settle tick); fallback sweep every {fallback_interval}s. "

@@ -81,7 +81,7 @@ class DetectSettledTest(unittest.TestCase):
 
             # ws1 receives a request and stays put; ws2 is mid-write this tick.
             (c1 / "review_request_A_r01.md").write_text("x", encoding="utf-8")
-            rp.detect_settled(pairs, sigs, dirty)          # both now dirty
+            rp.detect_settled(pairs, sigs, dirty)          # ws1 dirty (just wrote); ws2 still clean
             (c2 / "review_request_A_r01.md").write_text("y", encoding="utf-8")
             settled = rp.detect_settled(pairs, sigs, dirty)  # ws1 settles, ws2 moves
 

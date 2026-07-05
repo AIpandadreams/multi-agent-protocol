@@ -73,8 +73,11 @@ half-formed; for a hard guarantee independent of the interval, have the
 producer publish atomically (write a temp file, then rename it into place). A
 fallback sweep still runs every `--interval` seconds so requests arriving via a
 remote push are never missed — it, too, skips any channel that is mid-write, so
-the never-read-half-formed guarantee holds on the timer path as well. `--watch`
-is stdlib-only (a cheap directory-signature check — no `watchdog`/inotify
+the never-read-half-formed guarantee holds on the timer path as well. (A channel
+that never stops changing is therefore only ever picked up once it settles, not
+by the timer — the intended trade of liveness for never reading a half-written
+request; real producers stop writing once a request is complete.) `--watch` is
+stdlib-only (a cheap directory-signature check — no `watchdog`/inotify
 dependency).
 
 Alternatives, in preference order:
