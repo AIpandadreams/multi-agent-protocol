@@ -138,8 +138,14 @@ It verifies, profile-aware:
 Findings are tagged `BLOCKER` (structurally broken or unsafe — nonzero exit)
 or `WARN` (stamped but not yet fully bound — normal right after a stamp, exit
 0 unless `--strict`). A freshly stamped workspace passes with warnings for its
-unfilled slots; a fully bound one passes `--strict` clean. Good as a CI gate
-on the workspace repo (run `--strict` once every slot should be resolved).
+unfilled slots; a fully bound one passes `--strict` clean.
+
+Run it from a protocol checkout pointed at the workspace
+(`--workspace path/to/ws`) — the checker ships here, not stamped into each
+workspace, and it deliberately runs its own trusted copy of
+`validate_auth_log.py` rather than the target workspace's. That also makes it
+a natural CI gate: check the workspace out next to a protocol checkout and run
+`--strict` once every slot should be resolved.
 
 ## Heartbeats (unattended operation)
 

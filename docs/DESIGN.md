@@ -59,8 +59,9 @@ Honest list — these are real, and PRs are welcome (see
    same machine.
 4. **Windows-first tooling edges.** The protocol is OS-neutral; some
    heartbeat recipes and ops-gotchas examples carry a Windows accent.
-5. **No conformance suite.** A deployment can't yet self-verify "am I
-   running the protocol correctly" beyond the CI checks.
+5. **Conformance depth.** `tools/conformance_check.py` self-verifies a
+   workspace's structure, bindings, PROXY_AUTH guard, and auth-log chain;
+   deeper semantic checks (e.g. TASKQUEUE/DUTIES agreement) could still grow.
 
 ## Design stances (won't change)
 

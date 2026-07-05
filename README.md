@@ -116,6 +116,8 @@ tools/
   mirror_check.py           consistency CI over the skill tree
   reviewer_poller.py        optional bridge to a local Codex reviewer
   wave_coverage_check.py    coverage checker for builder read-waves
+  conformance_check.py      point-in-time workspace readiness check
+  validate_auth_log.py      auth-log chain validator (also stamped per workspace)
 docs/                       quickstart · architecture · configurations ·
                             protocol · advanced · design · FAQ
 examples/                   a worked end-to-end cycle you can read like a story
@@ -151,7 +153,6 @@ examples/                   a worked end-to-end cycle you can read like a story
   platform surface it depends on stabilizes.
 - Interactive `new_project.py --wizard` for BINDINGS fill-in.
 - Event-driven reviewer bridge (filesystem watcher replacing the poll loop).
-- A protocol conformance suite deployments can self-run.
 
 ## License
 

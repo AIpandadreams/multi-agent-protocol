@@ -40,10 +40,13 @@ SUPER_CLASSES = [
     "new-money/new-recipient financial actions",
     "destructive operations on another party's artifacts",
     "canonical-repo merges",
-    "changes to PROXY_AUTH",
+    # Full canonical sixth class — checking only "changes to PROXY_AUTH" would
+    # pass a slot that dropped "/ gates / embargoes / the protocol".
+    "changes to PROXY_AUTH / gates / embargoes / the protocol",
 ]
 
-FILL_RE = re.compile(r"\{\{FILL[:}]")
+# Matches both documented placeholder forms: {{FILL}} and {{FILL: hint}}.
+FILL_RE = re.compile(r"\{\{FILL(?::[^}]*)?\}\}")
 SLOT_RE = re.compile(r"^\|\s*([A-Z_/ ]+?)\s*\|\s*(.*?)\s*\|\s*$")
 
 
@@ -124,8 +127,11 @@ def check_bindings(ws: Path, slots, roles, f: Findings):
 
     profile = slots.get("PROFILE", "")
     if profile not in PROFILE_ROLES:
-        f.warn(f"PROFILE '{profile or 'absent'}' is not a known profile "
-               f"({', '.join(PROFILE_ROLES)})")
+        # BLOCKER, not WARN: an unknown profile means the required-file set is
+        # undefined, so a non-strict run could otherwise exit 0 having checked
+        # nothing meaningful.
+        f.blocker(f"PROFILE '{profile or 'absent'}' is not a known profile "
+                  f"({', '.join(PROFILE_ROLES)})")
     else:
         expected = PROFILE_ROLES[profile]
         if roles and roles != expected:
@@ -171,16 +177,29 @@ def check_auth_logs(ws: Path, roles, f: Findings):
             f.warn(f"memory/{role}/auth-log.md missing append-only/"
                    "single-writer header")
 
-    # Fold in the mechanical chain validator if it is present.
-    validator = ws / "tools" / "validate_auth_log.py"
-    if validator.is_file():
+    # Fold in the mechanical chain validator. Run the TRUSTED copy that ships
+    # beside this script in the protocol checkout — never the target
+    # workspace's own tools/validate_auth_log.py, which for an "unsure"
+    # workspace would be running unvetted code. Bounded by a timeout so a
+    # pathological log can't hang the check.
+    validator = Path(__file__).resolve().parent / "validate_auth_log.py"
+    if not validator.is_file():
+        f.warn("auth-log chain check skipped: trusted validate_auth_log.py "
+               "not found beside conformance_check.py (run from a protocol "
+               "checkout)")
+        return
+    try:
         proc = subprocess.run(
             [sys.executable, str(validator)], cwd=str(ws),
-            capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if proc.returncode != 0:
-            out = (proc.stdout or "").strip() or (proc.stderr or "").strip()
-            f.blocker(f"auth-log chain validation failed:\n    " +
-                      out.replace("\n", "\n    "))
+            capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=60)
+    except subprocess.TimeoutExpired:
+        f.blocker("auth-log chain validation timed out (>60s)")
+        return
+    if proc.returncode != 0:
+        out = (proc.stdout or "").strip() or (proc.stderr or "").strip()
+        f.blocker("auth-log chain validation failed:\n    " +
+                  out.replace("\n", "\n    "))
 
 
 def check_channel(ws: Path, f: Findings):
