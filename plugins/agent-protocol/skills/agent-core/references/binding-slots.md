@@ -11,7 +11,7 @@
 | SIDE_NAMES | the short names used in filenames and entry headers (e.g. `engine`, `builder`, `orch`) | ALL sessions bind the same set |
 | CANONICAL_REPO | the work repo/artifact the OWNER owns (path + remote + branch) | read-only to everyone else |
 | CHANNEL | the channel transport instance: shared directory (local-fs; a git-synced channel repo variant is on the roadmap) + the per-direction files per the filename grammar | see `transports/` in the multi-agent-protocol repo |
-| MEMORY | each role's persistent memory (index + verbatim log/topic files) | local: harness memory dir; cloud: committed `memory/<role>/` |
+| MEMORY | each role's persistent memory (index + verbatim log/topic files) | the workspace repo's committed `memory/<role>/` — persistent state lives in git (principle #2) |
 | REVIEWER | per side: mechanism (relayed / harness-gate) + model + verdict location + next round number in that side's series | see review-core.md |
 | PRINCIPAL | the human gate-holder; where each role's gated-items queue lives; how the principal is reached (notifications) | |
 | PINNED_RESOURCES | exact external resources (IDs/paths) a role may touch — everything else is forbidden, including reads | |

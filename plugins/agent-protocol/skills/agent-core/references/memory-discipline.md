@@ -2,14 +2,15 @@
 
 > Tier: once per project. Identical for all roles.
 
-Project memory is the successor session's lifeline. In cloud deployments the
-successor is not a contingency — EVERY scheduled wake is a cold successor, so
-this discipline is the architecture, not a courtesy.
+Project memory is the successor session's lifeline. Treat every unattended
+(scheduled) wake as a cold successor — the successor is not a contingency,
+so this discipline is the architecture, not a courtesy.
 
 - **Checkpoint after every shipped unit** (pushed commit, converged round,
   posted entry, decided question, consolidated wave) — not just at session
-  end. Cloud: a checkpoint is not complete until it is COMMITTED AND PUSHED;
-  a wake that cannot push cleanly must not claim progress.
+  end. When the workspace has a remote, a checkpoint is not complete until
+  it is COMMITTED AND PUSHED; a wake that cannot push cleanly must not claim
+  progress.
 - **State vs detail:** the memory index holds state + pointers (next entry
   number, next round number, in-flight units, resume order, gated queue,
   bindings). Verbatim round-by-round detail goes to topic/log files the index

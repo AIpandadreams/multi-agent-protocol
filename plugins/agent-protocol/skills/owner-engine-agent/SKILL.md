@@ -49,7 +49,7 @@ hard-coded into this skill:
 | ROLE_LOCK | this session's role on this project ("owner"), recorded at first bind |
 | SIDE_NAMES | the two sides' short names used in filenames and entries (e.g. `engine`, `builder`) — both sessions bind the SAME pair |
 | CANONICAL_REPO | the repo/artifact you own (path + remote + branch) |
-| CHANNEL | the channel transport instance (shared inbox directory locally; channel repo in cloud — see `transports/`) + the per-direction files: your append-only outbound; the peer's outbound (your inbound, read-only to you) — named per the filename grammar in the channel protocol |
+| CHANNEL | the channel transport instance (the workspace repo's `channel/` on a shared filesystem; a git-synced channel-repo variant is on the roadmap — see `transports/`) + the per-direction files: your append-only outbound; the peer's outbound (your inbound, read-only to you) — named per the filename grammar in the channel protocol |
 | MEMORY | persistent project memory (state + pointers) + a verbatim detail/log file |
 | REVIEWER | reviewer mechanism per side (relayed or harness-gate) + model + where verdicts land + next round number |
 | PRINCIPAL | the human gate-holder and how gated items are queued for them |

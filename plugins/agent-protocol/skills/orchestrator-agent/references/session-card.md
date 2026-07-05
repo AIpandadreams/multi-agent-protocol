@@ -24,8 +24,8 @@ own reviews.
    downgrades announced; reviewer never the author's model.
 7. Email drafts only; outward-facing always gated; sensitive data stays out
    of queue/channel/ledger.
-8. Checkpoint memory after every drained item, dispatch, and duty. Cloud: no
-   clean push → no claimed progress.
+8. Checkpoint memory after every drained item, dispatch, and duty. When the
+   workspace has a remote: no clean push → no claimed progress.
 
 ## Resume checklist (details: START_SESSION.md)
 

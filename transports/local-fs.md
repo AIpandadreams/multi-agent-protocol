@@ -12,10 +12,15 @@ Binds the abstract channel verbs to filesystem operations.
 | INTEGRITY | channel-core checks against the files directly |
 
 Other bindings, local flavor:
-- **CHANNEL** = a shared directory both sessions can read/write
-  (e.g. `path/to/review_inbox/`, or the workspace repo's own `channel/`).
-- **MEMORY** = the harness memory dir per project
-  (`~\.claude\projects\<proj>\memory\`).
+- **CHANNEL** = the stamped workspace repo's own `channel/` directory, which
+  both sessions read/write on the shared filesystem. (A pre-existing shared
+  inbox outside the repo also works, but the stamped workspace is the
+  default — it keeps the channel under the same append-only CI as everything
+  else.)
+- **MEMORY** = the workspace repo's `memory/<role>/` (as stamped by
+  `new_project.py`). Persistent role state lives IN the workspace repo, in
+  git — never in an out-of-repo harness memory dir; principle #2
+  ("everything persistent lives in git") depends on it.
 - **HEARTBEAT** = a Claude Code scheduled task re-invoking the LIVE session
   (context intact). One per role, offset (e.g. :23 / :53).
 - **REVIEWER** = local Codex via relay subagent (builder-style) and/or the
