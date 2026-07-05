@@ -1,0 +1,17 @@
+{
+  "name": "multi-agent-protocol",
+  "owner": {
+    "name": "AIpandadreams"
+  },
+  "metadata": {
+    "description": "A four-party collaboration protocol for running AI agents on real work: owner/builder/orchestrator role skills, an independent cross-vendor reviewer gating every round, and a human principal holding all authorization gates.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "agent-protocol",
+      "source": "./plugins/agent-protocol",
+      "description": "Role skills for the multi-agent collaboration protocol: agent-core (shared normative references), owner-engine-agent, helper-builder-agent, orchestrator-agent, plus /sleep and /wake lifecycle commands"
+    }
+  ]
+}

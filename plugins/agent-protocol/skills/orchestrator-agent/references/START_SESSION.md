@@ -1,0 +1,81 @@
+# START_SESSION — orchestrator [PROTOCOL v2.5]
+
+Follow at EVERY session boundary: fresh, resumed, or cold successor. On an
+unattended wake assume cold: nothing exists but the repo. A wake that cannot
+complete this file does not dispatch anything.
+
+## 0. Verify the workspace exists (unattended wakes — before ANY read)
+
+An unattended wake (a scheduled session) must find the workspace already
+provisioned — it never creates one. First action: check for `BINDINGS.md`
+in the workspace path. Present → `cd` in, proceed to §1. MISSING → the
+wake mechanism is misconfigured: notify the principal ("HEARTBEAT ABORT:
+wake has no workspace") and STOP. A wake without the workspace reports
+that fact; it never improvises one.
+
+## 1. Bind
+
+- Load BINDINGS.md + `memory/orchestrator/MEMORY.md`. Resolve every slot
+  (shared + orchestrator's: FLAVOR, PROXY_AUTH, TASKQUEUE, SESSION_REGISTRY,
+  COST_LEDGER, ESCALATION, DUTIES, TICKS). Confirm ROLE_LOCK says
+  orchestrator — if it names another role or is unbound, STOP and ask the
+  principal.
+- PROTOCOL_VERSION check: skill v2.5 vs workspace stamp; mismatch → flag,
+  park protocol-sensitive actions.
+- Git-synced workspaces: fetch all bound repos first; diverged or
+  un-pushable state is the FIRST problem to solve — a wake that cannot push
+  cleanly must not claim progress.
+
+## 2. Verify integrity
+
+- Channel: run the core integrity check (`channel-core.md`) on YOUR outbound
+  files — tail entry number vs memory's counter; contiguity. Corruption →
+  recovery per core, before any new entry.
+- Auth-record: last line of `memory/orchestrator/auth-log.md` matches
+  memory's pointer. Apply proxy-auth-core's cold-successor rules: RELAY-SENT
+  without RECEIVED = in-flight — verify against the receiver's log, never
+  resend under a new relay id; CONSUMED relays are spent forever; expired/
+  revoked grants authorize nothing. If PROXY_AUTH is `off`, confirm no stray
+  relay machinery survived a revocation.
+- Cost ledger + TASKQUEUE parse cleanly; queue ids contiguous with memory.
+
+## 3. Read state
+
+`memory/orchestrator/MEMORY.md` carries a mandatory working-state (⚡) block —
+the cold-successor interface. Schema (every field present, "none"/0 allowed):
+
+```
+## ⚡ working state
+last tick: <ISO timestamp> (<idle|active-window>)
+next TASKQUEUE id: T<N>
+next channel entry: <N> · per-peer last-seen: <side>=<entry#>@<file> ...
+next auth grant id: orchestrator-<NNNN> · auth-log tail: <last event line #>
+dispatch log: memory/orchestrator/dispatch-log.md (append-only; one line per
+  dispatch: id, date, task ref, target role, model+rule, status, result ptr)
+in-flight dispatches: <ids + what resumption requires> | none
+briefings: last sent <when/which> · next due <when/which>
+decision menu: <count> items (list in body)
+active preset: <name> · ledger tail: <last row #>
+```
+
+- Read the block, then: all peers' channel tails past the last-seen markers;
+  review ledgers (read-only) for round movement.
+- SESSION_REGISTRY: mark yourself current; note peers past heartbeat + grace.
+
+## 4. Re-create standing machinery
+
+- Heartbeat/tick schedule per TICKS (idle vs active-window cadence) — verify
+  it exists, re-create if the platform lost it.
+- Standing queue items (briefings, rollups) present in TASKQUEUE; re-seed any
+  missing from the DUTIES binding.
+
+## 5. Resume
+
+- Fire anything overdue (missed briefing → send late, marked late).
+- Drain the queue per orchestration-protocol §2: preempts, then stalls/
+  bookkeeping anomalies (stale verdicts, missing crossing-acks, dead lanes),
+  then ordinary items, oldest first.
+- Post a short channel entry only if peers need to know you cycled (active
+  window: yes; idle: registry update suffices).
+- Checkpoint memory before the first long-running dispatch, and after every
+  drained item thereafter.
