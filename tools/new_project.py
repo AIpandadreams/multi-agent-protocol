@@ -422,8 +422,7 @@ def fill_wizard(bindings_text: str) -> str:
     out_lines = []
     filled = skipped = 0
     for i, line in enumerate(lines):
-        m = FILL_RE.search(line)
-        if not m:
+        if not FILL_RE.search(line):
             out_lines.append(line)
             continue
         slot = "slot"
@@ -432,22 +431,32 @@ def fill_wizard(bindings_text: str) -> str:
             cells = stripped.split("|")
             if len(cells) > 1 and cells[1].strip():
                 slot = cells[1].strip()
-        hint = m.group(1).strip()
-        try:
-            answer = input(f"  {slot}\n    [{hint}]\n  > ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\n(wizard stopped — remaining slots left as {{FILL}})\n")
-            # keep this line and everything after it verbatim, by position
-            out_lines.append(line)
-            out_lines.extend(lines[i + 1:])
-            return "".join(out_lines)
-        if answer:
-            # repl is a callable → its return is substituted literally, so
-            # backslashes in Windows paths pass through untouched.
-            line = FILL_RE.sub(lambda _m: answer, line, count=1)
-            filled += 1
-        else:
-            skipped += 1
+        # A line may carry more than one {{FILL}} placeholder; prompt for each
+        # in order. `pos` advances past a skipped placeholder so we never
+        # re-prompt it, and past inserted text so we never re-scan an answer.
+        pos = 0
+        while True:
+            m = FILL_RE.search(line, pos)
+            if not m:
+                break
+            hint = m.group(1).strip()
+            try:
+                answer = input(f"  {slot}\n    [{hint}]\n  > ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\n(wizard stopped — remaining slots left as {{FILL}})\n")
+                # keep this line (with any placeholders still in it) + the rest
+                out_lines.append(line)
+                out_lines.extend(lines[i + 1:])
+                return "".join(out_lines)
+            if answer:
+                # splice the answer in for exactly this occurrence — a plain
+                # slice assignment, so backslashes in Windows paths are literal
+                line = line[:m.start()] + answer + line[m.end():]
+                pos = m.start() + len(answer)
+                filled += 1
+            else:
+                pos = m.end()   # leave this placeholder, move past it
+                skipped += 1
         out_lines.append(line)
     print(f"\nwizard done: {filled} filled, {skipped} left as {{{{FILL}}}}.\n")
     return "".join(out_lines)
