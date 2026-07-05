@@ -97,8 +97,10 @@ for different projects.
 ## What stays constant in every configuration
 
 - The reviewer gates every round. It is the fourth party, not an option.
-- The principal's gates are first-hand-only for the irreversible classes
-  (outward-facing actions, money, destructive operations, protocol/gate
-  changes) in every configuration, PROXY_AUTH or not.
+- The principal's gates are first-hand-only for the irreversible/outward
+  super-classes (outward-facing/publish actions, email SEND,
+  new-money/new-recipient financial actions, destructive operations on another
+  party's artifacts, canonical-repo merges, and changes to PROXY_AUTH / gates /
+  embargoes / the protocol) in every configuration, PROXY_AUTH or not.
 - Workspace anatomy is identical — a 2-agent workspace is a 3-agent
   workspace with three binding rows and one memory directory fewer.

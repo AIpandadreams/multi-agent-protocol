@@ -22,10 +22,13 @@ Autonomy is only responsible if an unattended agent cannot (a) lose state or
   dies mid-unit loses at most that unit; the next wake resumes from the
   committed state. (Tested — see [DESIGN.md](DESIGN.md).)
 - **Authority can't be exceeded.** Authorization never rides the channel and
-  is never implied by a memory note or a peer's say-so. The irreversible
-  classes (outward actions, money, destructive ops, protocol changes) are
-  first-hand-only in every configuration. An unattended agent that reaches
-  one of those gates *stops and surfaces it* rather than proceeding.
+  is never implied by a memory note or a peer's say-so. The irreversible/outward
+  super-classes (outward-facing/publish actions, email SEND,
+  new-money/new-recipient financial actions, destructive operations on another
+  party's artifacts, canonical-repo merges, and changes to PROXY_AUTH / gates /
+  embargoes / the protocol) are first-hand-only in every configuration. An
+  unattended agent that reaches one of those gates *stops and surfaces it*
+  rather than proceeding.
 
 ### The mechanisms
 

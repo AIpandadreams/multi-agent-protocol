@@ -39,8 +39,11 @@ Never on its own authority — it carries bytes, not permission. With
 PROXY_AUTH off (the default) it brings decisions to you and you approve in
 whichever session acts. With PROXY_AUTH on, your *recorded verbatim words*
 travel to workers as validated log events for enumerated gate classes
-only — and the irreversible classes (outward actions, money, destructive
-ops, protocol changes) are first-hand-only in every configuration.
+only — and the irreversible/outward super-classes (outward-facing/publish
+actions, email SEND, new-money/new-recipient financial actions, destructive
+operations on another party's artifacts, canonical-repo merges, and changes to
+PROXY_AUTH / gates / embargoes / the protocol) are first-hand-only in every
+configuration.
 
 **Does this send my data anywhere?**
 No. No telemetry, no network calls beyond the git remotes you configure.

@@ -55,9 +55,18 @@ relay-id: <grant-id>/R<k> · auth-ref: <grant-id> · gate-class: <class>
 words: "<exact bytes of the grant's words>"
 source: <orchestrator auth-log commit sha> @ <grant heading line>
 
-CONSUMED <relay-id> by <action: sha/send/etc> — <ISO timestamp>
+CONSUMED <relay-id> by <action: commit sha / internal write / etc> — <ISO timestamp>
 ABORTED <relay-id> <why> — <ISO timestamp>
 ```
+
+A relay only ever authorizes a **reversible, internal** action, so the only
+things a CONSUMED can name are reversible internal effects (a commit sha, an
+internal write). The **non-relayable super-classes have no relay id to
+consume**: outward-facing / publish actions, email SENDING,
+new-money/new-recipient financial actions, destructive actions on another
+party's artifacts, canonical-repo merges, and changes to PROXY_AUTH / gates /
+embargoes / the protocol. Those are first-hand-only in every configuration —
+they never appear on the PROXY_AUTH list and never ride a relay.
 
 Direct authorization (the principal speaks into the acting session — the
 only form that exists when PROXY_AUTH is off) uses the SAME event model in
@@ -72,11 +81,12 @@ Rules:
   count; at zero, no further relay exists. A RETRY of a failed relay reuses
   the SAME relay id (idempotent); a new relay id is a new consumption of
   scope.
-- **Consume is a pushed reservation — the serialization point.** Before an
-  irreversible effect: fetch the orchestrator's auth-log at remote HEAD,
-  re-verify the relay (unconsumed, unrevoked, unexpired), append CONSUMED to
-  your own log, **push PLAIN — never pull/rebase between the append and the
-  push — and proceed only if the push lands**. A rejected push = you lost
+- **Consume is a pushed reservation — the serialization point.** Before the
+  relay-authorized (reversible, internal) action: fetch the orchestrator's
+  auth-log at remote HEAD, re-verify the relay (unconsumed, unrevoked,
+  unexpired), append CONSUMED to your own log, **push PLAIN — never
+  pull/rebase between the append and the push — and proceed only if the push
+  lands**. A rejected push = you lost
   the race — DROP the consume commit (reset it away), pull, re-verify from
   scratch; if another session's CONSUMED (or a REVOKED) is now visible, the
   relay is dead for you. Rebasing a rejected consume onto the moved remote

@@ -30,9 +30,12 @@ as a double-spend. The workspace CI runs it on every push.
 
 - ON only for an **enumerated list** of gate classes, named in
   BINDINGS.md. Wildcards are invalid by construction.
-- The irreversible classes are **never relayable**: outward-facing
-  actions, new-money/new-recipient, destructive operations, gate/protocol
-  changes. First-hand only, forever.
+- The irreversible/outward super-classes are **never listable and never
+  relayable**, in every configuration: outward-facing/publish actions,
+  email SEND, new-money/new-recipient financial actions, destructive
+  operations on another party's artifacts, canonical-repo merges, and
+  changes to PROXY_AUTH / gates / embargoes / the protocol. First-hand
+  only, forever.
 - Only the principal, speaking directly into the orchestrator session, can
   change PROXY_AUTH itself.
 - Auth-log appends ride commits confined to the role's own
