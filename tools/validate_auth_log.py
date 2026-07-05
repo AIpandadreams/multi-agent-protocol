@@ -96,7 +96,7 @@ def check(parsed: list, bad: list) -> None:
             global_consumed.setdefault(cid, []).append(d["log"])
     for cid, where in sorted(global_consumed.items()):
         if len(where) > 1:
-            locs = ", ".join(str(w) for w in where)
+            locs = ", ".join(sorted({str(w) for w in where}))
             bad.append(f"duplicate CONSUMED {cid} - {len(where)} events "
                        f"across: {locs} (exactly-one landed CONSUMED per "
                        "action, global)")

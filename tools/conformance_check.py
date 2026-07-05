@@ -80,11 +80,9 @@ def parse_bindings(ws: Path):
     for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
         m = SLOT_RE.match(line)
         if not m:
-            continue
-        key, val = m.group(1).strip(), m.group(2).strip()
-        if key in ("slot", "---"):  # header / divider rows
-            continue
-        slots[key] = val
+            continue  # header ("| slot |") + divider ("|---|") rows can't
+                      # match SLOT_RE's uppercase key class, so they're skipped
+        slots[m.group(1).strip()] = m.group(2).strip()
     return slots
 
 
