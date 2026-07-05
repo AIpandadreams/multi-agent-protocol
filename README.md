@@ -130,6 +130,7 @@ examples/                   a worked end-to-end cycle you can read like a story
 - [PROTOCOL](docs/PROTOCOL.md) — channel rules, review rounds, verdicts, memory discipline
 - [ADVANCED](docs/ADVANCED.md) — proxy authorization, integrity CI, reviewer bridge, model presets
 - [DESIGN](docs/DESIGN.md) — what's proven, what's deliberately simplified, what's roadmap
+- [REVIEW_CONVERGENCE](docs/REVIEW_CONVERGENCE.md) — the independent-review evidence trail behind this release
 - [FAQ](docs/FAQ.md)
 
 ## Trust properties
