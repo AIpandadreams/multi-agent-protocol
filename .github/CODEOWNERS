@@ -1,0 +1,24 @@
+# CODEOWNERS — principal-locked path enforcement
+#
+# The self-improvement protocol's hard rails (agent-core/references/
+# self-improvement-protocol.md) require that no agent-authored change may touch
+# the authorization/gate rules, the auth-record mechanism, the data-hygiene /
+# embargo rules, or the rails themselves. This file is the mechanical backstop:
+# GitHub requires the listed owner's review before any PR touching these paths
+# can merge, so an agent PR against a locked path cannot self-merge.
+#
+# DEPLOYERS: replace @AIpandadreams with YOUR GitHub handle or team. The owner
+# here should be the human principal (or a human-only team) — never an
+# automation account, or the lock is hollow.
+
+# Default: the principal reviews everything by default.
+*                                                                   @AIpandadreams
+
+# Principal-locked normative cores — authorization + self-improvement rails.
+/plugins/agent-protocol/skills/agent-core/references/proxy-auth-core.md          @AIpandadreams
+/plugins/agent-protocol/skills/agent-core/references/self-improvement-protocol.md @AIpandadreams
+/plugins/agent-protocol/skills/agent-core/references/channel-core.md             @AIpandadreams
+/plugins/agent-protocol/skills/orchestrator-agent/references/authorization-relay.md @AIpandadreams
+
+# The lock itself.
+/.github/CODEOWNERS                                                 @AIpandadreams

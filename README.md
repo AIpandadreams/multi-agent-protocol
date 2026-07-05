@@ -41,7 +41,7 @@ carries your approvals as auditable log events (never as its own authority).
   and no agent can quietly rewrite its own gates. The repo eats its own
   dogfood ([self-improvement protocol](plugins/agent-protocol/skills/agent-core/references/self-improvement-protocol.md)).
 
-## Five load-bearing principles
+## Seven load-bearing principles
 
 Everything else in the protocol derives from these:
 

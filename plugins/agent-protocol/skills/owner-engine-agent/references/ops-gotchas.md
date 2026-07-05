@@ -25,8 +25,8 @@ principal must warm it, they run the command themselves in their own prompt (in 
 Code, a `!`-prefixed command; a command pasted as a chat message did NOT run).
 
 **Path dialect mismatches.** Tools disagree about path syntax on the same machine
-(e.g. Windows Python rejects Git-Bash `/x/...` drive paths → use the native `X:/...`
-form). Misdiagnosis risk: the error looks like a missing/unsynced file.
+(e.g. Windows Python rejects Git-Bash `/x/...` drive paths → use the native
+`<drive>:/...` form). Misdiagnosis risk: the error looks like a missing/unsynced file.
 
 **Encoding defaults.** Console codepages break on non-ASCII output (set
 `PYTHONIOENCODING=utf-8` or equivalent before scripts that print arbitrary text).

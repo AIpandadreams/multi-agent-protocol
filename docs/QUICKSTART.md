@@ -106,7 +106,8 @@ myproject-ws/
   BINDINGS.md          the deployment contract (you own this file)
   TASKQUEUE.md         orchestrator's queue (3-agent)
   MODELS.md            model matrix — switch presets by telling the orchestrator
-  channel/             append-only inter-agent messages + review rounds
+  channel/             append-only inter-agent messages + review rounds;
+                       INDEX.md is the shared review-round ledger
   memory/<role>/       each role's persistent memory + auth-log
   start/               per-role START_SESSION contracts (what /wake runs)
   tools/validate_auth_log.py   auth-chain validator (CI + local)

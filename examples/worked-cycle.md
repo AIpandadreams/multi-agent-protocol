@@ -52,7 +52,7 @@ Post review_request_builder_r03 for t7-dep-report; fingerprint first.
 ```
 # review request — builder r03 [PROTOCOL v2.5]
 scope: branch t7-dep-report vs main — deliverable docs/dep-risk-api.md
-fingerprint (git diff main...t7-dep-report | sha256sum):
+fingerprint (git diff main..t7-dep-report | sha256sum):
   9c1e6d2a…{64 hex}…f4
 asks: verify every claimed unmaintained dep against its actual repo
 activity; flag any risk claim without a cited source.

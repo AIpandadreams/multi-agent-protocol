@@ -422,7 +422,16 @@ def main() -> int:
 
     today = dt.date.today().isoformat()
     (dest / "channel").mkdir(parents=True)
-    (dest / "channel" / ".gitkeep").write_text("", encoding="utf-8")
+    # The shared review-round ledger (review-core.md): one row per round, each
+    # side appends only its own rows. Stamped on init so the channel dir is
+    # tracked and START_SESSION's "read INDEX.md" step finds a well-formed file.
+    (dest / "channel" / "INDEX.md").write_text(
+        f"# REVIEW-ROUND LEDGER — {args.name} [PROTOCOL v2.5]\n\n"
+        "Append-only. Each side appends ONLY its own rows.\n\n"
+        "| round | side | request file | verdict file (how written) | "
+        "verdict summary | actions taken | next round |\n"
+        "|---|---|---|---|---|---|---|\n",
+        encoding="utf-8")
     (dest / "start").mkdir()
     for role in roles:
         (dest / "memory" / role).mkdir(parents=True)

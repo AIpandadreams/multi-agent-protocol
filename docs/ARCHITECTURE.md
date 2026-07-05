@@ -61,8 +61,12 @@ BINDINGS.md              the deployment contract — every slot the skills
                          slot = the session stops and asks you ONCE.
 channel/                 append-only message files, one per direction per
                          day (e.g. orch_to_builder_2026-07-05.md), plus
-                         review_request_*/verdict_* round files
-CHANNEL_STATE.json       per-side counters; CI enforces monotonicity
+                         review_request_*/verdict_* round files and INDEX.md
+                         (the shared review-round ledger, stamped on init)
+CHANNEL_STATE.json       OPTIONAL per-side counter file; if a deployment adds
+                         one, the integrity CI enforces its monotonicity (the
+                         stamper does not create it — the append-only channel
+                         and per-peer last-seen in memory are the baseline)
 memory/<role>/MEMORY.md  the role's persistent memory index, headed by the
                          ⚡ working-state block (the cold-successor interface)
 memory/<role>/auth-log.md  append-only authorization event log (see PROTOCOL)
