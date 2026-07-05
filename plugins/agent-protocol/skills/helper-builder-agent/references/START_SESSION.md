@@ -1,6 +1,6 @@
 # BUILDER AGENT — session start / handover contract [PROTOCOL v2.5]
 
-`new_project.py` stamps this into each workspace as
+`tools/new_project.py` stamps this into each workspace as
 `start/START_SESSION.builder.md`. It carries no per-project values inline —
 §0 resolves every slot from the workspace's `BINDINGS.md`, so there is
 nothing to hand-fill here. Follow it top to bottom at the start of every
