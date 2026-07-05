@@ -166,19 +166,19 @@ def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
     most one watch_interval of latency. (For a hard guarantee regardless of
     watch_interval, have the producer publish atomically: write a temp file
     and rename it into place.)"""
-    chans = [Path(w) / "channel" for w in workspaces]
+    pairs = [(w, Path(w) / "channel") for w in workspaces]
     print(f"[poller] watch mode: local changes trigger within ~{watch_interval*2:.0f}s "
           f"(one settle tick); fallback full sweep every {fallback_interval}s. "
           "Ctrl-C to stop.")
     # Initial sweep clears anything already pending.
     cycle(workspaces, codex_cmd, dry)
-    sigs = {str(c): dir_signature(c) for c in chans}
+    sigs = {str(c): dir_signature(c) for _, c in pairs}
     dirty = set()  # channels seen changing, awaiting a stable tick
     last_cycle = time.monotonic()
     while True:
         time.sleep(watch_interval)
-        settled = False
-        for c in chans:
+        settled_ws = []  # workspaces whose channel settled THIS tick
+        for w, c in pairs:
             key = str(c)
             s = dir_signature(c)
             if s != sigs[key]:
@@ -186,14 +186,27 @@ def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
                 dirty.add(key)
             elif key in dirty:
                 dirty.discard(key)     # stable for a full tick — settled
-                settled = True
+                settled_ws.append(w)
         now = time.monotonic()
-        if settled or (now - last_cycle) >= fallback_interval:
+        if (now - last_cycle) >= fallback_interval:
+            # Fallback: an unconditional sweep of ALL workspaces so a request
+            # arriving via remote push (never dirty locally) is still caught.
             cycle(workspaces, codex_cmd, dry)
             last_cycle = time.monotonic()
-            # Re-snapshot: the sweep's own verdict writes (and any pulled
-            # files) must not re-trigger on the next tick.
-            for c in chans:
+            swept = set(workspaces)
+        elif settled_ws:
+            # Event-driven: sweep ONLY the workspaces that settled, never one
+            # still mid-write — otherwise a settle in ws1 would drag a
+            # half-written request in ws2 into review.
+            cycle(settled_ws, codex_cmd, dry)
+            swept = set(settled_ws)
+        else:
+            continue
+        # Re-snapshot only the swept channels: their own verdict writes (and
+        # any pulled files) must not re-trigger on the next tick. Channels
+        # left unswept keep their in-flight sig/dirty state intact.
+        for w, c in pairs:
+            if w in swept:
                 sigs[str(c)] = dir_signature(c)
                 dirty.discard(str(c))
 
@@ -203,11 +216,12 @@ def main() -> int:
     ap.add_argument("--workspace", action="append", default=[])
     ap.add_argument("--config")
     ap.add_argument("--codex-cmd", default=DEFAULT_CODEX_CMD)
-    ap.add_argument("--once", action="store_true")
-    ap.add_argument("--loop", action="store_true")
-    ap.add_argument("--watch", action="store_true",
-                    help="event-driven: sweep on local channel change plus a "
-                         "fallback sweep every --interval seconds")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--once", action="store_true")
+    mode.add_argument("--loop", action="store_true")
+    mode.add_argument("--watch", action="store_true",
+                      help="event-driven: sweep on local channel change plus a "
+                           "fallback sweep every --interval seconds")
     ap.add_argument("--interval", type=int, default=300,
                     help="--loop cadence, and --watch fallback-sweep bound")
     ap.add_argument("--watch-interval", type=float, default=2.0,
@@ -223,9 +237,9 @@ def main() -> int:
     if not workspaces:
         print("no workspaces given (--workspace / --config)", file=sys.stderr)
         return 2
-    if args.interval <= 0:
+    if (args.loop or args.watch) and args.interval <= 0:
         ap.error("--interval must be > 0")
-    if args.watch_interval <= 0:
+    if args.watch and args.watch_interval <= 0:
         ap.error("--watch-interval must be > 0")
 
     if args.watch:
