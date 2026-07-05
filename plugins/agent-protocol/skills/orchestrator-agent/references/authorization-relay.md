@@ -46,10 +46,13 @@ Authorization NEVER rides the channel — the carrier is the auth-log lane
    garbled, or gate-unnamed words go back to the principal — you never repair
    them. Your interpretation may accompany the grant, clearly separated and
    marked non-authoritative.
-2. **Echo-confirm when the gate class is irreversible or outward-facing:**
-   repeat the exact authorization back and get an affirmative confirmation
-   before relaying. (The principal may veto this guardrail per class in the
-   binding; default on.)
+2. **Echo-confirm the highest-stakes RELAYABLE grants:** for the most
+   consequential classes that are on the list, repeat the exact
+   authorization back and get an affirmative confirmation before relaying.
+   (The principal may veto this guardrail per class in the binding; default
+   on.) The irreversible / outward super-classes never reach this step —
+   they are refused for PROXY_AUTH entirely and handled first-hand in the
+   acting session, not relayed.
 3. **Log the GRANT first** in `memory/orchestrator/auth-log.md` per the core
    schema (grant id, gate-class from the list, verbatim words, session,
    scope). No grant record, no relay.

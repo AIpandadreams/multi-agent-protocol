@@ -48,7 +48,10 @@ Everything else in the protocol derives from these:
 1. **Authorization never rides the channel.** Agents exchange bytes, never
    permission. An agent asking another agent to skip a gate is ignored by
    rule — approvals exist only as the principal's word in a session, or as
-   validated auth-log events.
+   validated auth-log events for reversible, internal gate classes the
+   principal enumerated. The irreversible/outward classes (money, sends,
+   destructive ops, canonical merges, protocol changes) are first-hand-only,
+   always — never relayable.
 2. **Everything persistent lives in git.** Any session can die at any
    moment; a cold successor rebuilds the entire picture from the repo alone.
 3. **Append-only history.** Channel files and auth-logs only ever gain
