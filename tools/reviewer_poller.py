@@ -12,8 +12,22 @@ review-core's dead-lane escalation.
 Usage:
   python tools/reviewer_poller.py --workspace path/to/workspace [...] --once
   python tools/reviewer_poller.py --config poller.json --loop --interval 300
+  python tools/reviewer_poller.py --config poller.json --watch
   # poller.json: {"workspaces": ["path/to/ws1", "path/to/ws2"],
   #               "codex_cmd": "codex exec --sandbox read-only -C {workspace}"}
+
+Three run modes:
+  --once   one sweep, then exit (scheduled-task friendly).
+  --loop   a full sweep every --interval seconds (fixed cadence).
+  --watch  event-driven: a cheap directory-signature check (--watch-interval,
+           default 2s) fires a sweep once a channel/ change has settled (a
+           stable signature for one tick — so a half-written request is never
+           read), picking a request up in a couple of ticks instead of up to
+           one poll interval. A fallback sweep still runs at least every
+           --interval seconds so requests arriving via a remote push (which
+           don't touch the local dir until a fetch) are not missed; it skips
+           any channel that is mid-write, so the half-written guarantee holds on
+           the timer path too. Stdlib only — no watchdog/inotify dependency.
 
 The poller is transport machinery, not a party: it never edits requests,
 never writes channel entries, and produces ONLY verdict files authored by
@@ -22,6 +36,7 @@ invoking Codex or pushing.
 """
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -124,14 +139,117 @@ def cycle(workspaces, codex_cmd, dry):
     return total
 
 
+def dir_signature(channel: Path) -> frozenset:
+    """A cheap fingerprint of a channel dir: (name, mtime_ns, size) per file.
+
+    Changes when a request/verdict is added or rewritten — the trigger for an
+    event-driven sweep. No file contents are read.
+    """
+    sig = []
+    try:
+        for e in os.scandir(channel):
+            if e.is_file():
+                st = e.stat()
+                sig.append((e.name, st.st_mtime_ns, st.st_size))
+    except FileNotFoundError:
+        pass
+    return frozenset(sig)
+
+
+def detect_settled(pairs, sigs, dirty):
+    """Advance the change-tracking state one tick. Mutates `sigs`/`dirty` in
+    place and returns the workspaces whose channel *settled* this tick — was
+    dirty last tick, signature stable now. A channel whose signature changed is
+    (re)marked dirty; a dirty channel that held still is cleared and reported
+    settled. Pure w.r.t. everything except the two passed-in containers, so a
+    fake-signature test can drive it deterministically."""
+    settled_ws = []
+    for w, c in pairs:
+        key = str(c)
+        s = dir_signature(c)
+        if s != sigs[key]:
+            sigs[key] = s          # still moving — record and wait
+            dirty.add(key)
+        elif key in dirty:
+            dirty.discard(key)     # stable for a full tick — settled
+            settled_ws.append(w)
+    return settled_ws
+
+
+def plan_sweep(pairs, settled_ws, dirty, fallback_due):
+    """Decide which workspaces to sweep this tick. On a fallback (timer) tick,
+    sweep every channel that is NOT mid-write (`dirty`); otherwise sweep only
+    the channels that settled this tick. Either way a mid-write channel is never
+    swept — that is the never-read-half-formed guarantee, and it must hold on
+    the fallback path as well as the settle path. Returns [] for a no-op tick."""
+    if fallback_due:
+        return [w for w, c in pairs if str(c) not in dirty]
+    return list(settled_ws)
+
+
+def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
+    """Event-driven loop: sweep on local channel change, plus a periodic
+    fallback sweep so remote-pushed requests are still caught.
+
+    A change is acted on only once its directory signature has *settled* —
+    stayed identical for one full watch tick after first changing. A request
+    file still being written has a moving (mtime_ns, size) across ticks, so it
+    stays marked dirty and is excluded from BOTH the settle sweep and the
+    periodic fallback sweep — the poller never reads it half-written; it adds
+    at most one watch_interval of latency. (For a hard guarantee regardless of
+    watch_interval, have the producer publish atomically: write a temp file
+    and rename it into place.)
+
+    Corollary: a channel is rescued from the dirty set only by *settling*, not
+    by the fallback timer — a pathological producer that rewrites the channel
+    on every single tick would be excluded from every sweep and never reviewed.
+    That is by design (better late than a half-read verdict) and harmless for
+    real producers, which stop writing once a request is complete."""
+    pairs = [(w, Path(w) / "channel") for w in workspaces]
+    print(f"[poller] watch mode: local changes trigger within ~{watch_interval*2:.0f}s "
+          f"(one settle tick); fallback sweep every {fallback_interval}s. "
+          "Ctrl-C to stop.")
+    # Initial sweep clears anything already pending.
+    cycle(workspaces, codex_cmd, dry)
+    sigs = {str(c): dir_signature(c) for _, c in pairs}
+    dirty = set()  # channels seen changing, awaiting a stable tick
+    last_cycle = time.monotonic()
+    while True:
+        time.sleep(watch_interval)
+        settled_ws = detect_settled(pairs, sigs, dirty)
+        now = time.monotonic()
+        fallback_due = (now - last_cycle) >= fallback_interval
+        to_sweep = plan_sweep(pairs, settled_ws, dirty, fallback_due)
+        if fallback_due:
+            last_cycle = now
+        if not to_sweep:
+            continue
+        cycle(to_sweep, codex_cmd, dry)
+        # Re-snapshot only the swept channels: their own verdict writes (and
+        # any pulled files) must not re-trigger on the next tick. Channels
+        # left unswept keep their in-flight sig/dirty state intact.
+        swept = set(to_sweep)
+        for w, c in pairs:
+            if w in swept:
+                sigs[str(c)] = dir_signature(c)
+                dirty.discard(str(c))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--workspace", action="append", default=[])
     ap.add_argument("--config")
     ap.add_argument("--codex-cmd", default=DEFAULT_CODEX_CMD)
-    ap.add_argument("--once", action="store_true")
-    ap.add_argument("--loop", action="store_true")
-    ap.add_argument("--interval", type=int, default=300)
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--once", action="store_true")
+    mode.add_argument("--loop", action="store_true")
+    mode.add_argument("--watch", action="store_true",
+                      help="event-driven: sweep on local channel change plus a "
+                           "fallback sweep every --interval seconds")
+    ap.add_argument("--interval", type=int, default=300,
+                    help="--loop cadence, and --watch fallback-sweep bound")
+    ap.add_argument("--watch-interval", type=float, default=2.0,
+                    help="--watch directory-check cadence (seconds)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -143,8 +261,18 @@ def main() -> int:
     if not workspaces:
         print("no workspaces given (--workspace / --config)", file=sys.stderr)
         return 2
+    if (args.loop or args.watch) and args.interval <= 0:
+        ap.error("--interval must be > 0")
+    if args.watch and args.watch_interval <= 0:
+        ap.error("--watch-interval must be > 0")
 
-    if args.loop:
+    if args.watch:
+        try:
+            watch(workspaces, codex_cmd, args.dry_run,
+                  args.watch_interval, args.interval)
+        except KeyboardInterrupt:
+            print("\n[poller] watch stopped")
+    elif args.loop:
         while True:
             cycle(workspaces, codex_cmd, args.dry_run)
             time.sleep(args.interval)

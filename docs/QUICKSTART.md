@@ -44,11 +44,21 @@ Profiles: `3agent.local` (orchestrator + owner + builder — you talk only to
 the orchestrator) or `2agent.local` (owner + builder — you talk to the owner
 directly). Choosing: [CONFIGURATIONS.md](CONFIGURATIONS.md).
 
+Prefer to be walked through the slots instead of hand-editing? Add `--wizard`
+and the stamper prompts you for each `{{FILL}}` slot as it creates the
+workspace (press Enter to leave any slot for later):
+
+```bash
+python tools/new_project.py --name myproject --dest path/to/myproject-ws \
+    --profile 3agent.local --wizard
+```
+
 ## 3. Fill BINDINGS.md
 
-Open `BINDINGS.md` in the stamped workspace. Every `{{FILL}}` slot is a
-deployment decision; the glossary lives at
-`plugins/agent-protocol/skills/agent-core/references/binding-slots.md`.
+Open `BINDINGS.md` in the stamped workspace (with any `--wizard` answers
+already applied — Enter-skipped slots still show `{{FILL}}`). Every `{{FILL}}`
+slot is a deployment decision; the glossary lives
+at `plugins/agent-protocol/skills/agent-core/references/binding-slots.md`.
 The three that matter most on day one:
 
 | slot | what to put |

@@ -10,11 +10,16 @@ marketplace).
 Usage:
   python tools/new_project.py --name myproject --dest path/to/myproject-ws \
       --profile 3agent.local --owner-side engine --builder-side builder \
-      [--principal "Your Name"] [--no-orchestrator]
+      [--principal "Your Name"] [--no-orchestrator] [--wizard]
+
+Add --wizard to be prompted through the BINDINGS {{FILL}} slots interactively
+instead of hand-editing them afterwards (skipped automatically when stdin is
+not an interactive terminal, so unattended stamps never hang).
 """
 import argparse
 import datetime as dt
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -412,6 +417,66 @@ SETTINGS_TEMPLATE = {
 }
 
 
+FILL_RE = re.compile(r"\{\{FILL:([^}]*)\}\}")
+
+
+def fill_wizard(bindings_text: str) -> str:
+    """Walk the operator through each {{FILL}} slot in the rendered BINDINGS.
+
+    One prompt per placeholder, labelled with its slot name and the slot's
+    own hint. An empty answer leaves the {{FILL}} placeholder in place so it
+    can still be filled by hand later. Ctrl-C / EOF aborts the wizard cleanly
+    and keeps whatever was answered so far.
+    """
+    print("\n— BINDINGS wizard —")
+    print("Answer each slot, or press Enter to leave its {{FILL}} placeholder")
+    print("for later. Ctrl-C stops and keeps what you've entered.\n")
+    # Split once and index by position: two slots can share identical
+    # placeholder text, so we must never look a line up by value.
+    lines = bindings_text.splitlines(keepends=True)
+    out_lines = []
+    filled = skipped = 0
+    for i, line in enumerate(lines):
+        if not FILL_RE.search(line):
+            out_lines.append(line)
+            continue
+        slot = "slot"
+        stripped = line.lstrip()
+        if stripped.startswith("|"):
+            cells = stripped.split("|")
+            if len(cells) > 1 and cells[1].strip():
+                slot = cells[1].strip()
+        # A line may carry more than one {{FILL}} placeholder; prompt for each
+        # in order. `pos` advances past a skipped placeholder so we never
+        # re-prompt it, and past inserted text so we never re-scan an answer.
+        pos = 0
+        while True:
+            m = FILL_RE.search(line, pos)
+            if not m:
+                break
+            hint = m.group(1).strip()
+            try:
+                answer = input(f"  {slot}\n    [{hint}]\n  > ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\n(wizard stopped — remaining slots left as {{FILL}})\n")
+                # keep this line (with any placeholders still in it) + the rest
+                out_lines.append(line)
+                out_lines.extend(lines[i + 1:])
+                return "".join(out_lines)
+            if answer:
+                # splice the answer in for exactly this occurrence — a plain
+                # slice assignment, so backslashes in Windows paths are literal
+                line = line[:m.start()] + answer + line[m.end():]
+                pos = m.start() + len(answer)
+                filled += 1
+            else:
+                pos = m.end()   # leave this placeholder, move past it
+                skipped += 1
+        out_lines.append(line)
+    print(f"\nwizard done: {filled} filled, {skipped} left as {{{{FILL}}}}.\n")
+    return "".join(out_lines)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--name", required=True)
@@ -423,6 +488,9 @@ def main() -> int:
     ap.add_argument("--orch-side", default="orch")
     ap.add_argument("--principal", default="{{FILL: principal's name}}")
     ap.add_argument("--no-orchestrator", action="store_true")
+    ap.add_argument("--wizard", action="store_true",
+                    help="prompt through the BINDINGS {{FILL}} slots "
+                         "interactively (skipped if stdin is not a TTY)")
     args = ap.parse_args()
 
     dest = Path(args.dest)
@@ -536,13 +604,17 @@ def main() -> int:
         side_parts.append(args.builder_side)
     if orch:
         side_parts.append(args.orch_side)
-    (dest / "BINDINGS.md").write_text(
-        BINDINGS_TEMPLATE.format(name=args.name, date=today,
-                                 profile=args.profile, dest=dest.as_posix(),
-                                 side_names=" / ".join(side_parts),
-                                 orch_slots=ORCH_SLOTS if orch else "",
-                                 principal=args.principal),
-        encoding="utf-8")
+    bindings_text = BINDINGS_TEMPLATE.format(
+        name=args.name, date=today, profile=args.profile,
+        dest=dest.as_posix(), side_names=" / ".join(side_parts),
+        orch_slots=ORCH_SLOTS if orch else "", principal=args.principal)
+    if args.wizard:
+        if sys.stdin.isatty():
+            bindings_text = fill_wizard(bindings_text)
+        else:
+            print("(--wizard ignored: stdin is not an interactive terminal)",
+                  file=sys.stderr)
+    (dest / "BINDINGS.md").write_text(bindings_text, encoding="utf-8")
     (dest / "README.md").write_text(
         README_TEMPLATE.format(name=args.name, date=today,
                                roles=", ".join(roles), profile=args.profile),
