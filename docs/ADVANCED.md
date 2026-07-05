@@ -71,9 +71,11 @@ cycle. It acts on a change only once the channel signature has *settled*
 (stable for one tick), so a request that is still being written is never read
 half-formed; for a hard guarantee independent of the interval, have the
 producer publish atomically (write a temp file, then rename it into place). A
-fallback full sweep still runs every `--interval` seconds so requests arriving
-via a remote push are never missed. `--watch` is stdlib-only (a cheap
-directory-signature check — no `watchdog`/inotify dependency).
+fallback sweep still runs every `--interval` seconds so requests arriving via a
+remote push are never missed — it, too, skips any channel that is mid-write, so
+the never-read-half-formed guarantee holds on the timer path as well. `--watch`
+is stdlib-only (a cheap directory-signature check — no `watchdog`/inotify
+dependency).
 
 Alternatives, in preference order:
 

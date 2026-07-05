@@ -23,10 +23,11 @@ Three run modes:
            default 2s) fires a sweep once a channel/ change has settled (a
            stable signature for one tick — so a half-written request is never
            read), picking a request up in a couple of ticks instead of up to
-           one poll interval. A fallback full sweep still runs at least every
+           one poll interval. A fallback sweep still runs at least every
            --interval seconds so requests arriving via a remote push (which
-           don't touch the local dir until a fetch) are not missed. Stdlib
-           only — no watchdog/inotify dependency.
+           don't touch the local dir until a fetch) are not missed; it skips
+           any channel that is mid-write, so the half-written guarantee holds on
+           the timer path too. Stdlib only — no watchdog/inotify dependency.
 
 The poller is transport machinery, not a party: it never edits requests,
 never writes channel entries, and produces ONLY verdict files authored by
@@ -155,20 +156,52 @@ def dir_signature(channel: Path) -> frozenset:
     return frozenset(sig)
 
 
+def detect_settled(pairs, sigs, dirty):
+    """Advance the change-tracking state one tick. Mutates `sigs`/`dirty` in
+    place and returns the workspaces whose channel *settled* this tick — was
+    dirty last tick, signature stable now. A channel whose signature changed is
+    (re)marked dirty; a dirty channel that held still is cleared and reported
+    settled. Pure w.r.t. everything except the two passed-in containers, so a
+    fake-signature test can drive it deterministically."""
+    settled_ws = []
+    for w, c in pairs:
+        key = str(c)
+        s = dir_signature(c)
+        if s != sigs[key]:
+            sigs[key] = s          # still moving — record and wait
+            dirty.add(key)
+        elif key in dirty:
+            dirty.discard(key)     # stable for a full tick — settled
+            settled_ws.append(w)
+    return settled_ws
+
+
+def plan_sweep(pairs, settled_ws, dirty, fallback_due):
+    """Decide which workspaces to sweep this tick. On a fallback (timer) tick,
+    sweep every channel that is NOT mid-write (`dirty`); otherwise sweep only
+    the channels that settled this tick. Either way a mid-write channel is never
+    swept — that is the never-read-half-formed guarantee, and it must hold on
+    the fallback path as well as the settle path. Returns [] for a no-op tick."""
+    if fallback_due:
+        return [w for w, c in pairs if str(c) not in dirty]
+    return list(settled_ws)
+
+
 def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
     """Event-driven loop: sweep on local channel change, plus a periodic
     fallback sweep so remote-pushed requests are still caught.
 
     A change is acted on only once its directory signature has *settled* —
     stayed identical for one full watch tick after first changing. A request
-    file still being written has a moving (mtime_ns, size) across ticks, so
-    the settle wait keeps the poller from reading it half-written; it adds at
-    most one watch_interval of latency. (For a hard guarantee regardless of
+    file still being written has a moving (mtime_ns, size) across ticks, so it
+    stays marked dirty and is excluded from BOTH the settle sweep and the
+    periodic fallback sweep — the poller never reads it half-written; it adds
+    at most one watch_interval of latency. (For a hard guarantee regardless of
     watch_interval, have the producer publish atomically: write a temp file
     and rename it into place.)"""
     pairs = [(w, Path(w) / "channel") for w in workspaces]
     print(f"[poller] watch mode: local changes trigger within ~{watch_interval*2:.0f}s "
-          f"(one settle tick); fallback full sweep every {fallback_interval}s. "
+          f"(one settle tick); fallback sweep every {fallback_interval}s. "
           "Ctrl-C to stop.")
     # Initial sweep clears anything already pending.
     cycle(workspaces, codex_cmd, dry)
@@ -177,34 +210,19 @@ def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
     last_cycle = time.monotonic()
     while True:
         time.sleep(watch_interval)
-        settled_ws = []  # workspaces whose channel settled THIS tick
-        for w, c in pairs:
-            key = str(c)
-            s = dir_signature(c)
-            if s != sigs[key]:
-                sigs[key] = s          # still moving — record and wait
-                dirty.add(key)
-            elif key in dirty:
-                dirty.discard(key)     # stable for a full tick — settled
-                settled_ws.append(w)
+        settled_ws = detect_settled(pairs, sigs, dirty)
         now = time.monotonic()
-        if (now - last_cycle) >= fallback_interval:
-            # Fallback: an unconditional sweep of ALL workspaces so a request
-            # arriving via remote push (never dirty locally) is still caught.
-            cycle(workspaces, codex_cmd, dry)
-            last_cycle = time.monotonic()
-            swept = set(workspaces)
-        elif settled_ws:
-            # Event-driven: sweep ONLY the workspaces that settled, never one
-            # still mid-write — otherwise a settle in ws1 would drag a
-            # half-written request in ws2 into review.
-            cycle(settled_ws, codex_cmd, dry)
-            swept = set(settled_ws)
-        else:
+        fallback_due = (now - last_cycle) >= fallback_interval
+        to_sweep = plan_sweep(pairs, settled_ws, dirty, fallback_due)
+        if fallback_due:
+            last_cycle = now
+        if not to_sweep:
             continue
+        cycle(to_sweep, codex_cmd, dry)
         # Re-snapshot only the swept channels: their own verdict writes (and
         # any pulled files) must not re-trigger on the next tick. Channels
         # left unswept keep their in-flight sig/dirty state intact.
+        swept = set(to_sweep)
         for w, c in pairs:
             if w in swept:
                 sigs[str(c)] = dir_signature(c)
