@@ -65,8 +65,12 @@ writes channel entries. Schedule it (Task Scheduler / cron) and forget it.
 
 Three run modes: `--once` (one sweep, ideal for a scheduled task), `--loop`
 (a full sweep every `--interval` seconds), and `--watch` — event-driven, so a
-review request written to a shared-filesystem channel is picked up within
-`--watch-interval` seconds (default 2) instead of waiting out a poll cycle. A
+review request written to a shared-filesystem channel is picked up within a
+couple of `--watch-interval` ticks (default 2s) instead of waiting out a poll
+cycle. It acts on a change only once the channel signature has *settled*
+(stable for one tick), so a request that is still being written is never read
+half-formed; for a hard guarantee independent of the interval, have the
+producer publish atomically (write a temp file, then rename it into place). A
 fallback full sweep still runs every `--interval` seconds so requests arriving
 via a remote push are never missed. `--watch` is stdlib-only (a cheap
 directory-signature check — no `watchdog`/inotify dependency).

@@ -150,7 +150,6 @@ examples/                   a worked end-to-end cycle you can read like a story
   automerge of state PRs) — running upstream, will be released once the
   platform surface it depends on stabilizes.
 - Interactive `new_project.py --wizard` for BINDINGS fill-in.
-- Event-driven reviewer bridge (filesystem watcher replacing the poll loop).
 - A protocol conformance suite deployments can self-run.
 
 ## License

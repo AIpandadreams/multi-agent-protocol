@@ -20,12 +20,13 @@ Three run modes:
   --once   one sweep, then exit (scheduled-task friendly).
   --loop   a full sweep every --interval seconds (fixed cadence).
   --watch  event-driven: a cheap directory-signature check (--watch-interval,
-           default 2s) fires a sweep the instant a channel/ changes locally,
-           so a review request on the shared filesystem is picked up in
-           seconds instead of up to one poll interval. A fallback full sweep
-           still runs at least every --interval seconds so requests arriving
-           via a remote push (which don't touch the local dir until a fetch)
-           are not missed. Stdlib only — no watchdog/inotify dependency.
+           default 2s) fires a sweep once a channel/ change has settled (a
+           stable signature for one tick — so a half-written request is never
+           read), picking a request up in a couple of ticks instead of up to
+           one poll interval. A fallback full sweep still runs at least every
+           --interval seconds so requests arriving via a remote push (which
+           don't touch the local dir until a fetch) are not missed. Stdlib
+           only — no watchdog/inotify dependency.
 
 The poller is transport machinery, not a party: it never edits requests,
 never writes channel entries, and produces ONLY verdict files authored by
@@ -156,30 +157,45 @@ def dir_signature(channel: Path) -> frozenset:
 
 def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
     """Event-driven loop: sweep on local channel change, plus a periodic
-    fallback sweep so remote-pushed requests are still caught."""
+    fallback sweep so remote-pushed requests are still caught.
+
+    A change is acted on only once its directory signature has *settled* —
+    stayed identical for one full watch tick after first changing. A request
+    file still being written has a moving (mtime_ns, size) across ticks, so
+    the settle wait keeps the poller from reading it half-written; it adds at
+    most one watch_interval of latency. (For a hard guarantee regardless of
+    watch_interval, have the producer publish atomically: write a temp file
+    and rename it into place.)"""
     chans = [Path(w) / "channel" for w in workspaces]
-    print(f"[poller] watch mode: local changes trigger within ~{watch_interval}s; "
-          f"fallback full sweep every {fallback_interval}s. Ctrl-C to stop.")
+    print(f"[poller] watch mode: local changes trigger within ~{watch_interval*2:.0f}s "
+          f"(one settle tick); fallback full sweep every {fallback_interval}s. "
+          "Ctrl-C to stop.")
     # Initial sweep clears anything already pending.
     cycle(workspaces, codex_cmd, dry)
     sigs = {str(c): dir_signature(c) for c in chans}
+    dirty = set()  # channels seen changing, awaiting a stable tick
     last_cycle = time.monotonic()
     while True:
         time.sleep(watch_interval)
-        changed = False
+        settled = False
         for c in chans:
+            key = str(c)
             s = dir_signature(c)
-            if s != sigs[str(c)]:
-                sigs[str(c)] = s
-                changed = True
+            if s != sigs[key]:
+                sigs[key] = s          # still moving — record and wait
+                dirty.add(key)
+            elif key in dirty:
+                dirty.discard(key)     # stable for a full tick — settled
+                settled = True
         now = time.monotonic()
-        if changed or (now - last_cycle) >= fallback_interval:
+        if settled or (now - last_cycle) >= fallback_interval:
             cycle(workspaces, codex_cmd, dry)
             last_cycle = time.monotonic()
             # Re-snapshot: the sweep's own verdict writes (and any pulled
             # files) must not re-trigger on the next tick.
             for c in chans:
                 sigs[str(c)] = dir_signature(c)
+                dirty.discard(str(c))
 
 
 def main() -> int:
@@ -207,6 +223,10 @@ def main() -> int:
     if not workspaces:
         print("no workspaces given (--workspace / --config)", file=sys.stderr)
         return 2
+    if args.interval <= 0:
+        ap.error("--interval must be > 0")
+    if args.watch_interval <= 0:
+        ap.error("--watch-interval must be > 0")
 
     if args.watch:
         try:

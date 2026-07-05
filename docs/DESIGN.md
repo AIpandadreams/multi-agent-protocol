@@ -52,9 +52,10 @@ Honest list — these are real, and PRs are welcome (see
 
 1. **BINDINGS onboarding.** ~10 slots with a glossary is a wall for
    newcomers. Planned: `new_project.py --wizard` interactive fill.
-2. **Review latency.** The poller is a poll loop (default 5 min). An
-   event-driven bridge (filesystem watcher) is straightforward and on the
-   roadmap.
+2. **Review latency.** The poller defaults to a 5-min poll loop; its
+   `--watch` mode (a stdlib directory-signature watcher) closes local
+   latency to a couple of seconds. A true OS-level filesystem watcher
+   (inotify/ReadDirectoryChangesW) remains a possible refinement.
 3. **Reviewer coupling.** The worked path assumes a local Codex CLI on the
    same machine.
 4. **Windows-first tooling edges.** The protocol is OS-neutral; some
