@@ -164,8 +164,7 @@ def check_bindings(ws: Path, slots, roles, f: Findings):
                     "PROXY_AUTH guard weakened: missing never-listable "
                     f"super-class '{phrase}'")
         on = not pa.lstrip().lower().startswith("off")
-        guard = "never listable" in pa or "never listable or relayable" in pa
-        if on and not guard:
+        if on and "never listable or relayable" not in pa:
             f.blocker("PROXY_AUTH is ON but the never-listable/relayable "
                       "guard clause is missing from the slot")
 
