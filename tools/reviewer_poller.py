@@ -12,8 +12,20 @@ review-core's dead-lane escalation.
 Usage:
   python tools/reviewer_poller.py --workspace path/to/workspace [...] --once
   python tools/reviewer_poller.py --config poller.json --loop --interval 300
+  python tools/reviewer_poller.py --config poller.json --watch
   # poller.json: {"workspaces": ["path/to/ws1", "path/to/ws2"],
   #               "codex_cmd": "codex exec --sandbox read-only -C {workspace}"}
+
+Three run modes:
+  --once   one sweep, then exit (scheduled-task friendly).
+  --loop   a full sweep every --interval seconds (fixed cadence).
+  --watch  event-driven: a cheap directory-signature check (--watch-interval,
+           default 2s) fires a sweep the instant a channel/ changes locally,
+           so a review request on the shared filesystem is picked up in
+           seconds instead of up to one poll interval. A fallback full sweep
+           still runs at least every --interval seconds so requests arriving
+           via a remote push (which don't touch the local dir until a fetch)
+           are not missed. Stdlib only — no watchdog/inotify dependency.
 
 The poller is transport machinery, not a party: it never edits requests,
 never writes channel entries, and produces ONLY verdict files authored by
@@ -22,6 +34,7 @@ invoking Codex or pushing.
 """
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -124,6 +137,51 @@ def cycle(workspaces, codex_cmd, dry):
     return total
 
 
+def dir_signature(channel: Path) -> frozenset:
+    """A cheap fingerprint of a channel dir: (name, mtime_ns, size) per file.
+
+    Changes when a request/verdict is added or rewritten — the trigger for an
+    event-driven sweep. No file contents are read.
+    """
+    sig = []
+    try:
+        for e in os.scandir(channel):
+            if e.is_file():
+                st = e.stat()
+                sig.append((e.name, st.st_mtime_ns, st.st_size))
+    except FileNotFoundError:
+        pass
+    return frozenset(sig)
+
+
+def watch(workspaces, codex_cmd, dry, watch_interval, fallback_interval):
+    """Event-driven loop: sweep on local channel change, plus a periodic
+    fallback sweep so remote-pushed requests are still caught."""
+    chans = [Path(w) / "channel" for w in workspaces]
+    print(f"[poller] watch mode: local changes trigger within ~{watch_interval}s; "
+          f"fallback full sweep every {fallback_interval}s. Ctrl-C to stop.")
+    # Initial sweep clears anything already pending.
+    cycle(workspaces, codex_cmd, dry)
+    sigs = {str(c): dir_signature(c) for c in chans}
+    last_cycle = time.monotonic()
+    while True:
+        time.sleep(watch_interval)
+        changed = False
+        for c in chans:
+            s = dir_signature(c)
+            if s != sigs[str(c)]:
+                sigs[str(c)] = s
+                changed = True
+        now = time.monotonic()
+        if changed or (now - last_cycle) >= fallback_interval:
+            cycle(workspaces, codex_cmd, dry)
+            last_cycle = time.monotonic()
+            # Re-snapshot: the sweep's own verdict writes (and any pulled
+            # files) must not re-trigger on the next tick.
+            for c in chans:
+                sigs[str(c)] = dir_signature(c)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--workspace", action="append", default=[])
@@ -131,7 +189,13 @@ def main() -> int:
     ap.add_argument("--codex-cmd", default=DEFAULT_CODEX_CMD)
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--loop", action="store_true")
-    ap.add_argument("--interval", type=int, default=300)
+    ap.add_argument("--watch", action="store_true",
+                    help="event-driven: sweep on local channel change plus a "
+                         "fallback sweep every --interval seconds")
+    ap.add_argument("--interval", type=int, default=300,
+                    help="--loop cadence, and --watch fallback-sweep bound")
+    ap.add_argument("--watch-interval", type=float, default=2.0,
+                    help="--watch directory-check cadence (seconds)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -144,7 +208,13 @@ def main() -> int:
         print("no workspaces given (--workspace / --config)", file=sys.stderr)
         return 2
 
-    if args.loop:
+    if args.watch:
+        try:
+            watch(workspaces, codex_cmd, args.dry_run,
+                  args.watch_interval, args.interval)
+        except KeyboardInterrupt:
+            print("\n[poller] watch stopped")
+    elif args.loop:
         while True:
             cycle(workspaces, codex_cmd, args.dry_run)
             time.sleep(args.interval)

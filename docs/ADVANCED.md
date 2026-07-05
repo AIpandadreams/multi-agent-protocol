@@ -55,12 +55,21 @@ Worked path — local Codex CLI via the poller:
 ```bash
 python tools/reviewer_poller.py --workspace path/to/ws --once      # one sweep
 python tools/reviewer_poller.py --config poller.json --loop --interval 300
+python tools/reviewer_poller.py --config poller.json --watch        # event-driven
 ```
 
 The poller finds unanswered `review_request_*` files, feeds each to the
 Codex CLI (read-only sandbox), writes the verdict file back, and commits.
 It is transport machinery, not a party: it never edits requests and never
 writes channel entries. Schedule it (Task Scheduler / cron) and forget it.
+
+Three run modes: `--once` (one sweep, ideal for a scheduled task), `--loop`
+(a full sweep every `--interval` seconds), and `--watch` — event-driven, so a
+review request written to a shared-filesystem channel is picked up within
+`--watch-interval` seconds (default 2) instead of waiting out a poll cycle. A
+fallback full sweep still runs every `--interval` seconds so requests arriving
+via a remote push are never missed. `--watch` is stdlib-only (a cheap
+directory-signature check — no `watchdog`/inotify dependency).
 
 Alternatives, in preference order:
 
