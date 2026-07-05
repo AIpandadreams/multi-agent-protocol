@@ -51,7 +51,8 @@ Honest list — these are real, and PRs are welcome (see
 [CONTRIBUTING](../CONTRIBUTING.md)):
 
 1. **BINDINGS onboarding.** ~10 slots with a glossary is a wall for
-   newcomers. Planned: `new_project.py --wizard` interactive fill.
+   newcomers. Softened by `new_project.py --wizard` (interactive slot
+   fill); a guided glossary in-wizard could go further.
 2. **Review latency.** The poller is a poll loop (default 5 min). An
    event-driven bridge (filesystem watcher) is straightforward and on the
    roadmap.
