@@ -14,6 +14,30 @@ changes only through the
 
 ## [Unreleased]
 
+### Added
+- `tools/migrate_workspace.py` — migrates a stamped `PROTOCOL v2.5` workspace up
+  to `v2.6`. Mechanical, idempotent, and reversible. The rewrite is
+  line-structured, not a blind whole-file replace: it flips a `[PROTOCOL v2.5]`
+  stamp only on a file's BANNER line (its opening title heading / docstring —
+  the sole place a stamp is emitted), and rewrites the `PROTOCOL_VERSION` row
+  structurally (matched by slot name, any spacing; only the version cell is
+  flipped, extra cells preserved) so version detection and the rewrite can never
+  disagree. The same literal token off the banner — inside a PROXY_AUTH/authority
+  row, a memory-body heading or prose, or a fenced example — is therefore LEFT
+  UNTOUCHED (and reported, so the conservative skip is auditable), and a file's
+  existing line endings are preserved exactly. Following `scale_workspace.py`'s
+  contract, it never edits authority rows — it PRINTS the PROXY_AUTH reword when
+  the slot predates v2.6's canonical super-class wording (first-hand only) —
+  never stamps the new v2.6 slots (it prints the not-yet-present ones, flagged by
+  whether they apply to this profile), and never rewrites coordination state
+  (counters/memory are carried by the agents per `docs/MIGRATION.md`). Ends with
+  an informational `conformance_check.py` run and points the operator to
+  `--strict` as the final gate; `--dry-run` previews without writing.
+  Fills the version-migrate gap in the lifecycle family (`new_project` stamps
+  fresh · `scale_workspace` grows 2→3 · `adopt_project` adopts ad-hoc). Pin-aware
+  conformance means a not-yet-migrated workspace stays green under a v2.6
+  checkout, so workspaces migrate independently, each at its own freeze boundary.
+
 ## [1.2.0] — 2026-07-07
 
 ### Added — PROTOCOL v2.5 → v2.6 amendment
