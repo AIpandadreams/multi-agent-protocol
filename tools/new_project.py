@@ -26,6 +26,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
+# Canonical role order (SIDE_NAMES are positional against this) and each
+# role's DEFAULT side name — the argparse defaults below. A ROLE_ALIASES row
+# entry (and a README "(as ...)" note) is emitted only for a side whose name
+# was CHANGED from its default, so an all-defaults stamp stays byte-identical
+# to pre-ROLE_ALIASES stamps (owner/builder keep their canonical names; the
+# orchestrator's conventional short name `orch` is its default, not a rename).
+CANONICAL_ROLE_ORDER = ["owner", "builder", "orchestrator"]
+DEFAULT_SIDE_NAME = {"owner": "owner", "builder": "builder", "orchestrator": "orch"}
+
 BINDINGS_TEMPLATE = """# BINDINGS — {name} agent workspace [PROTOCOL v2.6]
 
 Instantiated {date} from the multi-agent-protocol repo (profile: {profile}).
@@ -36,7 +45,7 @@ Slot glossary: plugins/agent-protocol/skills/agent-core/references/binding-slots
 | PROJECT | {name} |
 | PROFILE | {profile} |
 | SIDE_NAMES | {side_names} |
-| CANONICAL_REPO | {{{{FILL: work repo path + remote + branch}}}} |
+{alias_row}| CANONICAL_REPO | {{{{FILL: work repo path + remote + branch}}}} |
 | CHANNEL | {dest}/channel/ (this workspace repo) |
 | MEMORY | {dest}/memory/<role>/ |
 | REVIEWER | {{{{FILL: per side — mechanism + model}}}} |
@@ -604,16 +613,22 @@ def main() -> int:
             "|---|---|---|---|---|---|\n",
             encoding="utf-8")
 
-    side_parts = []
-    if "owner" in roles:
-        side_parts.append(args.owner_side)
-    if "builder" in roles:
-        side_parts.append(args.builder_side)
-    if orch:
-        side_parts.append(args.orch_side)
+    role_side = {"owner": args.owner_side, "builder": args.builder_side,
+                 "orchestrator": args.orch_side}
+    side_parts = [role_side[r] for r in CANONICAL_ROLE_ORDER if r in roles]
+
+    # ROLE_ALIASES row: only the sides whose name was CHANGED from the role's
+    # default side name. All-defaults => empty string => byte-identical stamp.
+    alias_pairs = [f"{role_side[r]}→{r}"
+                   for r in CANONICAL_ROLE_ORDER
+                   if r in roles and role_side[r] != DEFAULT_SIDE_NAME[r]]
+    alias_row = (f"| ROLE_ALIASES | {', '.join(alias_pairs)} |\n"
+                 if alias_pairs else "")
+
     bindings_text = BINDINGS_TEMPLATE.format(
         name=args.name, date=today, profile=args.profile,
         dest=dest.as_posix(), side_names=" / ".join(side_parts),
+        alias_row=alias_row,
         orch_slots=ORCH_SLOTS if orch else "", principal=args.principal)
     if args.wizard:
         if sys.stdin.isatty():
@@ -622,9 +637,14 @@ def main() -> int:
             print("(--wizard ignored: stdin is not an interactive terminal)",
                   file=sys.stderr)
     (dest / "BINDINGS.md").write_text(bindings_text, encoding="utf-8")
+    # README roles line names the display name when a side was renamed
+    # (e.g. `owner (as "engine")`); an unchanged side shows just the role.
+    roles_disp = [(f'{r} (as "{role_side[r]}")'
+                   if role_side[r] != DEFAULT_SIDE_NAME[r] else r)
+                  for r in CANONICAL_ROLE_ORDER if r in roles]
     (dest / "README.md").write_text(
         README_TEMPLATE.format(name=args.name, date=today,
-                               roles=", ".join(roles), profile=args.profile),
+                               roles=", ".join(roles_disp), profile=args.profile),
         encoding="utf-8")
 
     shutil.copy(ROOT / "profiles" / "MODELS.md", dest / "MODELS.md")

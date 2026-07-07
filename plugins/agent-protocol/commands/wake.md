@@ -14,15 +14,30 @@ Requested role: $ARGUMENTS
 
 ## Steps (in order)
 
-1. **Resolve the role.** Accept `owner` | `builder` | `orchestrator`
-   (aliases: `engine` → owner, `helper` → builder, `orch` → orchestrator).
+1. **Locate the workspace.** The current directory (or nearest parent) must
+   contain `BINDINGS.md`. If it doesn't, ask once for the workspace path —
+   do not guess and do not create one. (Locate FIRST: the workspace's
+   `ROLE_ALIASES` binding is needed to resolve the requested name below.)
+
+2. **Resolve the role** to a canonical role (`owner` | `builder` |
+   `orchestrator`), in three tiers — first match wins:
+   1. **Canonical name** — `owner`, `builder`, `orchestrator` resolve to
+      themselves.
+   2. **The workspace's `ROLE_ALIASES` row** in BINDINGS.md — each
+      `<display>→<canonical>` maps a bound SIDE_NAME to its canonical role.
+      An explicit workspace binding always beats the built-ins below.
+   3. **Legacy built-in aliases** — `engine` → owner, `helper` → builder,
+      `orch` → orchestrator (kept verbatim so pre-2.6 workspaces with no
+      `ROLE_ALIASES` row still resolve).
+   - Unresolvable: list the valid names from BINDINGS (SIDE_NAMES +
+     ROLE_ALIASES) and ask the principal once which role to wake — do not
+     guess.
    - No argument given: if the current workspace has exactly one
      `memory/<role>/` directory with a ⚡ working-state block, wake that
      role; otherwise ask the principal once which role to wake.
-
-2. **Locate the workspace.** The current directory (or nearest parent) must
-   contain `BINDINGS.md`. If it doesn't, ask once for the workspace path —
-   do not guess and do not create one.
+   - Aliases resolve ADDRESSING only. Role identity artifacts — ROLE_LOCK,
+     `memory/<role>/`, `start/START_SESSION.<role>.md` — always use the
+     canonical role, never the display name.
 
 3. **Run the role's start procedure** —
    `start/START_SESSION.<role>.md`, top to bottom, no steps skipped:
@@ -42,6 +57,10 @@ Requested role: $ARGUMENTS
    Next step: <the ## Next Step from memory, verbatim>
    ---
    ```
+
+   When the workspace binds a display name that differs from the canonical
+   role (via SIDE_NAMES / ROLE_ALIASES), the header names both:
+   `☀️ AWAKE — <display name> (role: <canonical>) @ <workspace> …`.
 
    If the next step is ungated, proceed with it. If it is parked on a gate,
    present it and wait — waking never opens a gate.

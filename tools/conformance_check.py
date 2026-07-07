@@ -78,6 +78,21 @@ SUPER_CLASSES = [
 FILL_RE = re.compile(r"\{\{FILL(?::[^}]*)?\}\}")
 SLOT_RE = re.compile(r"^\|\s*([A-Z_/ ]+?)\s*\|\s*(.*?)\s*\|\s*$")
 
+# SIDE_NAMES are positional against this canonical order; each role's DEFAULT
+# side name is what a plain stamp uses (owner/builder keep the canonical name,
+# the orchestrator's conventional short name is `orch`). A side whose name
+# differs from its default is a rename that should carry a ROLE_ALIASES entry.
+CANONICAL_ROLES = ["owner", "builder", "orchestrator"]
+DEFAULT_SIDE = {"owner": "owner", "builder": "builder", "orchestrator": "orch"}
+# Filename-grammar charset for a side name — underscore is FORBIDDEN because it
+# is the `<from>_to_<to>_<date>` channel-filename separator.
+SIDE_CHARSET_RE = re.compile(r"^[A-Za-z0-9-]+$")
+# /wake's legacy built-in aliases (kept so pre-2.6 workspaces still resolve).
+# A renamed side covered by one of these resolves without a ROLE_ALIASES row.
+LEGACY_ALIASES = {"engine": "owner", "helper": "builder", "orch": "orchestrator"}
+# ROLE_ALIASES entries accept either arrow form: `display→role` or `display->role`.
+ALIAS_SEP_RE = re.compile(r"\s*(?:→|->)\s*")
+
 
 class Findings:
     def __init__(self):
@@ -244,6 +259,118 @@ def check_channel(ws: Path, pinned, f: Findings):
         f.warn("channel/INDEX.md missing the ledger table header row")
 
 
+def check_side_names(slots, roles, f: Findings):
+    """Validate SIDE_NAMES (and any ROLE_ALIASES row) for a workspace.
+
+    SIDE_NAMES are positional: split on ' / ', they map in order onto the
+    profile's roles taken in canonical order (owner, builder, orchestrator).
+    Each name must be filename-grammar-safe ([A-Za-z0-9-]; underscore is a
+    BLOCKER — it is the channel-filename separator), unique, and must not be
+    the canonical name of a DIFFERENT profile role. A ROLE_ALIASES row, when
+    present, must map each display name back to the canonical role its
+    SIDE_NAMES position implies. Aliases affect addressing/display only.
+    """
+    if slots is None:
+        return
+    ordered = [r for r in CANONICAL_ROLES if r in roles]
+    raw = slots.get("SIDE_NAMES", "")
+    # A SIDE_NAMES value may carry a trailing parenthetical note (a
+    # "(formerly: ..., until <date>)" history marker, or a channel-grammar
+    # reminder). Strip parentheticals BEFORE splitting so the note's spaces /
+    # slashes / underscored filename examples never look like side names.
+    stripped = re.sub(r"\([^)]*\)", "", raw)
+    names = [n.strip() for n in stripped.split(" / ") if n.strip()]
+
+    if not names:
+        f.warn("SIDE_NAMES slot is empty or unparseable")
+        return
+
+    if len(names) != len(ordered):
+        f.warn(f"SIDE_NAMES has {len(names)} name(s) but the profile has "
+               f"{len(ordered)} role(s) {ordered}")
+
+    seen = {}
+    for i, name in enumerate(names):
+        if not SIDE_CHARSET_RE.match(name):
+            if "_" in name:
+                f.blocker(f"SIDE_NAMES entry '{name}' contains an underscore — "
+                          "underscore breaks the <from>_to_<to>_<date> channel "
+                          "filename grammar (allowed charset: [A-Za-z0-9-])")
+            else:
+                f.blocker(f"SIDE_NAMES entry '{name}' has characters outside "
+                          "[A-Za-z0-9-] (breaks the channel filename grammar)")
+        if name in seen:
+            f.blocker(f"SIDE_NAMES entry '{name}' is duplicated (positions "
+                      f"{seen[name] + 1} and {i + 1}) — side names must be unique")
+        else:
+            seen[name] = i
+        # A side named after a DIFFERENT profile role's canonical name is a
+        # trap: filenames and addressing would read as that other role.
+        if i < len(ordered):
+            my_role = ordered[i]
+            for other in ordered:
+                if other != my_role and name == other:
+                    f.blocker(f"SIDE_NAMES entry '{name}' (the {my_role} side) "
+                              f"is the canonical name of the {other} role — a "
+                              "side may not be named after another role")
+
+    # Positions carrying a non-default display name (differ from the role's
+    # default side name) — the same predicate new_project uses to decide
+    # whether to stamp a ROLE_ALIASES row.
+    renamed = {ordered[i]: names[i]
+               for i in range(min(len(names), len(ordered)))
+               if names[i] != DEFAULT_SIDE.get(ordered[i])}
+
+    alias_raw = slots.get("ROLE_ALIASES", "")
+    has_alias_row = "ROLE_ALIASES" in slots and alias_raw != ""
+
+    if not has_alias_row:
+        if renamed:
+            # A renamed display still resolves if a legacy built-in alias maps
+            # it to the SAME role (e.g. an owner side named `engine`).
+            unresolved = sorted(n for r, n in renamed.items()
+                                if LEGACY_ALIASES.get(n) != r)
+            if unresolved:
+                f.warn("SIDE_NAMES use non-default display name(s) "
+                       f"{unresolved} but no ROLE_ALIASES row is present — "
+                       "/wake <name> won't resolve until you add it")
+            else:
+                f.warn("SIDE_NAMES use non-default display name(s) "
+                       f"{sorted(renamed.values())} covered only by /wake's "
+                       "legacy built-in aliases — add a ROLE_ALIASES row to "
+                       "make the mapping explicit")
+        return
+
+    # Validate the ROLE_ALIASES row against the SIDE_NAMES positions.
+    display_to_role = {names[i]: ordered[i]
+                       for i in range(min(len(names), len(ordered)))}
+    seen_display = set()
+    for part in alias_raw.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        bits = ALIAS_SEP_RE.split(part, maxsplit=1)
+        if len(bits) != 2 or not bits[0].strip() or not bits[1].strip():
+            f.blocker(f"ROLE_ALIASES entry '{part}' is not '<display>→<role>'")
+            continue
+        display, target = bits[0].strip(), bits[1].strip()
+        if display in seen_display:
+            f.blocker(f"ROLE_ALIASES display name '{display}' is listed twice")
+        seen_display.add(display)
+        if target not in ordered:
+            f.blocker(f"ROLE_ALIASES target '{target}' is not a canonical role "
+                      f"in this profile ({ordered})")
+            continue
+        if display not in display_to_role:
+            f.blocker(f"ROLE_ALIASES display '{display}' is not one of the "
+                      "bound SIDE_NAMES")
+            continue
+        implied = display_to_role[display]
+        if implied != target:
+            f.blocker(f"ROLE_ALIASES maps '{display}'→{target} but SIDE_NAMES "
+                      f"places '{display}' at the {implied} position")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -267,6 +394,7 @@ def main() -> int:
 
     check_structure(ws, roles, f)
     check_bindings(ws, slots, roles, pinned, f)
+    check_side_names(slots, roles, f)
     check_auth_logs(ws, roles, pinned, f)
     check_channel(ws, pinned, f)
 

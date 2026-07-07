@@ -20,7 +20,11 @@ Optional note from the principal to weave into the handover: $ARGUMENTS
    (a directory with `BINDINGS.md` and `memory/<role>/`).
 
 2. **Checkpoint memory** (`memory/<role>/MEMORY.md`), per the memory
-   discipline (`agent-core/references/memory-discipline.md`):
+   discipline (`agent-core/references/memory-discipline.md`). Your role here
+   is the CANONICAL role (owner / builder / orchestrator) even if the
+   workspace binds a different display name for your side — the
+   `memory/<role>/` path and your commit identity always use the canonical
+   role, never the display name:
    - Update the **⚡ working-state block** at the top: counters (next entry
      number, next round number), in-flight units, queue tips, last tick,
      resume order. The block plus the underlying artifacts IS the state.
