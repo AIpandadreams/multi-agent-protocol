@@ -26,9 +26,13 @@ every rule in it exists because its absence caused a real defect.
 | **Builder** | a Claude Code session | execution-heavy work: builds, censuses, QA sweeps, advisory deliverables |
 | **Reviewer** | a *different-vendor* model (e.g. Codex) | independent adversarial review gating every round — never the author's own model |
 
-An optional third agent, the **orchestrator**, becomes your single point of
-contact: it runs the task queue, dispatches the workers, briefs you, and
-carries your approvals as auditable log events (never as its own authority).
+The default shape runs all three agents. The **orchestrator** is your
+single point of contact: it runs the task queue,
+dispatches the workers, briefs you, and carries your approvals as auditable
+log events (never as its own authority). Prefer a more compact setup? Run
+the **dual-role owner** variant, where the owner absorbs the orchestrator's
+interface and intake duties. Either way the orchestrator is an *interface*
+role — it carries bytes, never permission — not a fifth authority party.
 
 ## Two properties that make it a platform, not a script
 
@@ -98,9 +102,9 @@ walkthrough: [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
 | you want | use | how it feels |
 |---|---|---|
-| agents on one project, you talk to the lead agent directly | **2-agent** (`2agent.local`) | owner is your interface; builder works alongside |
-| one point of contact running everything for you | **3-agent** (`3agent.local`) | you talk ONLY to the orchestrator; workers spawn on demand |
+| one point of contact running everything for you | **3-agent** (`3agent.local`) **(default)** | you talk ONLY to the orchestrator; workers spawn on demand |
 | one assistant fronting several projects at once | **3-agent, global flavor** | the same orchestrator, bound as `global-pa`, registers multiple worker pairs |
+| agents on one project, you talk to the lead agent directly | **2-agent** (`2agent.local`) | the owner runs dual-role as your interface; builder works alongside |
 
 Details and live-tested trade-offs: [docs/CONFIGURATIONS.md](docs/CONFIGURATIONS.md).
 

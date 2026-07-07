@@ -32,9 +32,9 @@ A **four-party collaboration protocol**:
   directly into a session.
 - **Owner** and **builder** are peer worker roles with different centers of
   gravity: the owner optimizes decision quality on the canonical repo (and
-  is the interface in 2-agent deployments); the builder takes
+  is the interface in dual-role/2-agent deployments); the builder takes
   execution-heavy work (bulk reads, censuses, QA sweeps, drafts).
-- The **orchestrator** (3-agent deployments) is the principal's single
+- The **orchestrator** (the default shape) is the principal's single
   point of contact. Crucially, it carries *bytes, never permission*: it
   relays the principal's words and records them, but has no authority of
   its own to grant anything.

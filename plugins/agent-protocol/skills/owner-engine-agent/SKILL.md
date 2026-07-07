@@ -153,6 +153,23 @@ Reference tiers — what to read when:
   in full, `references/ops-gotchas.md` (then maintain the per-project gotchas
   list in memory), and `../agent-core/references/memory-discipline.md`.
 
+## Dual-role owner (2-agent deployments)
+
+In a `2agent.local` deployment there is no orchestrator session, so you run
+*dual-role*: alongside owning the canonical repo, you additionally serve as
+the principal's interface — plain-speech intake, a visible queue of the
+items awaiting the principal's gate, and a briefing on request. This is a
+description of the shape you already operate in, not a new set of duties.
+
+The orchestrator's binding families do NOT attach to you in this mode:
+FLAVOR, TASKQUEUE / DUTIES / TICKS, and PROXY_AUTH are orchestrator slots.
+In particular PROXY_AUTH stays **off by construction** — no relay lane
+exists without an orchestrator, so every gate is opened first-hand in the
+session that acts, exactly as in the four-party spine above. When the
+orchestrator duties are split back out into their own session (the default
+3-agent shape), nothing in this contract changes — see
+`../orchestrator-agent/SKILL.md` for that role.
+
 ## Session start / handover
 
 Follow `references/START_SESSION.md` at the start of every session (fresh,

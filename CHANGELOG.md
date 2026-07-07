@@ -11,6 +11,15 @@ changes only through the
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
 
+## [Unreleased]
+
+### Changed
+- Documentation default topology inverted: the 3-agent shape (orchestrator +
+  owner + builder) is now presented as the default, and `2agent.local` is
+  reframed as the **dual-role-owner** variant (the owner absorbs the
+  orchestrator's interface/intake duties). No protocol-semantic change;
+  `PROTOCOL v2.5` is unchanged; profile ids and tooling are untouched.
+
 ## [1.1.0] — 2026-07-05
 
 Tooling round: three quality-of-life additions to `tools/`, each carried

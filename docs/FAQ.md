@@ -1,10 +1,12 @@
 # FAQ
 
 **Do I need three agents?**
-No. Start 2-agent (`2agent.local`) — owner + builder, you talk to the
-owner. Add the orchestrator only when you want a single point of contact
-and briefings ([CONFIGURATIONS.md](CONFIGURATIONS.md) has the upgrade
-path — it's additive, nothing restamps).
+The default is three (`3agent.local`) — orchestrator + owner + builder,
+with the orchestrator as your single point of contact. Want it more
+compact? Run with a **dual-role owner** (`2agent.local`): the owner absorbs
+the orchestrator's interface and intake duties and you talk to it directly.
+You can split the role back out any time ([CONFIGURATIONS.md](CONFIGURATIONS.md)
+has the path — nothing restamps).
 
 **Do I need Codex?**
 You need an *independent reviewer* — that's a protocol requirement, not a

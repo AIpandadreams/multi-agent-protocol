@@ -40,9 +40,10 @@ python tools/new_project.py --name myproject --dest path/to/myproject-ws \
     --profile 3agent.local --principal "Your Name"
 ```
 
-Profiles: `3agent.local` (orchestrator + owner + builder — you talk only to
-the orchestrator) or `2agent.local` (owner + builder — you talk to the owner
-directly). Choosing: [CONFIGURATIONS.md](CONFIGURATIONS.md).
+Profiles: `3agent.local` (orchestrator + owner + builder — the default; you
+talk only to the orchestrator) or `2agent.local` (compact: dual-role owner —
+the owner absorbs the orchestrator duties and you talk to it directly).
+Choosing: [CONFIGURATIONS.md](CONFIGURATIONS.md).
 
 Prefer to be walked through the slots instead of hand-editing? Add `--wizard`
 and the stamper prompts you for each `{{FILL}}` slot as it creates the

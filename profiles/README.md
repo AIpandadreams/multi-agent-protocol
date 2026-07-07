@@ -6,13 +6,16 @@ applies, and the model matrix. Instantiation copies the chosen profile +
 
 | profile | roles running | transport | principal interface |
 |---|---|---|---|
-| `2agent.local` | owner + builder | `transports/local-fs.md` | principal speaks into each session directly; owner doubles as primary interface |
 | `3agent.local` | orchestrator + owner + builder | `transports/local-fs.md` | principal speaks to the orchestrator; auth per proxy-authorization rules |
+| `2agent.local` | owner + builder | `transports/local-fs.md` | principal speaks to the owner, which runs dual-role (absorbs orchestrator interface/queue duties) |
 
 Notes:
-- The orchestrator is purely additive: the 3-agent profile degrades to its
-  2-agent sibling by simply not running the orchestrator, and a 2-agent
-  workspace upgrades by adding the orchestrator role + its binding slots.
+- The orchestrator duties are separable: nothing in the owner/builder
+  contract changes whether they run as their own session (the default
+  3-agent profile) or inside the owner (the 2-agent dual-role variant). The
+  3-agent profile collapses to its 2-agent sibling by simply not running
+  the orchestrator; a 2-agent workspace splits the role back out by adding
+  the orchestrator role + its binding slots.
 - One orchestrator can also front SEVERAL projects' worker pairs — bind
   `FLAVOR: global-pa` and register each project's workspace in its session
   registry (see `docs/CONFIGURATIONS.md`).
