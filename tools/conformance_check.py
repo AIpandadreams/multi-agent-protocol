@@ -93,7 +93,15 @@ SUPER_CLASSES = [
 
 # Matches both documented placeholder forms: {{FILL}} and {{FILL: hint}}.
 FILL_RE = re.compile(r"\{\{FILL(?::[^}]*)?\}\}")
+# A {{DEFERRED}} marker is a slot the operator DELIBERATELY postponed in the
+# wizard — distinct from an untouched {{FILL}}. It is still unresolved (a WARN),
+# but the message says so, and --strict still catches it.
+DEFERRED_RE = re.compile(r"\{\{DEFERRED(?::[^}]*)?\}\}")
 SLOT_RE = re.compile(r"^\|\s*([A-Z_/ ]+?)\s*\|\s*(.*?)\s*\|\s*$")
+# ROLE_LOCK declaration inside a memory index — the canonical role a memory
+# directory locks its sessions to (P-1: one agent per role per workspace).
+ROLE_LOCK_RE = re.compile(r"ROLE_LOCK[^\n]*?\b(OWNER|BUILDER|ORCHESTRATOR)\b",
+                          re.IGNORECASE)
 
 # SIDE_NAMES are positional against this canonical order; each role's DEFAULT
 # side name is what a plain stamp uses (owner/builder keep the canonical name,
@@ -199,11 +207,17 @@ def check_bindings(ws: Path, slots, roles, pinned, f: Findings):
                 f"profile {profile} expects roles {sorted(expected)} but "
                 f"memory/ has {sorted(roles)}")
 
-    # Unbound slots: any value still holding a {{FILL}} placeholder.
+    # Unbound slots: an untouched {{FILL}}, or a {{DEFERRED}} the operator
+    # deliberately postponed. Both are unresolved (WARN; --strict fails on
+    # either), but the message distinguishes "nobody has looked at this" from
+    # "postponed on purpose".
     for key, val in slots.items():
         if key in ("PROTOCOL_VERSION", "PROFILE"):
             continue
-        if FILL_RE.search(val):
+        if DEFERRED_RE.search(val):
+            f.warn(f"binding slot {key} is {{{{DEFERRED}}}} (deliberately "
+                   "postponed in the wizard) — resolve before relying on it")
+        elif FILL_RE.search(val):
             f.warn(f"binding slot {key} still holds a {{{{FILL}}}} placeholder")
 
     # PROXY_AUTH is an orchestrator-relay concept: the slot exists only in
@@ -262,6 +276,16 @@ def check_auth_logs(ws: Path, roles, pinned, f: Findings):
                   out.replace("\n", "\n    "))
 
 
+# A channel DIRECTION entry's name follows `<from>_to_<to>_<date>.md`
+# (channel-core). The lint is deliberately LENIENT and WARN-only, and only
+# grades files that are clearly MEANT to be direction entries — those carrying
+# the `_to_` infix. Review-lane artifacts (review_request_*, *_verdict_*) and
+# other channel files have their own grammar and are left alone, so the lint
+# catches a malformed direction filename (a typo) without flooding a live
+# channel that legitimately holds many file classes.
+CHANNEL_ENTRY_RE = re.compile(r"^[A-Za-z0-9-]+_to_[A-Za-z0-9-]+_.+\.md$")
+
+
 def check_channel(ws: Path, pinned, f: Findings):
     p = ws / "channel" / "INDEX.md"
     if not p.is_file():
@@ -274,6 +298,25 @@ def check_channel(ws: Path, pinned, f: Findings):
         f.warn("channel/INDEX.md missing the REVIEW-ROUND LEDGER header")
     if "| round | side |" not in t:
         f.warn("channel/INDEX.md missing the ledger table header row")
+
+
+def check_channel_entry_format(ws: Path, f: Findings):
+    """Smoke-lint channel entry filenames against the direction grammar.
+
+    Only entry files are graded — INDEX.md (the ledger) and dotfiles are
+    exempt. WARN-only by design; a fresh stamp has no entry files, so this is
+    silent until the first real entry lands.
+    """
+    chan = ws / "channel"
+    if not chan.is_dir():
+        return
+    for p in sorted(chan.glob("*.md")):
+        if p.name == "INDEX.md" or "_to_" not in p.name:
+            continue  # INDEX + non-direction files (review lane, etc.) exempt
+        if not CHANNEL_ENTRY_RE.match(p.name):
+            f.warn(f"channel/{p.name} looks like a direction entry but doesn't "
+                   "match `<from>_to_<to>_<date>.md` (channel-core) — check for "
+                   "a typo")
 
 
 def _report_uncovered(missing, row_state, f: Findings):
@@ -463,6 +506,55 @@ def check_transport(slots, f: Findings):
                        "every host (looks like a leaked host profile)")
 
 
+def check_one_agent_per_role(ws: Path, roles, f: Findings):
+    """P-1: exactly one agent per role per workspace — fail CLOSED.
+
+    Each memory/<role>/ index locks its sessions to a canonical role via a
+    ROLE_LOCK line. This verifies that mapping is 1:1: a role dir must lock to
+    its OWN role, and no two dirs may claim the same role (a collision would let
+    two agents answer as the same authority). Unparseable ROLE_LOCK on a role
+    that should carry one is itself a BLOCKER — the invariant can't be
+    confirmed, so it fails closed. The design is to scale HORIZONTALLY (separate
+    workspaces), never to run two agents of one role in one workspace.
+    """
+    declared = {}  # canonical role -> [dirs that lock to it]
+    for role in sorted(roles):
+        p = ws / "memory" / role / "MEMORY.md"
+        if not p.is_file():
+            continue  # missing-file BLOCKER already raised by check_structure
+        m = ROLE_LOCK_RE.search(p.read_text(encoding="utf-8", errors="replace"))
+        if not m:
+            f.blocker(f"memory/{role}/MEMORY.md has no parseable ROLE_LOCK line "
+                      "— one-agent-per-role can't be confirmed (fails closed)")
+            continue
+        got = m.group(1).lower()
+        declared.setdefault(got, []).append(role)
+        if got != role:
+            f.blocker(f"memory/{role}/MEMORY.md ROLE_LOCK names '{got}', not its "
+                      f"directory role '{role}' — a role dir must lock to its "
+                      "own role")
+    for canon, dirs in sorted(declared.items()):
+        if len(dirs) > 1:
+            f.blocker(f"ROLE_LOCK collision: role '{canon}' is claimed by "
+                      f"multiple memory dirs {sorted(dirs)} — exactly one agent "
+                      "per role per workspace (P-1); scale horizontally with "
+                      "separate workspaces, never two agents of one role here")
+
+
+def _self_check_banner():
+    """Print the SELF-CHECK MODE banner when this file is the STAMPED in-workspace
+    copy (C2): its parent-of-tools directory carries a BINDINGS.md, whereas the
+    protocol checkout's copy sits beside no workspace BINDINGS. The in-workspace
+    copy is workspace-OWNED code, so it is a hygiene self-check, never a trust
+    gate — for a trust decision, run the protocol checkout's copy."""
+    own_ws = Path(__file__).resolve().parent.parent
+    if (own_ws / "BINDINGS.md").is_file():
+        print("SELF-CHECK MODE — this is the workspace's OWN stamped copy of "
+              "the conformance suite (workspace-owned code). It is a hygiene "
+              "self-check, not a trust gate; for a trust decision run the "
+              "protocol checkout's copy against this workspace.\n")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -471,6 +563,8 @@ def main() -> int:
     ap.add_argument("--strict", action="store_true",
                     help="treat WARN (unbound slots etc.) as failing too")
     args = ap.parse_args()
+
+    _self_check_banner()
 
     ws = Path(args.workspace).resolve()
     if not ws.is_dir():
@@ -488,8 +582,10 @@ def main() -> int:
     check_bindings(ws, slots, roles, pinned, f)
     check_side_names(slots, roles, f)
     check_transport(slots, f)
+    check_one_agent_per_role(ws, roles, f)
     check_auth_logs(ws, roles, pinned, f)
     check_channel(ws, pinned, f)
+    check_channel_entry_format(ws, f)
 
     blockers, warns = f.counts()
     if not f.items:

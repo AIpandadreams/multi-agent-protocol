@@ -10,17 +10,22 @@ marketplace).
 Usage:
   python tools/new_project.py --name myproject --dest path/to/myproject-ws \
       --profile 3agent.local --owner-side engine --builder-side builder \
-      [--principal "Your Name"] [--no-orchestrator] [--wizard]
+      [--principal "Your Name"] [--no-orchestrator] [--wizard] [--git-init]
 
-Add --wizard to be prompted through the BINDINGS {{FILL}} slots interactively
-instead of hand-editing them afterwards (skipped automatically when stdin is
-not an interactive terminal, so unattended stamps never hang).
+Add --wizard for an interactive PRE-STAMP walkthrough (topology -> side names ->
+principal -> repo -> reviewer -> git-init -> plugin-install) that renders the
+resolved BINDINGS in one pass; it is skipped automatically when stdin is not an
+interactive terminal, so unattended stamps never hang. --git-init makes the
+fresh workspace a git repo (non-fatal); --plugin-install prints the plugin
+install steps after stamping. `--no-orchestrator` is a deprecated alias for
+`--profile 2agent.local` (a dual-role-owner workspace).
 """
 import argparse
 import datetime as dt
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -442,6 +447,8 @@ SETTINGS_TEMPLATE = {
             "Bash(gh pr view:*)", "Bash(gh pr list:*)",
             "Bash(gh run list:*)", "Bash(gh run view:*)",
             "Bash(python tools/validate_auth_log.py)",
+            # the in-workspace hygiene self-check (SELF-CHECK MODE copy)
+            "Bash(python tools/conformance_check.py:*)",
         ]
     },
 }
@@ -450,88 +457,196 @@ SETTINGS_TEMPLATE = {
 FILL_RE = re.compile(r"\{\{FILL:([^}]*)\}\}")
 
 
-def fill_wizard(bindings_text: str) -> str:
-    """Walk the operator through each {{FILL}} slot in the rendered BINDINGS.
+PROFILE_CHOICES = ["2agent.local", "3agent.local",
+                   "2agent.git-sync", "3agent.git-sync"]
 
-    One prompt per placeholder, labelled with its slot name and the slot's
-    own hint. An empty answer leaves the {{FILL}} placeholder in place so it
-    can still be filled by hand later. Ctrl-C / EOF aborts the wizard cleanly
-    and keeps whatever was answered so far.
+# An operator can DEFER a slot in the wizard instead of answering it: typing the
+# defer token stamps a {{DEFERRED: …}} marker distinct from an untouched
+# {{FILL}}. Conformance treats DEFERRED as a deliberate "later", not a slot
+# nobody has looked at.
+DEFER_TOKEN = "defer"
+
+
+def resolve_topology(profile, no_orchestrator):
+    """Resolve (profile, roles) from raw --profile (or None) + --no-orchestrator.
+
+    C3 fix: `--no-orchestrator` is a DEPRECATED alias for a 2-agent (dual-role
+    owner) workspace. Combining it with an explicit 3-agent profile is a hard
+    error — that pairing used to stamp owner+builder while writing
+    PROFILE=3agent.local, which conformance rightly BLOCKs. A 2agent.git-sync
+    selection is preserved.
     """
-    print("\n— BINDINGS wizard —")
-    print("Answer each slot, or press Enter to leave its {{FILL}} placeholder")
-    print("for later. Ctrl-C stops and keeps what you've entered.\n")
-    # Split once and index by position: two slots can share identical
-    # placeholder text, so we must never look a line up by value.
+    if no_orchestrator:
+        if profile is not None and profile.startswith("3agent"):
+            raise ValueError(
+                f"--no-orchestrator conflicts with --profile {profile}: "
+                "--no-orchestrator forces a 2-agent (dual-role owner) "
+                "workspace. Pick one. (--no-orchestrator is a deprecated alias "
+                "for --profile 2agent.local.)")
+        resolved = (profile if profile and profile.startswith("2agent")
+                    else "2agent.local")
+    else:
+        resolved = profile if profile is not None else "3agent.local"
+    roles = ["owner", "builder"]
+    if resolved.startswith("3agent"):
+        roles.append("orchestrator")
+    return resolved, roles
+
+
+def apply_slot_answers(bindings_text, answers):
+    """Splice wizard answers into named slot rows of the rendered BINDINGS.
+
+    `answers` maps a SLOT name -> answer string, or the DEFER_TOKEN sentinel to
+    stamp a {{DEFERRED: <original hint>}} marker in place of the slot's
+    {{FILL}}. A slot absent from `answers`, or given an empty answer, is left as
+    {{FILL}} for later. Rows are matched by their leading `| SLOT |`, never by
+    value, so two slots sharing placeholder text can't be confused.
+    """
+    if not answers:
+        return bindings_text
     lines = bindings_text.splitlines(keepends=True)
-    out_lines = []
-    filled = skipped = 0
     for i, line in enumerate(lines):
-        if not FILL_RE.search(line):
-            out_lines.append(line)
-            continue
-        slot = "slot"
         stripped = line.lstrip()
-        if stripped.startswith("|"):
-            cells = stripped.split("|")
-            if len(cells) > 1 and cells[1].strip():
-                slot = cells[1].strip()
-        # A line may carry more than one {{FILL}} placeholder; prompt for each
-        # in order. `pos` advances past a skipped placeholder so we never
-        # re-prompt it, and past inserted text so we never re-scan an answer.
-        pos = 0
-        while True:
-            m = FILL_RE.search(line, pos)
-            if not m:
-                break
+        if not stripped.startswith("|"):
+            continue
+        cells = stripped.split("|")
+        if len(cells) < 3:
+            continue
+        slot = cells[1].strip()
+        if slot not in answers:
+            continue
+        m = FILL_RE.search(line)
+        if not m:
+            continue
+        ans = answers[slot]
+        if ans == DEFER_TOKEN:
             hint = m.group(1).strip()
-            try:
-                answer = input(f"  {slot}\n    [{hint}]\n  > ").strip()
-            except (EOFError, KeyboardInterrupt):
-                print("\n(wizard stopped — remaining slots left as {{FILL}})\n")
-                # keep this line (with any placeholders still in it) + the rest
-                out_lines.append(line)
-                out_lines.extend(lines[i + 1:])
-                return "".join(out_lines)
-            if answer:
-                # splice the answer in for exactly this occurrence — a plain
-                # slice assignment, so backslashes in Windows paths are literal
-                line = line[:m.start()] + answer + line[m.end():]
-                pos = m.start() + len(answer)
-                filled += 1
-            else:
-                pos = m.end()   # leave this placeholder, move past it
-                skipped += 1
-        out_lines.append(line)
-    print(f"\nwizard done: {filled} filled, {skipped} left as {{{{FILL}}}}.\n")
-    return "".join(out_lines)
+            repl = "{{DEFERRED: " + hint + "}}" if hint else "{{DEFERRED}}"
+        elif ans:
+            repl = ans
+        else:
+            continue
+        lines[i] = line[:m.start()] + repl + line[m.end():]
+    return "".join(lines)
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--name", required=True)
-    ap.add_argument("--dest", required=True)
-    ap.add_argument("--profile", default="3agent.local",
-                    choices=["2agent.local", "3agent.local",
-                             "2agent.git-sync", "3agent.git-sync"])
-    ap.add_argument("--owner-side", default="owner")
-    ap.add_argument("--builder-side", default="builder")
-    ap.add_argument("--orch-side", default="orch")
-    ap.add_argument("--principal", default="{{FILL: principal's name}}")
-    ap.add_argument("--no-orchestrator", action="store_true")
-    ap.add_argument("--wizard", action="store_true",
-                    help="prompt through the BINDINGS {{FILL}} slots "
-                         "interactively (skipped if stdin is not a TTY)")
-    args = ap.parse_args()
+def _ask(prompt, default, input_fn):
+    """One wizard question with an echoed default; empty input takes the default."""
+    shown = f" [{default}]" if default not in (None, "") else ""
+    try:
+        ans = input_fn(f"{prompt}{shown}\n> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return default
+    return ans or default
 
-    dest = Path(args.dest)
+
+def _ask_yesno(prompt, default_yes, input_fn):
+    d = "Y/n" if default_yes else "y/N"
+    ans = _ask(f"{prompt} [{d}]", "", input_fn).strip().lower()
+    if not ans:
+        return default_yes
+    return ans[0] == "y"
+
+
+def wizard_preflight(input_fn=input, which_fn=None):
+    """Interactive PRE-STAMP walkthrough → a resolved config dict.
+
+    Order: topology (roles + transport) → side names → principal → repo →
+    reviewer (probes PATH for a CLI) → git-init → plugin-install. `input_fn` and
+    `which_fn` are injectable so tests can drive it without a TTY. Returns:
+      {profile, roles, role_side, principal, slot_answers, git_init,
+       plugin_install}
+    slot_answers carries CANONICAL_REPO / REVIEWER answers (or DEFER_TOKEN).
+    """
+    if which_fn is None:
+        which_fn = shutil.which
+    print("\n— new workspace wizard —")
+    print("Answer each question; press Enter for the default. Type "
+          f"'{DEFER_TOKEN}' on a slot to record it as {{{{DEFERRED}}}} for later.\n")
+
+    # 1. topology
+    three = _ask_yesno("Run a separate orchestrator? (3-agent; No = dual-role "
+                       "owner / 2-agent)", True, input_fn)
+    gitsync = _ask_yesno("Do the agents run on SEPARATE machines? "
+                         "(git-sync transport; No = one shared filesystem)",
+                         False, input_fn)
+    profile = ("3agent" if three else "2agent") + (".git-sync" if gitsync
+                                                   else ".local")
+    roles = ["owner", "builder"] + (["orchestrator"] if three else [])
+
+    # 2. side names
+    role_side = {}
+    for role in CANONICAL_ROLE_ORDER:
+        if role not in roles:
+            role_side[role] = DEFAULT_SIDE_NAME[role]
+            continue
+        role_side[role] = _ask(f"Display name for the {role} side",
+                               DEFAULT_SIDE_NAME[role], input_fn)
+
+    # 3. principal
+    principal = _ask("Principal's name (the human who holds the gates)",
+                     "{{FILL: principal's name}}", input_fn)
+
+    # 4. repo
+    slot_answers = {}
+    repo = _ask("CANONICAL_REPO — the project repo the agents work on "
+                "(path + remote + branch)", DEFER_TOKEN, input_fn)
+    slot_answers["CANONICAL_REPO"] = repo
+
+    # 5. reviewer (probe PATH)
+    probe = which_fn("codex")
+    if probe:
+        suggest = "codex CLI via tools/reviewer_poller.py, model default"
+        print(f"  (found a 'codex' CLI on PATH — suggested REVIEWER: {suggest})")
+    else:
+        suggest = DEFER_TOKEN
+        print("  (no 'codex' CLI on PATH — a different-model Claude session is "
+              "the documented fallback reviewer)")
+    reviewer = _ask("REVIEWER — who reviews each side's work", suggest, input_fn)
+    slot_answers["REVIEWER"] = reviewer
+
+    # 6. git-init  7. plugin-install
+    git_init = _ask_yesno("Initialize the workspace as a git repo now?",
+                          True, input_fn)
+    plugin_install = _ask_yesno("Print plugin-install steps after stamping?",
+                                True, input_fn)
+
+    return {"profile": profile, "roles": roles, "role_side": role_side,
+            "principal": principal, "slot_answers": slot_answers,
+            "git_init": git_init, "plugin_install": plugin_install}
+
+
+def run_git_init(dest, name, timeout=30):
+    """Make `dest` a git repo with one initial commit. Non-fatal: returns
+    (ok, message); a failure (no git, no identity, timeout) never aborts the
+    stamp — the workspace is already written, git is a convenience here."""
+    steps = [["git", "init", "-b", "main"],
+             ["git", "add", "-A"],
+             ["git", "commit", "-m", f"stamp {name} workspace"]]
+    try:
+        for cmd in steps:
+            r = subprocess.run(cmd, cwd=str(dest), capture_output=True,
+                               text=True, timeout=timeout)
+            if r.returncode != 0:
+                return False, (f"`{' '.join(cmd)}` failed: "
+                               + (r.stderr or r.stdout or "").strip())
+        return True, "git repo initialized on main with an initial commit"
+    except subprocess.TimeoutExpired:
+        return False, f"git init exceeded {timeout}s — left un-initialized"
+    except OSError as e:
+        return False, f"git not runnable ({e}) — left un-initialized"
+
+
+def stamp(name, dest, profile, roles, role_side, principal,
+          slot_answers=None):
+    """Write a complete workspace at `dest`. Returns 0 on success, 1 if `dest`
+    exists and is non-empty. Pure of argparse: callers (main / the wizard /
+    adopt_project / tests) resolve the config first, then call this."""
+    dest = Path(dest)
     if dest.exists() and any(dest.iterdir()):
         print(f"refusing: {dest} exists and is not empty", file=sys.stderr)
         return 1
 
-    roles = ["owner", "builder"]
-    if not (args.no_orchestrator or args.profile.startswith("2agent")):
-        roles.append("orchestrator")
     orch = "orchestrator" in roles
 
     today = dt.date.today().isoformat()
@@ -540,7 +655,7 @@ def main() -> int:
     # side appends only its own rows. Stamped on init so the channel dir is
     # tracked and START_SESSION's "read INDEX.md" step finds a well-formed file.
     (dest / "channel" / "INDEX.md").write_text(
-        f"# REVIEW-ROUND LEDGER — {args.name} [PROTOCOL v2.6]\n\n"
+        f"# REVIEW-ROUND LEDGER — {name} [PROTOCOL v2.6]\n\n"
         "Append-only. Each side appends ONLY its own rows. ROUND-TYPE is one of\n"
         "FREEZE / RESULTS / FIX-CONFIRMATION (see review-convergence.md).\n"
         "Rounds used vs budget: default 2-3 substantive rounds per artifact "
@@ -559,7 +674,7 @@ def main() -> int:
         # /wake reads a well-formed state from the very first session.
         if role != "orchestrator":
             (dest / "memory" / role / "MEMORY.md").write_text(
-                f"# {args.name} — {role} memory index\n\n"
+                f"# {name} — {role} memory index\n\n"
                 f"ROLE_LOCK: this workspace's {role.upper()} sessions only.\n\n"
                 "## ⚡ working state\n"
                 "last unit: none (fresh stamp — never run)\n"
@@ -574,7 +689,7 @@ def main() -> int:
                 "line with the concrete next action before /sleep.\n",
                 encoding="utf-8")
         (dest / "memory" / role / "auth-log.md").write_text(
-            f"# AUTH-RECORD — {args.name} / {role} [PROTOCOL v2.6]\n\n"
+            f"# AUTH-RECORD — {name} / {role} [PROTOCOL v2.6]\n\n"
             "Append-only, event-sourced. Single-writer: this role's sessions\n"
             "only, only for words the principal spoke into this session (or\n"
             "a relay verified per proxy-auth-core.md when PROXY_AUTH is on).\n"
@@ -585,7 +700,7 @@ def main() -> int:
 
     if "orchestrator" in roles:
         (dest / "memory" / "orchestrator" / "MEMORY.md").write_text(
-            f"# {args.name} — orchestrator memory index\n\n"
+            f"# {name} — orchestrator memory index\n\n"
             f"ROLE_LOCK: this workspace's ORCHESTRATOR sessions only.\n\n"
             "## ⚡ working state\n"
             "last tick: none (never ticked)\n"
@@ -604,13 +719,13 @@ def main() -> int:
             "Overwrite this line with the concrete next action before /sleep.\n",
             encoding="utf-8")
         (dest / "memory" / "orchestrator" / "dispatch-log.md").write_text(
-            f"# DISPATCH LOG — {args.name} [PROTOCOL v2.6]\n\n"
+            f"# DISPATCH LOG — {name} [PROTOCOL v2.6]\n\n"
             "Append-only. One line per dispatch:\n"
             "| id | date | task ref | target role | model (rule) | status | result |\n"
             "|---|---|---|---|---|---|---|\n",
             encoding="utf-8")
         (dest / "TASKQUEUE.md").write_text(
-            f"# TASKQUEUE — {args.name} [PROTOCOL v2.6]\n\n"
+            f"# TASKQUEUE — {name} [PROTOCOL v2.6]\n\n"
             "T1-T3 below are EXAMPLE standing duties seeded by the stamp —\n"
             "when filling BINDINGS, prune/replace them to match the DUTIES\n"
             "binding (a duty in the queue that is not in DUTIES, or vice\n"
@@ -623,18 +738,16 @@ def main() -> int:
             f"| T3 | {today} | stamp | standing: cost-ledger day rollup (recurring) | queued |\n",
             encoding="utf-8")
         (dest / "memory" / "orchestrator" / "session-registry.md").write_text(
-            f"# SESSION_REGISTRY — {args.name}\n\n"
+            f"# SESSION_REGISTRY — {name}\n\n"
             "| role | workspace | session link/id | model | last seen | current unit |\n"
             "|---|---|---|---|---|---|\n",
             encoding="utf-8")
         (dest / "memory" / "orchestrator" / "cost-ledger.md").write_text(
-            f"# COST_LEDGER — {args.name}\n\n"
+            f"# COST_LEDGER — {name}\n\n"
             "| date | dispatch | role | model | rule (preset/override/escalation/downgrade) | est. tokens/cost |\n"
             "|---|---|---|---|---|---|\n",
             encoding="utf-8")
 
-    role_side = {"owner": args.owner_side, "builder": args.builder_side,
-                 "orchestrator": args.orch_side}
     side_parts = [role_side[r] for r in CANONICAL_ROLE_ORDER if r in roles]
 
     # ROLE_ALIASES row: only the sides whose name was CHANGED from the role's
@@ -648,22 +761,19 @@ def main() -> int:
     # Transport binding: the `.git-sync` profiles bind the git-sync transport
     # and need a WORKSPACE_REMOTE row (FILL at instantiation); the `.local`
     # profiles bind local-fs and carry no remote row.
-    transport = "git-sync" if args.profile.endswith("git-sync") else "local-fs"
+    transport = "git-sync" if profile.endswith("git-sync") else "local-fs"
     remote_row = ("| WORKSPACE_REMOTE | {{FILL: remote URL + default branch}} |\n"
                   if transport == "git-sync" else "")
 
     bindings_text = BINDINGS_TEMPLATE.format(
-        name=args.name, date=today, profile=args.profile,
+        name=name, date=today, profile=profile,
         transport=transport, remote_row=remote_row,
         dest=dest.as_posix(), side_names=" / ".join(side_parts),
         alias_row=alias_row,
-        orch_slots=ORCH_SLOTS if orch else "", principal=args.principal)
-    if args.wizard:
-        if sys.stdin.isatty():
-            bindings_text = fill_wizard(bindings_text)
-        else:
-            print("(--wizard ignored: stdin is not an interactive terminal)",
-                  file=sys.stderr)
+        orch_slots=ORCH_SLOTS if orch else "", principal=principal)
+    # Wizard answers (CANONICAL_REPO / REVIEWER / …) collected pre-stamp are
+    # spliced in here; DEFER_TOKEN answers become {{DEFERRED}} markers.
+    bindings_text = apply_slot_answers(bindings_text, slot_answers)
     (dest / "BINDINGS.md").write_text(bindings_text, encoding="utf-8")
     # README roles line names the display name when a side was renamed
     # (e.g. `owner (as "engine")`); an unchanged side shows just the role.
@@ -671,8 +781,8 @@ def main() -> int:
                    if role_side[r] != DEFAULT_SIDE_NAME[r] else r)
                   for r in CANONICAL_ROLE_ORDER if r in roles]
     (dest / "README.md").write_text(
-        README_TEMPLATE.format(name=args.name, date=today,
-                               roles=", ".join(roles_disp), profile=args.profile),
+        README_TEMPLATE.format(name=name, date=today,
+                               roles=", ".join(roles_disp), profile=profile),
         encoding="utf-8")
 
     shutil.copy(ROOT / "profiles" / "MODELS.md", dest / "MODELS.md")
@@ -704,9 +814,145 @@ def main() -> int:
     (dest / "tools" / "validate_auth_log.py").write_text(
         AUTH_LOG_VALIDATOR, encoding="utf-8")
 
-    print(f"stamped {args.name} at {dest} (roles: {', '.join(roles)})")
-    print("next: fill every {{FILL}} in BINDINGS.md, git init + private "
-          "remote, then run each role's first session.")
+    # In-workspace conformance copy — a HYGIENE self-check, NOT a trust gate
+    # (C2): running it from inside the workspace prints a SELF-CHECK MODE banner
+    # because it is workspace-owned code. A mandatory provenance header (C/D-5)
+    # records where and when it was stamped; to vet an unfamiliar workspace, run
+    # the protocol checkout's copy instead.
+    conf_src = ROOT / "tools" / "conformance_check.py"
+    if conf_src.is_file():
+        header = ("# STAMPED COPY — multi-agent-protocol PROTOCOL v2.6 @ "
+                  f"{today}. In-workspace HYGIENE SELF-CHECK (workspace-owned "
+                  "code); for a trust decision run the protocol checkout's "
+                  "copy against this workspace.\n")
+        src_text = conf_src.read_text(encoding="utf-8")
+        if src_text.startswith("#!"):
+            nl = src_text.index("\n") + 1
+            src_text = src_text[:nl] + header + src_text[nl:]
+        else:
+            src_text = header + src_text
+        (dest / "tools" / "conformance_check.py").write_text(
+            src_text, encoding="utf-8")
+
+    print(f"stamped {name} at {dest} (roles: {', '.join(roles)})")
+    return 0
+
+
+def print_next_steps(name, dest, roles, git_ok, git_msg, plugin_install):
+    """The post-stamp NEXT STEPS block: exactly what the operator does now."""
+    lead = "orchestrator" if "orchestrator" in roles else "owner"
+    print("\n=== NEXT STEPS ===")
+    n = 1
+    print(f"{n}. Fill every {{{{FILL}}}} in {dest}/BINDINGS.md "
+          "(CANONICAL_REPO, REVIEWER, EMBARGOES first). {{DEFERRED}} markers "
+          "are ones you chose to postpone — resolve before relying on them.")
+    n += 1
+    if git_ok:
+        print(f"{n}. Git: {git_msg}. Add a private remote and push so history "
+              "is protected.")
+    else:
+        print(f"{n}. Make it a repo: `cd {dest} && git init -b main && "
+              "git add -A && git commit -m \"stamp workspace\"`"
+              + (f"  (auto git-init: {git_msg})" if git_msg else "")
+              + ", then push to a private remote.")
+    n += 1
+    print(f"{n}. Sanity-check it — from your PROTOCOL CHECKOUT (trust copy): "
+          f"`python tools/conformance_check.py --workspace {dest}`. A fresh "
+          "stamp shows WARNs for unfilled slots; `--strict` should be clean "
+          "once every slot is resolved.")
+    n += 1
+    print(f"{n}. Open a Claude Code session IN {dest} and `/wake {lead}`.")
+    if plugin_install:
+        print("\n--- plugin install (once per machine) ---")
+        print("  /plugin marketplace add AIpandadreams/multi-agent-protocol")
+        print("  /plugin install agent-protocol@multi-agent-protocol")
+        print("  (the stamped .claude/settings.json also installs it at "
+              "session start.)")
+
+
+def _print_adoption_appendix(name, dest):
+    """Embed adopt_project.adoption_checklist() as a wizard appendix, for the
+    case where this workspace is replacing an existing ad-hoc collaboration.
+    Loaded lazily to avoid a new_project<->adopt_project import cycle; silent if
+    the tool is absent."""
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "adopt_project", ROOT / "tools" / "adopt_project.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except Exception:
+        return
+    print("\n--- if you are ADOPTING an existing collaboration ---")
+    print(mod.adoption_checklist(f"{name} at {dest}"))
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(
+        description="Stamp a dedicated per-project agent workspace.")
+    ap.add_argument("--name", required=True)
+    ap.add_argument("--dest", required=True)
+    # default None so resolve_topology can tell "not given" from an explicit
+    # choice (needed for the --no-orchestrator C3 conflict check).
+    ap.add_argument("--profile", default=None, choices=PROFILE_CHOICES)
+    ap.add_argument("--owner-side", default="owner")
+    ap.add_argument("--builder-side", default="builder")
+    ap.add_argument("--orch-side", default="orch")
+    ap.add_argument("--principal", default="{{FILL: principal's name}}")
+    ap.add_argument("--no-orchestrator", action="store_true",
+                    help="DEPRECATED alias for --profile 2agent.local "
+                         "(dual-role owner); errors if combined with a 3agent "
+                         "profile")
+    ap.add_argument("--wizard", action="store_true",
+                    help="interactive pre-stamp walkthrough (skipped if stdin "
+                         "is not a TTY)")
+    ap.add_argument("--git-init", action="store_true",
+                    help="initialize the stamped workspace as a git repo "
+                         "(non-fatal)")
+    ap.add_argument("--plugin-install", action="store_true",
+                    help="print plugin-install steps after stamping")
+    args = ap.parse_args()
+
+    git_init = args.git_init
+    plugin_install = args.plugin_install
+    slot_answers = {}
+
+    if args.wizard and sys.stdin.isatty():
+        cfg = wizard_preflight()
+        profile, roles = cfg["profile"], cfg["roles"]
+        role_side = cfg["role_side"]
+        principal = cfg["principal"]
+        slot_answers = cfg["slot_answers"]
+        git_init = cfg["git_init"]
+        plugin_install = cfg["plugin_install"]
+    else:
+        if args.wizard:
+            print("(--wizard ignored: stdin is not an interactive terminal)",
+                  file=sys.stderr)
+        try:
+            profile, roles = resolve_topology(args.profile, args.no_orchestrator)
+        except ValueError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
+        role_side = {"owner": args.owner_side, "builder": args.builder_side,
+                     "orchestrator": args.orch_side}
+        principal = args.principal
+
+    rc = stamp(args.name, args.dest, profile, roles, role_side, principal,
+               slot_answers=slot_answers)
+    if rc != 0:
+        return rc
+
+    git_ok, git_msg = (False, "")
+    if git_init:
+        git_ok, git_msg = run_git_init(Path(args.dest), args.name)
+        if not git_ok:
+            print(f"(git-init: {git_msg})", file=sys.stderr)
+
+    print_next_steps(args.name, args.dest, roles, git_ok, git_msg,
+                     plugin_install)
+    if args.wizard and sys.stdin.isatty():
+        _print_adoption_appendix(args.name, args.dest)
     return 0
 
 

@@ -137,6 +137,13 @@ examples/                   a worked end-to-end cycle you can read like a story
 
 ## Documentation
 
+**Reading order.** New here? Read in this order: **QUICKSTART** (stand one up) →
+**ARCHITECTURE** (what the pieces are) → **CONFIGURATIONS** (pick 2- vs 3-agent)
+→ **PROTOCOL** (the rules the agents follow). Then, as you need them:
+**AUTONOMY** and **ADVANCED** for unattended operation + proxy-auth, **CLOUD**
+for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
+**DESIGN**/**REVIEW_CONVERGENCE** for the evidence trail. **FAQ** anytime.
+
 - [QUICKSTART](docs/QUICKSTART.md) — zero to a running team
 - [ARCHITECTURE](docs/ARCHITECTURE.md) — the model, the workspace anatomy, why each piece exists
 - [AUTONOMY](docs/AUTONOMY.md) — unattended operation + self-improvement, the two core platform properties
