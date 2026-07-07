@@ -1071,7 +1071,7 @@ def main() -> int:
                     help="how the stamped .claude/settings.json installs the "
                          "plugin: 'marketplace' (default) registers + enables "
                          "it; 'manual' OMITS those blocks for a hand-copied "
-                         "~/.claude install (C/D-7)")
+                         "~/.claude install")
     args = ap.parse_args()
 
     git_init = args.git_init

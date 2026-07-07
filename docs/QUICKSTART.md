@@ -94,8 +94,11 @@ python tools/new_project.py --name myproject --dest path/to/myproject-ws --wizar
 Type `defer` on any slot to record it as `{{DEFERRED}}` (a *deliberately
 postponed* marker, distinct from an untouched `{{FILL}}`). Add `--git-init` to
 make the workspace a git repo immediately (non-fatal — if git or an identity is
-missing it just tells you), and `--plugin-install` to print the install steps
-again at the end. After stamping, the tool prints a **NEXT STEPS** block with
+missing it just tells you). `--plugin-install {marketplace,manual}` (default
+`marketplace`) controls how the stamped `.claude/settings.json` installs the
+plugin: `marketplace` registers and enables it; `manual` omits those blocks
+for a hand-copied `~/.claude` install. After stamping, the tool prints a
+**NEXT STEPS** block with
 exactly what to do next. `--no-orchestrator` is a deprecated alias for
 `--profile 2agent.local`.
 
