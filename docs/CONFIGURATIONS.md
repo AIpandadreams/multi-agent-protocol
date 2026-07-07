@@ -94,7 +94,10 @@ for different projects.
   orchestrator's binding rows to BINDINGS.md (the slot list is in
   `binding-slots.md`), create `memory/orchestrator/` + TASKQUEUE.md (copy
   the shapes from a fresh `3agent.local` stamp), and `/wake orchestrator`.
-  Workers notice nothing.
+  Workers notice nothing. `tools/scale_workspace.py --workspace <ws>` does the
+  file half for you — it materializes the orchestrator scaffold from the same
+  templates a fresh stamp uses and prints the exact BINDINGS rows to add by
+  hand (it never edits the principal-owned BINDINGS.md itself).
 
 ## Choosing, concretely
 
@@ -104,6 +107,7 @@ for different projects.
 | several concurrent projects, one brain to rule them | 3-agent global flavor |
 | one project, you enjoy reviewing the work directly and prefer talking to the owner | 2-agent (dual-role owner) |
 | you want approvals relayed while you're away from the worker sessions | 3-agent + PROXY_AUTH (advanced — read [ADVANCED.md](ADVANCED.md) first) |
+| several **fully separate** teams under one principal (not one brain over many pairs) | [FEDERATION.md](FEDERATION.md) — teams share only the protocol and you; authorization never crosses a team boundary |
 
 ## What stays constant in every configuration
 

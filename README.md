@@ -127,6 +127,9 @@ tools/
   wave_coverage_check.py    coverage checker for builder read-waves
   conformance_check.py      point-in-time workspace readiness check
   validate_auth_log.py      auth-log chain validator (also stamped per workspace)
+  watcher.py                generic multi-lane channel watcher (reports only)
+  scale_workspace.py        upgrade a 2-agent workspace to 3-agent
+  adopt_project.py          adopt an ad-hoc collaboration into a workspace
 docs/                       quickstart · architecture · configurations ·
                             protocol · advanced · design · FAQ
 examples/                   a worked end-to-end cycle you can read like a story
@@ -138,6 +141,8 @@ examples/                   a worked end-to-end cycle you can read like a story
 - [ARCHITECTURE](docs/ARCHITECTURE.md) — the model, the workspace anatomy, why each piece exists
 - [AUTONOMY](docs/AUTONOMY.md) — unattended operation + self-improvement, the two core platform properties
 - [CONFIGURATIONS](docs/CONFIGURATIONS.md) — 2-agent vs 3-agent vs combined, from live deployments
+- [MIGRATION](docs/MIGRATION.md) — moving a live channel's lanes safely (the stayed-lane rule)
+- [FEDERATION](docs/FEDERATION.md) — many separate teams under one principal, isolated by construction
 - [PROTOCOL](docs/PROTOCOL.md) — channel rules, review rounds, verdicts, memory discipline
 - [ADVANCED](docs/ADVANCED.md) — proxy authorization, integrity CI, reviewer bridge, model presets
 - [DESIGN](docs/DESIGN.md) — what's proven, what's deliberately simplified, what's roadmap

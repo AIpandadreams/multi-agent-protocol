@@ -31,6 +31,11 @@ Three rules do most of the work:
 3. **Append-only.** Files only ever gain lines; `CHANNEL_STATE.json`
    counters only ever go up. CI enforces both.
 
+Moving these lanes to a new location without losing an entry or leaving a lane
+unwatched follows a fixed pattern — including the **stayed-lane rule** (a
+repointed watcher goes blind on every lane it left behind, so each stayed lane
+keeps its own live monitor): see [MIGRATION.md](MIGRATION.md).
+
 ## Review rounds
 
 Every unit of consequence gets an independent review round before it lands:
@@ -92,6 +97,12 @@ from the orchestrator to workers as validated, append-only auth-log events
 — GRANT → RELAY-SENT → RECEIVED → exactly-one-landed CONSUMED → ACK — for
 an **enumerated list** of gate classes only. Full design:
 [ADVANCED.md](ADVANCED.md#proxy_auth--the-auth-log-lane).
+
+**Across teams:** authorization never crosses a team boundary either — a grant
+in one team authorizes nothing in another, even for the same principal. Multiple
+separate teams under one principal share only the protocol and you; the identity
+invariant is one role per workspace, keyed by `<project>/<side>` (no global
+agent-name registry). See [FEDERATION.md](FEDERATION.md).
 
 ## Changing the protocol
 

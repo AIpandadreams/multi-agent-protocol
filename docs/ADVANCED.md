@@ -182,6 +182,36 @@ workspace, and it deliberately runs its own trusted copy of
 a natural CI gate: check the workspace out next to a protocol checkout and run
 `--strict` once every slot should be resolved.
 
+## Renaming a side (display names)
+
+A side's *display* name — what shows in channel filenames, entry headers, and
+`/wake <name>` — is separate from its *canonical role* (owner / builder /
+orchestrator). The canonical role is load-bearing: `memory/<role>/` paths,
+`start/START_SESSION.<role>.md`, ROLE_LOCK, the auth-log chain, and every
+append-only counter key off it and must never change. You can, however, rename
+the display name (e.g. `builder` → `helper`) without touching any of that. See
+the `SIDE_NAMES` / `ROLE_ALIASES` slots in `binding-slots.md`.
+
+Do it at a **session boundary**, not mid-flight:
+
+1. **Freeze.** Both agents `/sleep` first — no in-flight channel entries or
+   review rounds.
+2. **Edit `BINDINGS.md`.** Set `SIDE_NAMES` to the new names, add or update the
+   `ROLE_ALIASES` row (`<new display>→<canonical role>`, comma-separated), and
+   append a history marker inside the `SIDE_NAMES` value so a later reader can
+   decode old channel filenames — e.g.
+   `SIDE_NAMES | engine / helper (formerly: engine / builder, until 2026-07-07)`.
+   Display names use charset `[A-Za-z0-9-]+` — no underscore (it is the
+   `<from>_to_<to>_<date>` filename separator).
+3. **Leave history alone.** Do NOT rename existing `channel/` files or
+   `memory/<role>/` directories — the old names stay so past filenames still
+   parse. New entries use the new names; each side's per-side entry counter
+   continues unbroken (role identity is unchanged, so numbering never resets).
+4. **Land + verify + wake.** One commit at the freeze boundary, run
+   `python tools/conformance_check.py --workspace <ws>` (a renamed side without
+   a matching `ROLE_ALIASES` row warns; an alias pointing at the wrong role
+   blocks), then `/wake <new name>`.
+
 ## Heartbeats (unattended operation)
 
 Local deployments run attended by default: sessions live while you're
@@ -190,10 +220,35 @@ a headless run per role — e.g. a Windows scheduled task or cron job that
 opens the workspace and runs the role's tick prompt. Rules that live
 experience made non-negotiable:
 
-- The tick runs in a **dedicated clone**, not your interactive checkout.
+- The tick runs in a **dedicated clone**, not your interactive checkout. This
+  is isolation **by construction, not by convention**: because the tick's clone
+  is a different working tree, it *physically cannot* stage the WIP sitting in
+  your interactive session — there is no `git add` it could run that would reach
+  those files. That is the difference between "we're careful not to commit your
+  half-finished edit" and "it is not possible to".
 - Fail closed: clone missing / cd failed / pull failed → abort loudly with
   a logged reason, never "best-effort continue".
-- Commit by explicit path; propagate the exit code so the scheduler can
-  alert.
+- **Stage only the role's own paths, by explicit path** — never `git add -A`
+  / `git add .`. The tick commits exactly the files its role produces, and
+  **any unexpected diff outside those paths is an ABORT, not a commit**: a tick
+  that finds something it did not expect stops and logs it rather than sweeping
+  it into history. Propagate the exit code so the scheduler can alert.
 - An unattended wake that finds no workspace reports
   "HEARTBEAT ABORT" and stops — it never improvises one.
+
+**Monitoring the heartbeat.** The tick keeps the queue moving; a second,
+principal-side check watches *the tick itself*. Schedule a lightweight probe
+that alerts when the workspace remote goes **silent past an idle-max** (no new
+commit within, say, your longest expected gap between ticks) — a stalled or
+crashed scheduler is otherwise invisible, since "nothing happened" looks
+identical to "nothing needed to happen". Pair it with a **history-rewrite
+guard**: the last-seen remote sha must remain an **ancestor** of the current tip
+(`git merge-base --is-ancestor <last-seen> <tip>`); a tip that no longer
+descends from what you last saw means force-pushed/rewritten history, which on
+an append-only workspace is a red flag worth a human look. This is
+**detection-only**, and its blind spots are named on purpose: it cannot see the
+**baseline first run** (no prior sha to compare), and a **rewrite-and-revert
+between two polls** slips through (the tip is an ancestor again by the time you
+look). The protocol deliberately **does not ship** this probe — the alert
+channel (email, chat, pager) is platform-specific and yours to wire; the two
+checks above are the whole contract.
