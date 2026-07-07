@@ -8,10 +8,13 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
 
 ## [Unreleased]
+
+## [1.2.0] — 2026-07-07
 
 ### Added — PROTOCOL v2.5 → v2.6 amendment
 An amendment bundle bumping the protocol the skills implement from
@@ -61,6 +64,16 @@ An amendment bundle bumping the protocol the skills implement from
   agreement, unknown-value block, repo-relative-path guard). See
   [docs/CLOUD.md](docs/CLOUD.md) for the deployment recipes and their honest
   hosted-cloud caveats.
+- **Role display-name aliasing (rename)** — a new **ROLE_ALIASES** binding slot
+  lets a deployment give its roles workspace-local display names (e.g.
+  `engine→owner`, `helper→builder`) that `/wake` resolves in three tiers:
+  canonical name → the workspace's `ROLE_ALIASES` row (which beats the built-ins)
+  → the legacy `engine`/`helper`/`orch` built-ins (so pre-2.6 workspaces with no
+  row still resolve). Aliases resolve ADDRESSING only — identity artifacts
+  (`ROLE_LOCK`, `memory/<role>/`, `START_SESSION`) always use the canonical role.
+  The rename is doc-only (no scripted rewrite); `conformance_check.py` gains a
+  side-name pass and warns on a role renamed without a matching `ROLE_ALIASES`
+  row.
 - **Onboarding — wizard v2** — `new_project.py --wizard` is now a pre-stamp
   walkthrough: topology → side names (validated at entry — underscore and other
   channel-filename-illegal characters are rejected and re-prompted) → principal

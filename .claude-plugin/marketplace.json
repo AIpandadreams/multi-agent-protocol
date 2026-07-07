@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "A four-party collaboration protocol for running AI agents on real work: owner/builder/orchestrator role skills, an independent cross-vendor reviewer gating every round, and a human principal holding all authorization gates.",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
