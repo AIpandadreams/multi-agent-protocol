@@ -10,15 +10,18 @@ marketplace).
 Usage:
   python tools/new_project.py --name myproject --dest path/to/myproject-ws \
       --profile 3agent.local --owner-side engine --builder-side builder \
-      [--principal "Your Name"] [--no-orchestrator] [--wizard] [--git-init]
+      [--principal "Your Name"] [--no-orchestrator] [--wizard] [--git-init] \
+      [--plugin-install {marketplace,manual}]
 
 Add --wizard for an interactive PRE-STAMP walkthrough (topology -> side names ->
-principal -> repo -> reviewer -> git-init -> plugin-install) that renders the
-resolved BINDINGS in one pass; it is skipped automatically when stdin is not an
-interactive terminal, so unattended stamps never hang. --git-init makes the
-fresh workspace a git repo (non-fatal); --plugin-install prints the plugin
-install steps after stamping. `--no-orchestrator` is a deprecated alias for
-`--profile 2agent.local` (a dual-role-owner workspace).
+principal -> repo -> reviewer -> a grouped {{FILL}} walk -> git-init ->
+plugin-install) that renders the resolved BINDINGS in one pass; it is skipped
+automatically when stdin is not an interactive terminal, so unattended stamps
+never hang. --git-init makes the fresh workspace a git repo (non-fatal);
+--plugin-install {marketplace,manual} chooses how the stamped
+.claude/settings.json installs the plugin — `manual` omits the marketplace
+blocks for a hand-copied ~/.claude install. `--no-orchestrator` is a deprecated
+alias for `--profile 2agent.local` (a dual-role-owner workspace).
 """
 import argparse
 import datetime as dt
@@ -424,34 +427,47 @@ jobs:
           echo "protected-path guard clean"
 """
 
-SETTINGS_TEMPLATE = {
-    "extraKnownMarketplaces": {
-        "multi-agent-protocol": {
-            "source": {
-                "source": "github",
-                "repo": "AIpandadreams/multi-agent-protocol",
-            }
-        },
-    },
-    "enabledPlugins": ["agent-protocol@multi-agent-protocol"],
-    # unattended wakes stall on permission prompts they cannot answer —
-    # pre-approve exactly the git/gh surface the channel loop needs
-    "permissions": {
-        "allow": [
-            "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)",
-            "Bash(git show:*)", "Bash(git fetch:*)", "Bash(git pull:*)",
-            "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
-            "Bash(git checkout:*)", "Bash(git switch:*)",
-            "Bash(git branch:*)", "Bash(git rev-parse:*)",
-            "Bash(git merge-base:*)", "Bash(gh pr create:*)",
-            "Bash(gh pr view:*)", "Bash(gh pr list:*)",
-            "Bash(gh run list:*)", "Bash(gh run view:*)",
-            "Bash(python tools/validate_auth_log.py)",
-            # the in-workspace hygiene self-check (SELF-CHECK MODE copy)
-            "Bash(python tools/conformance_check.py:*)",
-        ]
-    },
-}
+# unattended wakes stall on permission prompts they cannot answer —
+# pre-approve exactly the git/gh surface the channel loop needs
+_PERMISSIONS_ALLOW = [
+    "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)",
+    "Bash(git show:*)", "Bash(git fetch:*)", "Bash(git pull:*)",
+    "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
+    "Bash(git checkout:*)", "Bash(git switch:*)",
+    "Bash(git branch:*)", "Bash(git rev-parse:*)",
+    "Bash(git merge-base:*)", "Bash(gh pr create:*)",
+    "Bash(gh pr view:*)", "Bash(gh pr list:*)",
+    "Bash(gh run list:*)", "Bash(gh run view:*)",
+    "Bash(python tools/validate_auth_log.py)",
+    # the in-workspace hygiene self-check (SELF-CHECK MODE copy)
+    "Bash(python tools/conformance_check.py:*)",
+]
+
+PLUGIN_MODES = ("marketplace", "manual")
+
+
+def build_settings(plugin_mode="marketplace"):
+    """The stamped `.claude/settings.json` dict.
+
+    `marketplace` (default) registers the plugin marketplace and enables the
+    plugin so a session opened in the workspace installs it automatically.
+    `manual` OMITS both blocks (C/D-7): the operator installs the skills into
+    their own `~/.claude` by hand, and the workspace must NOT also try to pull
+    the marketplace plugin (which would double-install / fight the manual copy).
+    Either way the git/gh permission allowlist is stamped."""
+    settings = {}
+    if plugin_mode == "marketplace":
+        settings["extraKnownMarketplaces"] = {
+            "multi-agent-protocol": {
+                "source": {
+                    "source": "github",
+                    "repo": "AIpandadreams/multi-agent-protocol",
+                }
+            },
+        }
+        settings["enabledPlugins"] = ["agent-protocol@multi-agent-protocol"]
+    settings["permissions"] = {"allow": list(_PERMISSIONS_ALLOW)}
+    return settings
 
 
 FILL_RE = re.compile(r"\{\{FILL:([^}]*)\}\}")
@@ -465,6 +481,34 @@ PROFILE_CHOICES = ["2agent.local", "3agent.local",
 # {{FILL}}. Conformance treats DEFERRED as a deliberate "later", not a slot
 # nobody has looked at.
 DEFER_TOKEN = "defer"
+
+# A side (display) name feeds the `<from>_to_<to>_<date>` channel filename, so
+# it must match this charset — underscore in particular is FORBIDDEN because it
+# is that grammar's separator. The wizard rejects a bad name AT ENTRY (rather
+# than letting conformance catch it post-stamp).
+SIDE_CHARSET_RE = re.compile(r"^[A-Za-z0-9-]+$")
+
+# The remaining {{FILL}} slots the wizard walks AFTER the preflight, grouped so
+# the operator fills the load-bearing ones on day one and is offered an easy
+# "defer" on the rest (addressing the "{{FILL}} wall" — most are postponeable).
+# CANONICAL_REPO / REVIEWER / PRINCIPAL are handled in the preflight already.
+DAY_ONE_SLOTS = [
+    ("EMBARGOES / GATES", "standing must-ask-first list + size tripwire"),
+    ("SIGNING", "gpg-local / webflow-api / sign-on-merge"),
+]
+DEFERRABLE_SLOTS = [
+    ("PINNED_RESOURCES", "exact IDs/paths the agents may touch, or 'none'"),
+    ("HEARTBEAT", "per-role check-in cadence + offset"),
+    ("WATCHER", "per-role monitor + lanes + cadence (required if never-idle)"),
+]
+# Orchestrator-only slots are deferrable too (a 2-agent stamp never has them).
+DEFERRABLE_ORCH_SLOTS = [
+    ("FLAVOR", "global-pa or project:<name>"),
+    ("AUTH_PROVENANCE", "per-role-identity / single-identity"),
+    ("ESCALATION", "matrix + quiet hours"),
+    ("DUTIES", "standing duty list"),
+    ("TICKS", "idle cadence / active-window cadence"),
+]
 
 
 def resolve_topology(profile, no_orchestrator):
@@ -548,44 +592,115 @@ def _ask_yesno(prompt, default_yes, input_fn):
     return ans[0] == "y"
 
 
-def wizard_preflight(input_fn=input, which_fn=None):
+def _ask_side_name(role, default, input_fn):
+    """Ask for a side display name, REJECTING an illegal one at entry.
+
+    A side name flows into channel filenames, so it must be [A-Za-z0-9-]
+    (underscore is the filename separator — forbidden). On a bad answer we
+    explain and re-prompt rather than stamp a workspace conformance will
+    later BLOCK. A bounded retry count keeps a piped/hostile input_fn from
+    looping forever — it falls back to the default with a note."""
+    for _ in range(5):
+        name = _ask(f"Display name for the {role} side", default, input_fn)
+        if SIDE_CHARSET_RE.match(name):
+            return name
+        why = ("'_' is the channel-filename separator"
+               if "_" in name else "only letters, digits and '-' are allowed")
+        print(f"  ! '{name}' is not a legal side name ({why}). Try again.")
+    print(f"  ! too many invalid attempts — using the default '{default}'.")
+    return default
+
+
+def walk_fill_slots(roles, input_fn, slot_answers):
+    """Walk the remaining {{FILL}} slots after the preflight, in two groups.
+
+    Day-one slots default to `defer` but are worth answering now; deferrable
+    slots default to `defer` outright. Any slot the operator leaves at the
+    default is recorded as DEFER_TOKEN (→ {{DEFERRED}}); a typed value is kept
+    verbatim. Answers are written into `slot_answers` (never overwriting a
+    preflight answer). Mutates and returns `slot_answers`."""
+    groups = [("day-one (fill these first)", DAY_ONE_SLOTS),
+              ("deferrable (Enter to postpone)", DEFERRABLE_SLOTS)]
+    if "orchestrator" in roles:
+        groups.append(("orchestrator (deferrable)", DEFERRABLE_ORCH_SLOTS))
+    for label, slots in groups:
+        print(f"\n  — {label} —")
+        for slot, hint in slots:
+            if slot in slot_answers:
+                continue  # a preflight answer wins
+            ans = _ask(f"{slot} ({hint})", DEFER_TOKEN, input_fn)
+            slot_answers[slot] = ans if ans else DEFER_TOKEN
+    return slot_answers
+
+
+def wizard_preflight(input_fn=None, which_fn=None, seed=None):
     """Interactive PRE-STAMP walkthrough → a resolved config dict.
 
     Order: topology (roles + transport) → side names → principal → repo →
-    reviewer (probes PATH for a CLI) → git-init → plugin-install. `input_fn` and
-    `which_fn` are injectable so tests can drive it without a TTY. Returns:
+    reviewer (probes PATH for a CLI) → grouped {{FILL}} walk → git-init →
+    plugin-install. `input_fn` and `which_fn` are injectable so tests can drive
+    it without a TTY. Both use a None sentinel resolved to the live builtin at
+    CALL time — a bare `input_fn=input` default would capture the builtin at
+    import, so a caller (or test) that later swaps `builtins.input` wouldn't be
+    seen.
+
+    `seed` (typically the parsed argparse args) PRE-FILLS each question's
+    DEFAULT, so a flag the operator already passed just needs Enter to accept —
+    flags seed, the wizard confirms. Reads: profile, no_orchestrator,
+    owner_side/builder_side/orch_side, principal, plugin_install. Returns:
       {profile, roles, role_side, principal, slot_answers, git_init,
-       plugin_install}
-    slot_answers carries CANONICAL_REPO / REVIEWER answers (or DEFER_TOKEN).
+       plugin_mode}
+    slot_answers carries CANONICAL_REPO / REVIEWER + the walked slots (values or
+    DEFER_TOKEN).
     """
+    if input_fn is None:
+        input_fn = input
     if which_fn is None:
         which_fn = shutil.which
+
+    def _seed(attr, fallback=None):
+        return getattr(seed, attr, fallback) if seed is not None else fallback
+
     print("\n— new workspace wizard —")
     print("Answer each question; press Enter for the default. Type "
           f"'{DEFER_TOKEN}' on a slot to record it as {{{{DEFERRED}}}} for later.\n")
 
-    # 1. topology
+    # 1. topology — defaults seeded from --profile / --no-orchestrator
+    seed_profile = _seed("profile")
+    if seed_profile:
+        three_default = seed_profile.startswith("3agent")
+        gitsync_default = seed_profile.endswith("git-sync")
+    else:
+        three_default = not bool(_seed("no_orchestrator", False))
+        gitsync_default = False
     three = _ask_yesno("Run a separate orchestrator? (3-agent; No = dual-role "
-                       "owner / 2-agent)", True, input_fn)
+                       "owner / 2-agent)", three_default, input_fn)
     gitsync = _ask_yesno("Do the agents run on SEPARATE machines? "
                          "(git-sync transport; No = one shared filesystem)",
-                         False, input_fn)
+                         gitsync_default, input_fn)
     profile = ("3agent" if three else "2agent") + (".git-sync" if gitsync
                                                    else ".local")
     roles = ["owner", "builder"] + (["orchestrator"] if three else [])
 
-    # 2. side names
+    # 2. side names (validated at entry — underscore / bad charset rejected;
+    #    seeded from --owner-side / --builder-side / --orch-side)
+    seed_side = {"owner": _seed("owner_side", DEFAULT_SIDE_NAME["owner"]),
+                 "builder": _seed("builder_side", DEFAULT_SIDE_NAME["builder"]),
+                 "orchestrator": _seed("orch_side",
+                                       DEFAULT_SIDE_NAME["orchestrator"])}
     role_side = {}
     for role in CANONICAL_ROLE_ORDER:
         if role not in roles:
             role_side[role] = DEFAULT_SIDE_NAME[role]
             continue
-        role_side[role] = _ask(f"Display name for the {role} side",
-                               DEFAULT_SIDE_NAME[role], input_fn)
+        # never seed an illegal default (a bad --*-side flag) into the prompt.
+        cand = seed_side.get(role) or DEFAULT_SIDE_NAME[role]
+        default = cand if SIDE_CHARSET_RE.match(cand) else DEFAULT_SIDE_NAME[role]
+        role_side[role] = _ask_side_name(role, default, input_fn)
 
-    # 3. principal
+    # 3. principal — seeded from --principal (unless still the FILL sentinel)
     principal = _ask("Principal's name (the human who holds the gates)",
-                     "{{FILL: principal's name}}", input_fn)
+                     _seed("principal", "{{FILL: principal's name}}"), input_fn)
 
     # 4. repo
     slot_answers = {}
@@ -602,18 +717,29 @@ def wizard_preflight(input_fn=input, which_fn=None):
         suggest = DEFER_TOKEN
         print("  (no 'codex' CLI on PATH — a different-model Claude session is "
               "the documented fallback reviewer)")
-    reviewer = _ask("REVIEWER — who reviews each side's work", suggest, input_fn)
+    reviewer = _ask("REVIEWER — who reviews each side's work (type 'none' to "
+                    "run without one)", suggest, input_fn)
+    if reviewer.strip().lower() == "none":
+        print("  ! REVIEWER = none. Independent cross-vendor review is the "
+              "protocol's single biggest quality lever — running without it "
+              "means no gate catches a bad round. Bind one as soon as you can "
+              "(a different-model Claude session is a fine fallback).")
     slot_answers["REVIEWER"] = reviewer
 
-    # 6. git-init  7. plugin-install
+    # 6. the remaining {{FILL}} walk (day-one vs deferrable), then git + plugin
+    walk_fill_slots(roles, input_fn, slot_answers)
+
     git_init = _ask_yesno("Initialize the workspace as a git repo now?",
                           True, input_fn)
-    plugin_install = _ask_yesno("Print plugin-install steps after stamping?",
-                                True, input_fn)
+    manual_default = _seed("plugin_install", "marketplace") == "manual"
+    manual = _ask_yesno("Install skills MANUALLY (copy into ~/.claude)? "
+                        "No = marketplace plugin (recommended)", manual_default,
+                        input_fn)
+    plugin_mode = "manual" if manual else "marketplace"
 
     return {"profile": profile, "roles": roles, "role_side": role_side,
             "principal": principal, "slot_answers": slot_answers,
-            "git_init": git_init, "plugin_install": plugin_install}
+            "git_init": git_init, "plugin_mode": plugin_mode}
 
 
 def run_git_init(dest, name, timeout=30):
@@ -638,14 +764,21 @@ def run_git_init(dest, name, timeout=30):
 
 
 def stamp(name, dest, profile, roles, role_side, principal,
-          slot_answers=None):
+          slot_answers=None, plugin_mode="marketplace"):
     """Write a complete workspace at `dest`. Returns 0 on success, 1 if `dest`
     exists and is non-empty. Pure of argparse: callers (main / the wizard /
-    adopt_project / tests) resolve the config first, then call this."""
+    adopt_project / tests) resolve the config first, then call this.
+    `plugin_mode` (marketplace | manual) shapes .claude/settings.json."""
     dest = Path(dest)
     if dest.exists() and any(dest.iterdir()):
         print(f"refusing: {dest} exists and is not empty", file=sys.stderr)
         return 1
+
+    # A principal of 'defer' (wizard defer, or `--principal defer`) becomes a
+    # DEFERRED marker so conformance WARNs — never a literal 'defer' silently
+    # stamped as the principal's name (Codex M3).
+    if principal is not None and principal.strip().lower() == DEFER_TOKEN:
+        principal = "{{DEFERRED: principal's name}}"
 
     orch = "orchestrator" in roles
 
@@ -805,7 +938,8 @@ def stamp(name, dest, profile, roles, role_side, principal,
     claude_dir = dest / ".claude"
     claude_dir.mkdir()
     (claude_dir / "settings.json").write_text(
-        json.dumps(SETTINGS_TEMPLATE, indent=2) + "\n", encoding="utf-8")
+        json.dumps(build_settings(plugin_mode), indent=2) + "\n",
+        encoding="utf-8")
 
     wf_dir = dest / ".github" / "workflows"
     wf_dir.mkdir(parents=True)
@@ -838,8 +972,15 @@ def stamp(name, dest, profile, roles, role_side, principal,
     return 0
 
 
-def print_next_steps(name, dest, roles, git_ok, git_msg, plugin_install):
-    """The post-stamp NEXT STEPS block: exactly what the operator does now."""
+def print_next_steps(name, dest, roles, git_ok, git_msg,
+                     plugin_mode="marketplace"):
+    """The post-stamp NEXT STEPS block: exactly what the operator does now.
+
+    The plugin section matches `plugin_mode`: `marketplace` shows the two
+    `/plugin` commands (and notes the stamped settings.json re-installs at
+    session start); `manual` shows the copy-into-~/.claude instructions and
+    notes that settings.json deliberately OMITS the marketplace blocks so the
+    manual copy is authoritative (C/D-7)."""
     lead = "orchestrator" if "orchestrator" in roles else "owner"
     print("\n=== NEXT STEPS ===")
     n = 1
@@ -862,19 +1003,30 @@ def print_next_steps(name, dest, roles, git_ok, git_msg, plugin_install):
           "once every slot is resolved.")
     n += 1
     print(f"{n}. Open a Claude Code session IN {dest} and `/wake {lead}`.")
-    if plugin_install:
-        print("\n--- plugin install (once per machine) ---")
+    if plugin_mode == "manual":
+        print("\n--- plugin install: MANUAL (settings.json omits the "
+              "marketplace blocks) ---")
+        print("  cp -r plugins/agent-protocol/skills/* ~/.claude/skills/")
+        print("  cp plugins/agent-protocol/commands/*.md ~/.claude/commands/")
+        print("  (run from your protocol checkout; your ~/.claude copy is the "
+              "one that loads — the workspace won't also pull the marketplace "
+              "plugin.)")
+    else:
+        print("\n--- plugin install: MARKETPLACE (once per machine) ---")
         print("  /plugin marketplace add AIpandadreams/multi-agent-protocol")
         print("  /plugin install agent-protocol@multi-agent-protocol")
         print("  (the stamped .claude/settings.json also installs it at "
               "session start.)")
 
 
-def _print_adoption_appendix(name, dest):
-    """Embed adopt_project.adoption_checklist() as a wizard appendix, for the
-    case where this workspace is replacing an existing ad-hoc collaboration.
-    Loaded lazily to avoid a new_project<->adopt_project import cycle; silent if
-    the tool is absent."""
+def _print_adoption_appendix(name, dest, refusal=False):
+    """Print adopt_project.adoption_checklist(). Called on TWO wizard paths:
+    (1) after a NON-EMPTY-DEST REFUSAL (`refusal=True`) — the ACTUAL adopter,
+    who already has a collaboration sitting in `dest` and needs the in-place
+    path; and (2) after a SUCCESSFUL stamp (`refusal=False`) — a clearly
+    OPTIONAL pointer for the rarer case of replacing an ad-hoc collaboration,
+    ignorable otherwise. Loaded lazily to avoid a new_project<->adopt_project
+    import cycle; silent if the tool is absent."""
     try:
         import importlib.util
         spec = importlib.util.spec_from_file_location(
@@ -883,7 +1035,12 @@ def _print_adoption_appendix(name, dest):
         spec.loader.exec_module(mod)
     except Exception:
         return
-    print("\n--- if you are ADOPTING an existing collaboration ---")
+    if refusal:
+        print("\n--- that directory already has content — if you are ADOPTING "
+              "an existing collaboration IN PLACE, here's how ---")
+    else:
+        print("\n--- OPTIONAL: only if this workspace REPLACES an existing "
+              "ad-hoc collaboration — otherwise ignore ---")
     print(mod.adoption_checklist(f"{name} at {dest}"))
 
 
@@ -909,22 +1066,26 @@ def main() -> int:
     ap.add_argument("--git-init", action="store_true",
                     help="initialize the stamped workspace as a git repo "
                          "(non-fatal)")
-    ap.add_argument("--plugin-install", action="store_true",
-                    help="print plugin-install steps after stamping")
+    ap.add_argument("--plugin-install", choices=PLUGIN_MODES,
+                    default="marketplace",
+                    help="how the stamped .claude/settings.json installs the "
+                         "plugin: 'marketplace' (default) registers + enables "
+                         "it; 'manual' OMITS those blocks for a hand-copied "
+                         "~/.claude install (C/D-7)")
     args = ap.parse_args()
 
     git_init = args.git_init
-    plugin_install = args.plugin_install
+    plugin_mode = args.plugin_install
     slot_answers = {}
 
     if args.wizard and sys.stdin.isatty():
-        cfg = wizard_preflight()
+        cfg = wizard_preflight(seed=args)
         profile, roles = cfg["profile"], cfg["roles"]
         role_side = cfg["role_side"]
         principal = cfg["principal"]
         slot_answers = cfg["slot_answers"]
         git_init = cfg["git_init"]
-        plugin_install = cfg["plugin_install"]
+        plugin_mode = cfg["plugin_mode"]
     else:
         if args.wizard:
             print("(--wizard ignored: stdin is not an interactive terminal)",
@@ -939,8 +1100,13 @@ def main() -> int:
         principal = args.principal
 
     rc = stamp(args.name, args.dest, profile, roles, role_side, principal,
-               slot_answers=slot_answers)
+               slot_answers=slot_answers, plugin_mode=plugin_mode)
     if rc != 0:
+        # A non-empty-dest refusal under the wizard is exactly the operator who
+        # already has an ad-hoc collaboration there — point them at adopt-in-
+        # place rather than leaving them stuck (C/D — adoption appendix).
+        if args.wizard and sys.stdin.isatty():
+            _print_adoption_appendix(args.name, args.dest, refusal=True)
         return rc
 
     git_ok, git_msg = (False, "")
@@ -949,8 +1115,7 @@ def main() -> int:
         if not git_ok:
             print(f"(git-init: {git_msg})", file=sys.stderr)
 
-    print_next_steps(args.name, args.dest, roles, git_ok, git_msg,
-                     plugin_install)
+    print_next_steps(args.name, args.dest, roles, git_ok, git_msg, plugin_mode)
     if args.wizard and sys.stdin.isatty():
         _print_adoption_appendix(args.name, args.dest)
     return 0

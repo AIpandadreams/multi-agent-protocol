@@ -61,6 +61,25 @@ An amendment bundle bumping the protocol the skills implement from
   agreement, unknown-value block, repo-relative-path guard). See
   [docs/CLOUD.md](docs/CLOUD.md) for the deployment recipes and their honest
   hosted-cloud caveats.
+- **Onboarding — wizard v2** — `new_project.py --wizard` is now a pre-stamp
+  walkthrough: topology → side names (validated at entry — underscore and other
+  channel-filename-illegal characters are rejected and re-prompted) → principal
+  → project repo → reviewer (probes `PATH` for a `codex` CLI; `none` is allowed
+  but warns that independent review is the core quality lever) → a grouped
+  `{{FILL}}` walk (day-one slots vs deferrable, where Enter records a
+  `{{DEFERRED}}` marker distinct from an untouched `{{FILL}}`). After every
+  stamp it prints a **NEXT STEPS** block with absolute paths. New `--git-init`
+  (default off; non-fatal, timeout-guarded so a cold GPG agent never eats the
+  stamp) and `--plugin-install {marketplace,manual}` — `manual` omits the
+  marketplace blocks from the stamped `.claude/settings.json` for a hand-copied
+  `~/.claude` install. `--no-orchestrator` is now a deprecated alias for
+  `--profile 2agent.local` (it errors instead of stamping an invalid workspace).
+  The stamp also drops a **self-check copy** of `conformance_check.py` into the
+  workspace (`SELF-CHECK MODE` banner — hygiene, not a trust gate), and the
+  `/wake` command runs a pre-wake conformance gate that hard-stops on any
+  BLOCKER (including the new **one-agent-per-role** check) and warns when the
+  workspace is not a git repo (checkpoints won't persist). QUICKSTART gains a
+  three-repo diagram and a first-exchange example; README gains a reading order.
 
 The whole skills tree, the two lifecycle commands, and the tooling stamps flip
 to `PROTOCOL v2.6`; `new_project.py` stamps v2.6 workspaces.

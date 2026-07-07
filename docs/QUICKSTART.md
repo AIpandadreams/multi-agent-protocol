@@ -118,7 +118,9 @@ Leave `PROXY_AUTH` **off** (the default). It's an advanced feature
 requires it: with it off, you simply give approvals in whichever session
 asks for them.
 
-Then make the workspace a repo:
+Then make the workspace a repo — **unless you already did**: `--git-init` (or
+answering "yes" to the wizard's git-init question) has already run this, so skip
+to pushing a remote. Otherwise:
 
 ```bash
 cd path/to/myproject-ws

@@ -546,7 +546,14 @@ def _self_check_banner():
     copy (C2): its parent-of-tools directory carries a BINDINGS.md, whereas the
     protocol checkout's copy sits beside no workspace BINDINGS. The in-workspace
     copy is workspace-OWNED code, so it is a hygiene self-check, never a trust
-    gate — for a trust decision, run the protocol checkout's copy."""
+    gate — for a trust decision, run the protocol checkout's copy.
+
+    Detection keys on THIS FILE's own provenance (a workspace BINDINGS.md beside
+    its tools/ dir), NOT on whether the --workspace target happens to contain
+    this file. That is deliberate: the banner is about the code you are running
+    being workspace-owned, so it correctly fires whenever a stamped copy runs —
+    including when pointed at some OTHER workspace, which is exactly when the
+    "don't trust workspace-owned code" reminder matters most."""
     own_ws = Path(__file__).resolve().parent.parent
     if (own_ws / "BINDINGS.md").is_file():
         print("SELF-CHECK MODE — this is the workspace's OWN stamped copy of "

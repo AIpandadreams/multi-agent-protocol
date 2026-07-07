@@ -19,30 +19,13 @@ Requested role: $ARGUMENTS
    do not guess and do not create one. (Locate FIRST: the workspace's
    `ROLE_ALIASES` binding is needed to resolve the requested name below.)
    A headless / cold-successor wake that finds NO provisioned workspace
-   **ABORTS loudly and never self-clones** — see step 3.
+   **ABORTS loudly and never self-clones** — see step 2.
 
-2. **Run the hygiene conformance gate.** Before reading any state, run the
-   workspace's own `tools/conformance_check.py --workspace .` (it prints a
-   `SELF-CHECK MODE` banner — it is workspace-owned code, a hygiene check,
-   not a trust gate). **Any BLOCKER is a HARD STOP: do not wake.** Surface the
-   blockers and ask the principal to resolve them first. Blockers mean the
-   deployment is structurally unsound — a missing required file, an
-   unsupported protocol pin, a weakened PROXY_AUTH guard, a broken auth-log
-   chain, or a **one-agent-per-role violation** (two `memory/<role>/` dirs
-   locking to the same role, or a dir whose ROLE_LOCK names a different role —
-   waking into that would let two sessions answer as the same authority).
-   WARN-only findings (unfilled `{{FILL}}` / postponed `{{DEFERRED}}` slots)
-   do not block the wake — note them and continue. To vet an UNFAMILIAR
-   workspace you did not stamp, run the trusted copy from your protocol
-   checkout instead of the workspace's own.
-   Also check the workspace is a **git repository**: if it is not, warn the
-   principal that `/sleep` checkpoints will NOT persist durably (memory and
-   channel state live in git — principle #2) and recommend `git init` +
-   remote before real work. Warn-and-continue, not a stop.
-
-3. **Sync the transport first (git-sync only).** If `TRANSPORT` binds
+2. **Sync the transport FIRST (git-sync only).** If `TRANSPORT` binds
    `git-sync`, the workspace repo is the rendezvous and it may be stale or
-   diverged — resolve that BEFORE reading any state:
+   diverged — resolve that BEFORE the conformance gate or any state read, so
+   the gate (step 3) validates the CURRENT tree, not a stale checkout that a
+   fetch would immediately supersede.
    - **Fetch first**, then reconcile against `WORKSPACE_REMOTE`'s branch. A
      divergence (local commits the remote lacks, or vice versa) is the FIRST
      problem to solve — un-pushable state means a later checkpoint cannot
@@ -54,7 +37,27 @@ Requested role: $ARGUMENTS
      The scheduler provisions the checkout; its absence is a setup failure to
      report, not to paper over.
    - Under `local-fs` this step is a no-op (the shared filesystem is the
-     rendezvous) — proceed to step 4.
+     rendezvous) — go straight to the conformance gate, which stays gate-first.
+
+3. **Run the hygiene conformance gate.** With any git-sync rendezvous now
+   reconciled, run the workspace's own `tools/conformance_check.py
+   --workspace .` against the CURRENT tree (it prints a `SELF-CHECK MODE`
+   banner — it is workspace-owned code, a hygiene check, not a trust gate).
+   **Any BLOCKER is a HARD STOP: do not wake.** Surface the blockers and ask
+   the principal to resolve them first. Blockers mean the deployment is
+   structurally unsound — a missing required file, an unsupported protocol pin,
+   a weakened PROXY_AUTH guard, a broken auth-log chain, or a
+   **one-agent-per-role violation** (two `memory/<role>/` dirs locking to the
+   same role, or a dir whose ROLE_LOCK names a different role — waking into that
+   would let two sessions answer as the same authority). WARN-only findings
+   (unfilled `{{FILL}}` / postponed `{{DEFERRED}}` slots) do not block the
+   wake — note them and continue. To vet an UNFAMILIAR workspace you did not
+   stamp, run the trusted copy from your protocol checkout instead of the
+   workspace's own.
+   Also check the workspace is a **git repository**: if it is not, warn the
+   principal that `/sleep` checkpoints will NOT persist durably (memory and
+   channel state live in git — principle #2) and recommend `git init` +
+   remote before real work. Warn-and-continue, not a stop.
 
 4. **Resolve the role** to a canonical role (`owner` | `builder` |
    `orchestrator`), in three tiers — first match wins:
