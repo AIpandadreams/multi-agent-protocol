@@ -1,0 +1,37 @@
+# Example release-scrub pattern list  (structure only — NOT a real list)
+#
+# HOW TO USE THIS FILE:
+#   1. Copy it to a location OUTSIDE this repo (so your real strings never get
+#      committed), e.g.  cp examples/scrub_patterns.example.txt ~/my-scrub.txt
+#   2. Replace every placeholder below with the actual strings your deployment
+#      must never publish (your name, company, home path, private repo, ...).
+#   3. Keep that filled-in copy PRIVATE and untracked. Point the gate at it:
+#        python tools/release_scrub.py <release-tree> --patterns ~/my-scrub.txt
+#
+# Format: one case-insensitive regular expression per line. Blank lines and
+# lines beginning with '#' are ignored. The placeholders here are deliberately
+# generic so this example passes cleanly against this anonymous repo.
+
+# your own name(s) — first, last, nicknames
+yourname
+yourfirst yourlast
+
+# your company / product / brand names
+yourcompany
+yourproduct
+
+# home-directory paths that leak a real username
+C:[\\/]Users[\\/]
+/home/[a-z][a-z0-9_-]+
+
+# personal email addresses / domains
+@gmail\.com
+@yahoo\.com
+you@example\.com
+
+# your private repo slugs (host/handle or host/handle/repo)
+github\.com/yourhandle/
+gitlab\.com/yourhandle/
+
+# internal hostnames / infrastructure identifiers
+yourhost\.internal
