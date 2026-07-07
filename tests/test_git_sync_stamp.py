@@ -215,6 +215,49 @@ class CheckTransportTest(unittest.TestCase):
         self.assertEqual(_sev(f, "WARN"), [])
         self.assertEqual(_sev(f, "BLOCKER"), [])
 
+    def test_repo_relative_value_with_url_note_no_warn(self):
+        # A repo-relative value that cites a URL must NOT trip the absolute-path
+        # guard — the `s:/` in `https://` used to false-match the drive-letter
+        # alternative (the MODERATE finding).
+        f = _transport_findings(
+            {"PROFILE": "3agent.git-sync", "TRANSPORT": "git-sync",
+             "CHANNEL": "channel/ (repo-relative)",
+             "MEMORY": "memory/<role>/ (see https://example.com/doc)"})
+        self.assertEqual(_sev(f, "WARN"), [])
+        self.assertEqual(_sev(f, "BLOCKER"), [])
+
+
+class AbsPathRegexTest(unittest.TestCase):
+    # Directly pin ABS_PATH_RE against the cases the MODERATE finding named:
+    # real absolute paths match; repo-relative values and URLs do not.
+    def _matches(self, value):
+        return cc.ABS_PATH_RE.search(value) is not None
+
+    def test_repo_relative_channel_no_match(self):
+        self.assertFalse(self._matches("channel/"))
+        self.assertFalse(self._matches("channel/ (repo-relative)"))
+
+    def test_windows_drive_path_matches(self):
+        self.assertTrue(self._matches("C:\\ws"))
+        self.assertTrue(self._matches("C:/ws"))
+        # at string start (no char before the drive letter)
+        self.assertTrue(self._matches("C:\\ws\\channel"))
+
+    def test_posix_absolute_path_matches(self):
+        self.assertTrue(self._matches("/srv/ws"))
+        self.assertTrue(self._matches("/var/lib/ws"))
+
+    def test_unc_path_matches(self):
+        self.assertTrue(self._matches("\\\\host\\share"))
+
+    def test_bare_url_no_match(self):
+        self.assertFalse(self._matches("https://example.com/x"))
+        self.assertFalse(self._matches("http://example.com/a/b"))
+
+    def test_value_with_embedded_url_no_match(self):
+        self.assertFalse(
+            self._matches("memory/<role>/ (see https://example.com/doc)"))
+
 
 if __name__ == "__main__":
     unittest.main()

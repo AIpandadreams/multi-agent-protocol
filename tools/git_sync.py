@@ -38,8 +38,26 @@ from typing import List, NamedTuple, Optional
 class PublishResult(NamedTuple):
     ok: bool
     attempts: int
-    action: str          # pushed | reservation-dropped | conflict | lane-down
+    action: str
     detail: Optional[str]
+    # `action` values, and what each means for LOCAL state:
+    #   pushed               push succeeded — remote advanced, nothing to redo.
+    #   reservation-dropped  CONFIRMED contention on a reservation-class push:
+    #                        the local CONSUMED was hard-reset away; re-verify
+    #                        the grant from the new tip before reserving again.
+    #   mixed-publish        caller bug — more than the single reservation
+    #                        commit was ahead; NOTHING dropped, local intact.
+    #   conflict             rebase hit a content conflict (a writer touched a
+    #                        file it does not own); rebase aborted, local intact.
+    #   lane-down            still rejected after max_attempts of CONFIRMED
+    #                        contention; any rebase done is kept, nothing lost.
+    #   transport-error      push was rejected AND the follow-up fetch failed
+    #                        (network / auth / bad remote URL) — the reject
+    #                        cause is unknown, so NOTHING was mutated locally.
+    #   rejected-no-contention  push rejected but a successful fetch shows the
+    #                        remote did NOT move — a server-side refusal
+    #                        (protected branch, pre-receive hook, permissions),
+    #                        not a lost race; NOTHING was mutated locally.
 
 
 class PollResult(NamedTuple):
@@ -53,6 +71,21 @@ def _git(repo, *args, check=False):
     default: the retry logic inspects returncodes rather than raising."""
     return subprocess.run(["git", *args], cwd=str(repo), check=check,
                           capture_output=True, text=True)
+
+
+def _count_ahead(repo, target: str) -> int:
+    """How many commits `target` (a tracking ref) has that local HEAD lacks.
+
+    >0 means the remote genuinely moved ahead of us (real contention); 0 means
+    it did not (a rejected push is then a server-side refusal, not a lost race);
+    -1 means the count could not be determined (treat as: do not mutate)."""
+    r = _git(repo, "rev-list", "--count", f"HEAD..{target}")
+    if r.returncode != 0:
+        return -1
+    try:
+        return int(r.stdout.strip())
+    except ValueError:
+        return -1
 
 
 def publish(repo, branch: str = "main", mode: str = "append",
@@ -70,15 +103,66 @@ def publish(repo, branch: str = "main", mode: str = "append",
         if push.returncode == 0:
             return PublishResult(True, attempt, "pushed", None)
 
-        # Push rejected: the remote moved under us. Fetch the remote (no
-        # branch arg, so the clone's default refspec updates the
-        # `<remote>/<branch>` tracking ref — `git fetch <remote> <branch>` only
-        # moves FETCH_HEAD and would leave us rebasing onto a stale tip).
-        _git(repo, "fetch", remote)
+        # Push rejected. Before applying ANY class rule, establish WHY, because
+        # the class rules mutate local state (reset/rebase) and must never fire
+        # on a reject that is not concurrent contention.
+        #
+        # Step 1 — fetch. Use no branch arg so the clone's default refspec
+        # updates the `<remote>/<branch>` tracking ref (`git fetch <remote>
+        # <branch>` only moves FETCH_HEAD, leaving a stale tracking tip). If the
+        # fetch ITSELF fails, the reject cause is unknowable (network / auth /
+        # bad remote URL) — return a transport error and mutate NOTHING. This is
+        # the bug the MAJOR finding caught: a broken remote used to fall through
+        # to a hard-reset that destroyed the local reservation.
+        fetch = _git(repo, "fetch", remote)
+        if fetch.returncode != 0:
+            return PublishResult(
+                False, attempt, "transport-error",
+                "push was rejected and the follow-up fetch also failed — the "
+                "reject cause is unknown, so nothing was changed locally; "
+                "resolve connectivity/credentials and retry. git said: "
+                + (fetch.stderr or fetch.stdout or "").strip())
         target = f"{remote}/{branch}"
 
+        # Step 2 — did the remote actually MOVE? A rejected push whose remote
+        # tip we already contain is NOT a lost race (protected branch, a
+        # pre-receive hook, or missing permissions); applying a class rule would
+        # reset/rebase good local work for no reason. Return non-contention and
+        # mutate NOTHING.
+        remote_ahead = _count_ahead(repo, target)
+        if remote_ahead < 0:
+            return PublishResult(
+                False, attempt, "transport-error",
+                f"push rejected; could not determine whether {target} moved "
+                "after fetch (rev-list failed) — nothing was changed locally")
+        if remote_ahead == 0:
+            return PublishResult(
+                False, attempt, "rejected-no-contention",
+                "push was rejected but the remote has not moved (no new commits "
+                "to integrate) — this is a server-side refusal (protected "
+                "branch, pre-receive hook, or permissions), not a lost race; "
+                "nothing was changed locally. Resolve the refusal, then retry")
+
+        # Confirmed contention: the remote moved. Now the class rules apply.
         if mode == "reservation":
-            # DROP: discard the local reservation commit(s) and re-verify from
+            # Guard the drop: reservation commits publish ALONE (mixing
+            # classes in one push is a caller bug per the transport spec). If
+            # anything besides the single reservation commit is ahead, refuse
+            # to reset — a blind --hard here would silently discard the extra
+            # commits, and silent loss is worse than a loud caller error.
+            count = _git(repo, "rev-list", "--count", f"{target}..HEAD")
+            try:
+                ahead = int(count.stdout.strip())
+            except ValueError:
+                ahead = -1
+            if ahead != 1:
+                return PublishResult(
+                    False, attempt, "mixed-publish",
+                    f"{ahead} local commit(s) ahead of {target} on a "
+                    "reservation-class publish — reservation commits publish "
+                    "ALONE; nothing was dropped. Separate the commits and "
+                    "publish each under its own class")
+            # DROP: discard the local reservation commit and re-verify from
             # the fetched tip. Never rebase a CONSUMED forward — that risks a
             # double-spend of the grant.
             _git(repo, "reset", "--hard", target)

@@ -53,7 +53,14 @@ KNOWN_TRANSPORTS = ("local-fs", "git-sync")
 # A CHANNEL/MEMORY value that carries an absolute path (drive-letter, POSIX
 # root, or UNC) rather than a repo-relative one — a host-profile leak under
 # git-sync, where both must resolve inside the synchronized workspace repo.
-ABS_PATH_RE = re.compile(r"[A-Za-z]:[\\/]|(?:^|\s)/[^\s/]|\\\\[^\s\\]")
+# The drive-letter alternative is guarded by a negative lookbehind so it does
+# NOT fire on the `s:/` inside a URL scheme (`https://…`); a real drive path
+# (`C:\ws`, at line start or after a space/paren) has no alphanumeric before
+# the letter. The POSIX alternative requires the leading `/` to sit at string
+# start or after whitespace, so URL path slashes (never whitespace-preceded)
+# don't match either.
+ABS_PATH_RE = re.compile(
+    r"(?<![A-Za-z0-9])[A-Za-z]:[\\/]|(?:^|\s)/[^\s/]|\\\\[^\s\\]")
 
 # Protocol versions this suite knows how to validate. A workspace pinned outside
 # the set is a BLOCKER (its file/stamp expectations are undefined here); a

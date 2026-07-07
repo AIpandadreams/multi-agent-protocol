@@ -144,7 +144,7 @@ if TRANSPORTS.is_dir():
 # future that already arrived. History (CHANGELOG released sections) is exempt
 # by not being scanned here.
 ROADMAP_BAN = re.compile(
-    r"git[- ]synced?\s+channel(?:[- ]repo)?\s+variant\s+is\s+on\s+the\s+roadmap",
+    r"git[- ]sync(?:ed)?\s+channel(?:[- ]repo)?\s+variant\s+is\s+on\s+the\s+roadmap",
     re.IGNORECASE)
 roadmap_scan = list(SKILLS.rglob("*.md"))
 for sub in ("transports", "docs", "profiles"):

@@ -19,6 +19,7 @@ signing forced off so a cold agent key never blocks the run.
     python -m unittest discover -s tests
 """
 import importlib.util
+import os
 import subprocess
 import tempfile
 import unittest
@@ -144,7 +145,13 @@ class GitSyncRoundtripTest(unittest.TestCase):
         # B reserves the same grant while behind.
         _commit(self.b, "res_b.md", "B reserves\n", "B: CONSUMED")
 
-        self.assertTrue(gs.publish(self.a, "main", "append").ok)   # A's reservation lands
+        # A's CONSUMED publishes ALONE with mode="reservation" (the spec's
+        # reservation-commits-publish-alone rule — honoured inside our own
+        # fixture). Uncontended, so it lands on attempt 1.
+        a_res = gs.publish(self.a, "main", "reservation")
+        self.assertTrue(a_res.ok)
+        self.assertEqual(a_res.action, "pushed")
+        self.assertEqual(a_res.attempts, 1)
         res = gs.publish(self.b, "main", "reservation")
         self.assertFalse(res.ok)
         self.assertEqual(res.action, "reservation-dropped")
@@ -155,6 +162,76 @@ class GitSyncRoundtripTest(unittest.TestCase):
         self.assertTrue((self.b / "res_a.md").is_file())
         self.assertEqual(_head(self.b),
                          _git(self.b, "rev-parse", "origin/main").stdout.strip())
+
+    # (e) lane-down under real contention with a single attempt --------------
+    def test_lane_down_on_exhausted_attempts_keeps_local_work(self):
+        # max_attempts=1 + genuine contention: B rebases onto A's landed tip but
+        # has no second attempt to re-push, so it exhausts -> lane-down. The
+        # rebase is real work; assert it is NOT lost (both files local) and the
+        # remote simply never received B yet.
+        _commit(self.a, "entry_a.md", "A entry\n", "A: entry")
+        b_sha = _commit(self.b, "entry_b.md", "B entry\n", "B: entry")
+
+        self.assertTrue(gs.publish(self.a, "main", "append").ok)   # A lands
+        res = gs.publish(self.b, "main", "append", max_attempts=1)
+        self.assertFalse(res.ok)
+        self.assertEqual(res.action, "lane-down")
+        self.assertEqual(res.attempts, 1)
+
+        # No work lost: B rebased, so both files are present locally and B's
+        # change still lives in local history; the remote has only initial + A.
+        self.assertTrue((self.b / "entry_a.md").is_file())
+        self.assertTrue((self.b / "entry_b.md").is_file())
+        remote_count = _git(self.b, "rev-list", "--count",
+                            "origin/main").stdout.strip()
+        self.assertEqual(remote_count, "2")   # initial + A only; B not pushed
+        subj = _git(self.b, "log", "-1", "--format=%s").stdout.strip()
+        self.assertEqual(subj, "B: entry")    # B's commit is still HEAD's tip
+
+    # (f) broken remote: reject + failed fetch = transport-error, NOT a drop --
+    def test_broken_remote_is_transport_error_not_dropped(self):
+        # The MAJOR finding: with an unreachable remote, the push fails and the
+        # follow-up fetch ALSO fails; the reject cause is unknown, so a
+        # reservation-class publish must return transport-error and mutate
+        # nothing — never hard-reset the local CONSUMED away.
+        head_before = _commit(self.b, "res_b.md", "B reserves\n", "B: CONSUMED")
+        base = Path(self._tmp.name)
+        _git(self.b, "remote", "set-url", "origin",
+             str(base / "does-not-exist.git"))
+
+        res = gs.publish(self.b, "main", "reservation")
+        self.assertFalse(res.ok)
+        self.assertEqual(res.action, "transport-error")
+        # Local reservation intact: file present, HEAD unmoved.
+        self.assertTrue((self.b / "res_b.md").is_file())
+        self.assertEqual(_head(self.b), head_before)
+
+    # (g) server-side refusal: reject + unmoved remote = non-contention -------
+    def test_server_refusal_is_non_contention_not_dropped(self):
+        # A pre-receive hook that always rejects makes the push fail while the
+        # remote never moves. fix 1(ii): the loser must see rejected-no-
+        # contention and mutate nothing — not treat an unmoved remote as a lost
+        # race. If Git-for-Windows does not fire the sh hook on this machine,
+        # skip loudly (the transport-error case above still pins the sibling
+        # no-mutate path).
+        hooks = self.remote / "hooks"
+        hooks.mkdir(exist_ok=True)
+        hook = hooks / "pre-receive"
+        hook.write_text("#!/bin/sh\nexit 1\n",
+                        encoding="utf-8", newline="\n")
+        os.chmod(hook, 0o755)
+
+        head_before = _commit(self.b, "res_b.md", "B reserves\n", "B: CONSUMED")
+        res = gs.publish(self.b, "main", "reservation")
+        if res.action == "pushed":
+            self.skipTest("pre-receive hook did not fire on this git build; "
+                          "non-contention path is pinned by the broken-remote "
+                          "transport-error test instead")
+        self.assertFalse(res.ok)
+        self.assertEqual(res.action, "rejected-no-contention")
+        # Nothing mutated: reservation file present, HEAD unmoved.
+        self.assertTrue((self.b / "res_b.md").is_file())
+        self.assertEqual(_head(self.b), head_before)
 
 
 if __name__ == "__main__":
