@@ -97,6 +97,32 @@ class OnceStateRoundTripTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("no lanes", err)
 
+    def test_state_inside_watched_lane_is_usage_error(self):
+        # A --state path INSIDE a watched lane would be rewritten each pass and
+        # reported as its own change: the watcher must refuse it (exit 2) and
+        # write nothing, rather than silently excluding it.
+        with tempfile.TemporaryDirectory() as d:
+            lane = Path(d) / "lane"
+            lane.mkdir()
+            state = lane / "state.json"   # inside the watched lane
+            code, _, err = _run(["--dir", str(lane), "--once",
+                                 "--state", str(state)])
+            self.assertEqual(code, 2)
+            self.assertIn("inside watched lane", err)
+            self.assertFalse(state.exists())  # fail-fast: nothing persisted
+
+    def test_state_in_subdir_of_watched_lane_is_usage_error(self):
+        # The guard is subtree-wide, not just the immediate directory.
+        with tempfile.TemporaryDirectory() as d:
+            lane = Path(d) / "lane"
+            (lane / "sub").mkdir(parents=True)
+            state = lane / "sub" / "state.json"
+            code, _, err = _run(["--dir", str(lane), "--once",
+                                 "--state", str(state)])
+            self.assertEqual(code, 2)
+            self.assertIn("inside watched lane", err)
+            self.assertFalse(state.exists())
+
 
 class SettleSemanticsTest(unittest.TestCase):
     """The watcher reuses reviewer_poller's settle primitives, so a file being
@@ -174,6 +200,33 @@ class SubstitutionTest(unittest.TestCase):
             cmd = f'"{sys.executable}" "{helper}" "{{dir}}"'
             w.run_on_change(cmd, str(lane))
             self.assertTrue((lane / "marker").is_file())
+
+    def test_once_on_change_passes_full_spaced_dir_path(self):
+        # A lane path containing a space must reach --on-change intact: the old
+        # code recovered the lane by str.split(" ", 2)[1], truncating at the
+        # first space. Drive it end-to-end through --once and prove the marker
+        # lands INSIDE the full spaced directory (it wouldn't if truncated).
+        with tempfile.TemporaryDirectory() as d:
+            lane = Path(d) / "lane with space"
+            lane.mkdir()
+            state = Path(d) / "state.json"   # outside the watched lane
+            helper = Path(d) / "mark.py"
+            helper.write_text(
+                "import sys, pathlib\n"
+                "pathlib.Path(sys.argv[1], 'oc-marker').write_text('x')\n",
+                encoding="utf-8")
+            cmd = f'"{sys.executable}" "{helper}" "{{dir}}"'
+
+            # baseline, then introduce a change so --on-change fires
+            _run(["--dir", str(lane), "--once", "--state", str(state)])
+            (lane / "e.md").write_text("y", encoding="utf-8")
+            code, out, _ = _run(["--dir", str(lane), "--once",
+                                 "--state", str(state), "--on-change", cmd])
+            self.assertEqual(code, 3)
+            # printed output contract is unchanged (still one CHANGED line)
+            self.assertIn("ADDED e.md", out)
+            # the marker proves the FULL spaced path was passed, not truncated
+            self.assertTrue((lane / "oc-marker").is_file())
 
 
 class CollectDirsTest(unittest.TestCase):

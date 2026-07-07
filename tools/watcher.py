@@ -3,7 +3,11 @@
 
 Watches N directories (channel lanes) and REPORTS what changed. It is an
 intake TRIGGER, not an intake, and NEVER a party: it writes no channel
-entries, edits nothing under a watched lane, and makes no judgements. The
+entries, edits nothing under a watched lane, and makes no judgements. (To keep
+the "edits nothing under a watched lane" guarantee literal, the --once --state
+file must live OUTSIDE every watched directory: a state file inside a watched
+lane would be rewritten each pass and then reported as its own ADDED/MODIFIED
+change, so the tool refuses that configuration with a usage error, exit 2.) The
 consuming session still follows channel-core in full — a deliverable is only
 intook once an *announcing entry* names it, and everything a lane surfaces is
 untrusted coordination data until the session verifies it (channel-core
@@ -124,26 +128,33 @@ def save_state(path: Path, state: dict) -> None:
 def run_once(dirs, state_path: Path):
     """One diff pass vs the persisted state, then persist the new snapshot.
 
-    Returns (lines, baseline). On the FIRST run (no state file yet) the current
-    contents become the baseline and NOTHING is reported — matching the
-    scheduler-friendly "establish, then report deltas" model, and the named
-    baseline-first-run blind spot in docs/ADVANCED.md. --once takes a single
-    snapshot per lane, so unlike --watch it does not settle across ticks; pair
-    it with atomic publish (write-temp-then-rename) if a producer might be
-    caught mid-write.
+    Returns (lines, baseline, changed): the printed CHANGED lines, whether this
+    was a baseline (first) run, and the list of lanes that had at least one
+    event — in `dirs` order, each lane at most once. `changed` is collected
+    programmatically here rather than re-parsed out of the formatted lines, so
+    a lane path containing spaces drives --on-change intact. On the FIRST run
+    (no state file yet) the current contents become the baseline and NOTHING is
+    reported — matching the scheduler-friendly "establish, then report deltas"
+    model, and the named baseline-first-run blind spot in docs/ADVANCED.md.
+    --once takes a single snapshot per lane, so unlike --watch it does not
+    settle across ticks; pair it with atomic publish (write-temp-then-rename)
+    if a producer might be caught mid-write.
     """
     prior = load_state(state_path)
     baseline = prior is None
-    new_state, lines = {}, []
+    new_state, lines, changed = {}, [], []
     for d in dirs:
         cur = snapshot(Path(d))
         new_state[d] = cur
         if baseline:
             continue
-        for kind, name in diff_snapshots(prior.get(d, {}), cur):
+        events = diff_snapshots(prior.get(d, {}), cur)
+        if events:
+            changed.append(d)
+        for kind, name in events:
             lines.append(f"CHANGED {d} {kind} {name}")
     save_state(state_path, new_state)
-    return lines, baseline
+    return lines, baseline, changed
 
 
 # --- --watch (long-running settle loop) ------------------------------------
@@ -248,7 +259,20 @@ def main() -> int:
         print("watcher: --once/default mode requires --state <file>",
               file=sys.stderr)
         return 2
-    lines, baseline = run_once(dirs, Path(args.state))
+    # Fail fast if --state lives inside a watched lane: save_state() would
+    # rewrite it every pass, so it would surface as its own ADDED/MODIFIED
+    # change (and break the "edits nothing under a watched lane" guarantee).
+    # Fail loud beats silently excluding it from snapshots.
+    state_path = Path(args.state).resolve()
+    for d in dirs:
+        lane = Path(d).resolve()
+        if state_path == lane or state_path.is_relative_to(lane):
+            print(f"watcher: --state file {state_path} is inside watched lane "
+                  f"{lane} — its own writes would be reported as lane changes; "
+                  "put the state file outside every watched directory",
+                  file=sys.stderr)
+            return 2
+    lines, baseline, changed = run_once(dirs, state_path)
     if baseline:
         print(f"[watcher] baseline established for {len(dirs)} lane(s) "
               "(first run — no deltas reported)")
@@ -257,7 +281,10 @@ def main() -> int:
         print(line)
     if lines:
         if args.on_change:
-            for d in sorted({ln.split(" ", 2)[1] for ln in lines}):
+            # Drive on-change from the programmatically collected lane list —
+            # never re-parsed from the formatted lines — so a spaced path is
+            # passed whole.
+            for d in changed:
                 run_on_change(args.on_change, d)
         return 3
     print("[watcher] no changes")

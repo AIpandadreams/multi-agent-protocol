@@ -143,7 +143,7 @@ class CorruptSideNameTest(unittest.TestCase):
                 for m in _sev(f, "BLOCKER")))
 
     def test_aliases_missing_legacy_covered_soft_warns(self):
-        # Mirrors the live wc-tandem-ws case: engine / builder, no ROLE_ALIASES.
+        # A renamed-but-unaliased owner side: engine / builder, no ROLE_ALIASES.
         # `engine` IS covered by /wake's legacy built-in (engine→owner), so the
         # WARN nudges toward an explicit row without claiming wake would fail.
         f = _side_findings("engine / builder", ROLES_2)
@@ -161,14 +161,60 @@ class CorruptSideNameTest(unittest.TestCase):
                 for m in _sev(f, "WARN")))
         self.assertEqual(_sev(f, "BLOCKER"), [])
 
-    def test_aliases_missing_legacy_name_wrong_role_warns_wont_resolve(self):
-        # A BUILDER side named `engine` is NOT covered: the legacy built-in
-        # maps engine→owner, the wrong role. Only an explicit ROLE_ALIASES row
-        # (which /wake checks BEFORE the built-ins) resolves it correctly.
+    def test_aliases_missing_legacy_name_wrong_role_blocks(self):
+        # A BUILDER side named `engine` with no covering entry MISROUTES: the
+        # legacy built-in maps engine→owner, so /wake engine wakes the WRONG
+        # role. Only an explicit ROLE_ALIASES entry (which /wake checks BEFORE
+        # the built-ins) resolves it correctly — absent one, this must block.
         f = _side_findings("owner / engine", ROLES_2)
         self.assertTrue(
-            any("won't resolve" in m and "engine" in m
+            any("WRONG role" in m and "engine" in m
+                for m in _sev(f, "BLOCKER")))
+
+    def test_legacy_wrong_role_with_overriding_entry_passes(self):
+        # Same shape but WITH the overriding entry: workspace ROLE_ALIASES
+        # beats the legacy built-in in /wake's tier order, so it resolves.
+        f = _side_findings("owner / engine", ROLES_2,
+                           role_aliases="engine→builder")
+        self.assertEqual(_sev(f, "BLOCKER"), [])
+        self.assertEqual(_sev(f, "WARN"), [])
+
+    def test_side_named_after_out_of_profile_canonical_role_blocks(self):
+        # 2-agent profile, OWNER side named `orchestrator`: /wake resolves
+        # canonical names FIRST, for ALL roles — not just this profile's — so
+        # /wake orchestrator would target the absent orchestrator role even
+        # with an alias row present.
+        f = _side_findings("orchestrator / builder", ROLES_2,
+                           role_aliases="orchestrator→owner")
+        self.assertTrue(
+            any("canonical name of the orchestrator role" in m
+                for m in _sev(f, "BLOCKER")))
+
+    def test_partial_alias_row_unresolved_side_warns_wont_resolve(self):
+        # A row that EXISTS but omits a renamed side must not pass silently:
+        # `capt` (orchestrator) matches no legacy built-in — /wake capt fails.
+        f = _side_findings("engine / builder / capt", ROLES_3,
+                           role_aliases="engine→owner")
+        self.assertTrue(
+            any("won't resolve" in m and "capt" in m
                 for m in _sev(f, "WARN")))
+        self.assertEqual(_sev(f, "BLOCKER"), [])
+
+    def test_partial_alias_row_legacy_covered_soft_warns(self):
+        # Omitted side covered by a same-role legacy built-in (helper→builder)
+        # still resolves — soft nudge, not a "won't resolve" claim.
+        f = _side_findings("engine / helper / orch", ROLES_3,
+                           role_aliases="engine→owner")
+        self.assertTrue(
+            any("legacy" in m and "helper" in m for m in _sev(f, "WARN")))
+        self.assertFalse(
+            any("won't resolve" in m for m in _sev(f, "WARN")))
+
+    def test_complete_alias_row_yields_no_side_name_warns(self):
+        f = _side_findings("engine / helper / orch", ROLES_3,
+                           role_aliases="engine→owner, helper→builder")
+        self.assertEqual(_sev(f, "WARN"), [])
+        self.assertEqual(_sev(f, "BLOCKER"), [])
 
     def test_unknown_alias_target_blocks(self):
         f = _side_findings("engine / helper / orch", ROLES_3,

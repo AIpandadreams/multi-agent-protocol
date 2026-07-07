@@ -259,6 +259,41 @@ def check_channel(ws: Path, pinned, f: Findings):
         f.warn("channel/INDEX.md missing the ledger table header row")
 
 
+def _report_uncovered(missing, row_state, f: Findings):
+    """Report renamed sides with no explicit ROLE_ALIASES entry.
+
+    Coverage follows wake.md's resolution order. Three classes:
+    - a legacy built-in maps the name to the SAME role → still resolves
+      (soft WARN: make it explicit);
+    - a legacy built-in maps it to a DIFFERENT role → /wake would wake the
+      WRONG role (BLOCKER: an explicit entry overrides the built-in);
+    - no built-in at all → the name is unresolvable (WARN).
+    `missing` maps canonical role → uncovered display name; `row_state`
+    describes why coverage is absent (no row at all, or row omits them).
+    """
+    if not missing:
+        return
+    for role, name in sorted(missing.items()):
+        other = LEGACY_ALIASES.get(name)
+        if other is not None and other != role:
+            f.blocker(f"renamed side '{name}' (the {role} side) is /wake's "
+                      f"legacy built-in alias for the {other} role and has no "
+                      f"overriding ROLE_ALIASES entry — /wake {name} would "
+                      f"wake the WRONG role; add '{name}→{role}' (an explicit "
+                      "workspace entry overrides the built-in)")
+    unresolved = sorted(n for r, n in missing.items()
+                        if n not in LEGACY_ALIASES)
+    legacy_ok = sorted(n for r, n in missing.items()
+                       if LEGACY_ALIASES.get(n) == r)
+    if unresolved:
+        f.warn(f"renamed side(s) {unresolved} — {row_state} — /wake <name> "
+               "won't resolve until you add an entry")
+    if legacy_ok:
+        f.warn(f"renamed side(s) {legacy_ok} rely on /wake's legacy built-in "
+               f"aliases ({row_state}) — add explicit ROLE_ALIASES entries "
+               "to make the mapping explicit")
+
+
 def check_side_names(slots, roles, f: Findings):
     """Validate SIDE_NAMES (and any ROLE_ALIASES row) for a workspace.
 
@@ -304,15 +339,20 @@ def check_side_names(slots, roles, f: Findings):
                       f"{seen[name] + 1} and {i + 1}) — side names must be unique")
         else:
             seen[name] = i
-        # A side named after a DIFFERENT profile role's canonical name is a
-        # trap: filenames and addressing would read as that other role.
+        # A side named after a DIFFERENT role's canonical name is a trap —
+        # checked against ALL canonical roles, not just this profile's: /wake
+        # resolves canonical names FIRST (tier 1), before any workspace alias,
+        # so `/wake orchestrator` in a 2-agent workspace whose OWNER side is
+        # named `orchestrator` would target the absent orchestrator role.
         if i < len(ordered):
             my_role = ordered[i]
-            for other in ordered:
+            for other in CANONICAL_ROLES:
                 if other != my_role and name == other:
                     f.blocker(f"SIDE_NAMES entry '{name}' (the {my_role} side) "
-                              f"is the canonical name of the {other} role — a "
-                              "side may not be named after another role")
+                              f"is the canonical name of the {other} role — "
+                              "/wake resolves canonical names before any "
+                              "alias, so a side may not be named after "
+                              "another role")
 
     # Positions carrying a non-default display name (differ from the role's
     # default side name) — the same predicate new_project uses to decide
@@ -325,20 +365,7 @@ def check_side_names(slots, roles, f: Findings):
     has_alias_row = "ROLE_ALIASES" in slots and alias_raw != ""
 
     if not has_alias_row:
-        if renamed:
-            # A renamed display still resolves if a legacy built-in alias maps
-            # it to the SAME role (e.g. an owner side named `engine`).
-            unresolved = sorted(n for r, n in renamed.items()
-                                if LEGACY_ALIASES.get(n) != r)
-            if unresolved:
-                f.warn("SIDE_NAMES use non-default display name(s) "
-                       f"{unresolved} but no ROLE_ALIASES row is present — "
-                       "/wake <name> won't resolve until you add it")
-            else:
-                f.warn("SIDE_NAMES use non-default display name(s) "
-                       f"{sorted(renamed.values())} covered only by /wake's "
-                       "legacy built-in aliases — add a ROLE_ALIASES row to "
-                       "make the mapping explicit")
+        _report_uncovered(renamed, "no ROLE_ALIASES row is present", f)
         return
 
     # Validate the ROLE_ALIASES row against the SIDE_NAMES positions.
@@ -369,6 +396,11 @@ def check_side_names(slots, roles, f: Findings):
         if implied != target:
             f.blocker(f"ROLE_ALIASES maps '{display}'→{target} but SIDE_NAMES "
                       f"places '{display}' at the {implied} position")
+
+    # Completeness: a row that exists but omits a renamed side is as silent a
+    # failure as no row at all — every renamed side must still resolve.
+    missing = {r: n for r, n in renamed.items() if n not in seen_display}
+    _report_uncovered(missing, "the ROLE_ALIASES row has no entry for them", f)
 
 
 def main() -> int:
