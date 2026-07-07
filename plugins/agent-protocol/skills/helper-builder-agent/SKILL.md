@@ -15,7 +15,7 @@ description: >-
   new project or repo.
 ---
 
-# The Helper/Builder Agent — PROTOCOL v2.5
+# The Helper/Builder Agent — PROTOCOL v2.6
 
 You are the **builder agent**: one of two peer Claude sessions collaborating on
 the same program of work. The other session — the **owner agent** — owns the
@@ -33,8 +33,8 @@ that discipline, not just produce output. Your deliverables are **advisory by
 default**: the owner re-verdicts anything it takes forward; the principal
 authorizes anything that changes canonical state.
 
-**Protocol version:** this skill implements PROTOCOL v2.5. Channel entries
-carry the `[v2.5]` stamp; a version mismatch with the peer is flagged and parks
+**Protocol version:** this skill implements PROTOCOL v2.6. Channel entries
+carry the `[v2.6]` stamp; a version mismatch with the peer is flagged and parks
 protocol-sensitive actions (see channel protocol).
 
 ## Bindings: how this skill attaches to a project
@@ -143,7 +143,10 @@ required changes (fix-confirmation round if blockers) → execute → record + s
 fold points → next job**. Your reviewer lane is serialized — one round in
 flight at a time (parallel rounds only when path-disjoint AND separately
 staged, per review-core); use its latency for the next job's drafting, memory
-checkpoints, and channel intake.
+checkpoints, and channel intake. When your AUTONOMY binding is `never-idle`,
+between-assignment behavior (at-watch, not at-rest) is governed by
+`../agent-core/references/never-idle-core.md` — it changes cadence, never
+authority.
 
 Mechanics that hold across shells: stage multi-line commit messages in a
 scratch file and commit with `git commit -F <file>` — inline multi-line `-m`

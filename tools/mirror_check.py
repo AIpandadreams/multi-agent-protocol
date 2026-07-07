@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mirror-consistency CI for the agent-protocol skills (PROTOCOL v2.5).
+"""Mirror-consistency CI for the agent-protocol skills (PROTOCOL v2.6).
 
 Guards against the drift class that produced the original v2 defects:
 role skills contradicting each other or the agent-core normative files.
@@ -28,7 +28,8 @@ def check(cond: bool, msg: str) -> None:
 
 
 # 1. Core files exist
-for name in ["channel-core.md", "review-core.md", "binding-slots.md",
+for name in ["channel-core.md", "review-core.md", "review-convergence.md",
+             "never-idle-core.md", "binding-slots.md",
              "memory-discipline.md", "self-improvement-protocol.md",
              "proxy-auth-core.md"]:
     check((CORE / name).is_file(), f"agent-core missing {name}")
@@ -67,7 +68,10 @@ for p in SKILLS.rglob("*.md"):
 
 # 4. Role files must NOT duplicate core rule blocks (dedup guard)
 CORE_HEADINGS = ["## Untrusted-input rule", "## REVIEWER ARCHITECTURE",
-                 "## VERDICT CONTRACT", "## Entry format"]
+                 "## VERDICT CONTRACT", "## Entry format",
+                 "## Reviewer-lane outage", "## The four seats",
+                 "## Anti-anchoring", "## Watcher-driven intake",
+                 "## THE INVARIANT: cadence, not authority"]
 for role in ROLES:
     for p in (SKILLS / role).rglob("*.md"):
         t = text(p)
@@ -75,9 +79,9 @@ for role in ROLES:
             check(h not in t,
                   f"core block '{h}' duplicated in {p.relative_to(ROOT)}")
 
-# 5. Version stamp coverage: every reference/skill file carries v2.5
+# 5. Version stamp coverage: every reference/skill file carries v2.6
 for p in SKILLS.rglob("*.md"):
-    check("v2.5" in text(p), f"missing PROTOCOL v2.5 stamp: {p.relative_to(ROOT)}")
+    check("v2.6" in text(p), f"missing PROTOCOL v2.6 stamp: {p.relative_to(ROOT)}")
 
 # 6. Role files that override the core must defer to it explicitly
 for role in ROLES:

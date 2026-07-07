@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Workspace conformance suite [PROTOCOL v2.5].
+"""Workspace conformance suite [PROTOCOL v2.5 / v2.6].
 
 A self-runnable, point-in-time readiness check for a stamped workspace.
 Where the integrity CI protects the coordination *record over time*
@@ -10,6 +10,13 @@ guard is intact, and the auth-log chain is clean. Run it after stamping,
 after filling BINDINGS, and any time you want to confirm a deployment is
 sound before waking an agent in it.
 
+Version handling is PIN-AWARE: the workspace's own `PROTOCOL_VERSION` must be
+one of the SUPPORTED_VERSIONS (a version outside the set is a BLOCKER — the
+required-file and stamp expectations are undefined for it), and every per-file
+stamp (auth-logs, channel INDEX) is checked against that WORKSPACE'S pinned
+version, not a hardcoded literal. This keeps a live v2.5 workspace green under a
+v2.6 checkout of the suite, and vice-versa.
+
 Run it from a protocol checkout (this file lives here, not inside a stamped
 workspace) and point --workspace at the workspace you want to check:
 
@@ -19,9 +26,11 @@ workspace) and point --workspace at the workspace you want to check:
 
 Exit 0 = conformant (no BLOCKER; and no WARN under --strict); 1 = findings.
 BLOCKER = structurally broken or unsafe (missing required file, wrong/unknown
-profile, weakened PROXY_AUTH guard, broken auth-log chain). WARN = stamped but
-not yet fully bound, or cosmetic drift (unfilled slot, missing per-file v2.5
-stamp/header) — resolve before relying on the workspace, or gate with --strict.
+profile, unsupported PROTOCOL_VERSION, weakened PROXY_AUTH guard, broken
+auth-log chain). WARN = stamped but not yet fully bound, or cosmetic drift
+(unfilled slot, a per-file stamp/header that doesn't match the workspace's
+pinned version) — resolve before relying on the workspace, or gate with
+--strict.
 """
 import argparse
 import re
@@ -35,6 +44,21 @@ PROFILE_ROLES = {
     "2agent.local": {"owner", "builder"},
     "3agent.local": {"owner", "builder", "orchestrator"},
 }
+
+# Protocol versions this suite knows how to validate. A workspace pinned outside
+# the set is a BLOCKER (its file/stamp expectations are undefined here); a
+# workspace pinned inside it is checked against its OWN version, so both a live
+# v2.5 and a fresh v2.6 workspace pass under one checkout of this tool.
+SUPPORTED_VERSIONS = ("v2.5", "v2.6")
+VERSION_RE = re.compile(r"v2\.\d+")
+
+
+def pinned_version(slots):
+    """The workspace's own PROTOCOL_VERSION token (e.g. 'v2.6'), or None."""
+    if not slots:
+        return None
+    m = VERSION_RE.search(slots.get("PROTOCOL_VERSION", ""))
+    return m.group(0) if m else None
 
 # The six irreversible/outward super-classes that are NEVER PROXY_AUTH-listable
 # or relayable, in every configuration. The PROXY_AUTH slot's guard clause must
@@ -119,14 +143,15 @@ def check_structure(ws: Path, roles, f: Findings):
             f.blocker(f"missing required file: {rel}")
 
 
-def check_bindings(ws: Path, slots, roles, f: Findings):
+def check_bindings(ws: Path, slots, roles, pinned, f: Findings):
     if slots is None:
         f.blocker("BINDINGS.md not found or unreadable")
         return
 
     ver = slots.get("PROTOCOL_VERSION", "")
-    if "v2.5" not in ver:
-        f.blocker(f"PROTOCOL_VERSION is '{ver or 'absent'}', expected v2.5")
+    if pinned is None or pinned not in SUPPORTED_VERSIONS:
+        f.blocker(f"PROTOCOL_VERSION is '{ver or 'absent'}', expected one of "
+                  f"{{{', '.join(SUPPORTED_VERSIONS)}}}")
 
     profile = slots.get("PROFILE", "")
     if profile not in PROFILE_ROLES:
@@ -167,14 +192,15 @@ def check_bindings(ws: Path, slots, roles, f: Findings):
                       "guard clause is missing from the slot")
 
 
-def check_auth_logs(ws: Path, roles, f: Findings):
+def check_auth_logs(ws: Path, roles, pinned, f: Findings):
+    stamp = f"[PROTOCOL {pinned}]" if pinned else None
     for role in sorted(roles):
         p = ws / "memory" / role / "auth-log.md"
         if not p.is_file():
             continue  # missing-file already reported by structure check
         t = p.read_text(encoding="utf-8", errors="replace")
-        if "[PROTOCOL v2.5]" not in t:
-            f.warn(f"memory/{role}/auth-log.md missing PROTOCOL v2.5 stamp")
+        if stamp and stamp not in t:
+            f.warn(f"memory/{role}/auth-log.md missing {stamp} stamp")
         if "Append-only" not in t or "Single-writer" not in t:
             f.warn(f"memory/{role}/auth-log.md missing append-only/"
                    "single-writer header")
@@ -204,13 +230,14 @@ def check_auth_logs(ws: Path, roles, f: Findings):
                   out.replace("\n", "\n    "))
 
 
-def check_channel(ws: Path, f: Findings):
+def check_channel(ws: Path, pinned, f: Findings):
     p = ws / "channel" / "INDEX.md"
     if not p.is_file():
         return  # reported by structure check
     t = p.read_text(encoding="utf-8", errors="replace")
-    if "[PROTOCOL v2.5]" not in t:
-        f.warn("channel/INDEX.md missing PROTOCOL v2.5 stamp")
+    stamp = f"[PROTOCOL {pinned}]" if pinned else None
+    if stamp and stamp not in t:
+        f.warn(f"channel/INDEX.md missing {stamp} stamp")
     if "REVIEW-ROUND LEDGER" not in t:
         f.warn("channel/INDEX.md missing the REVIEW-ROUND LEDGER header")
     if "| round | side |" not in t:
@@ -234,13 +261,14 @@ def main() -> int:
     f = Findings()
     slots = parse_bindings(ws)
     roles = infer_roles(ws)
+    pinned = pinned_version(slots)
     if not roles:
         f.blocker("no memory/<role>/ directories found — not a workspace?")
 
     check_structure(ws, roles, f)
-    check_bindings(ws, slots, roles, f)
-    check_auth_logs(ws, roles, f)
-    check_channel(ws, f)
+    check_bindings(ws, slots, roles, pinned, f)
+    check_auth_logs(ws, roles, pinned, f)
+    check_channel(ws, pinned, f)
 
     blockers, warns = f.counts()
     if not f.items:

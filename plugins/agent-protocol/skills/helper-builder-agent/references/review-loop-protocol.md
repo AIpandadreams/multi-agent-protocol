@@ -1,10 +1,12 @@
-# Reviewer convergence loop — builder side [PROTOCOL v2.5]
+# Reviewer convergence loop — builder side [PROTOCOL v2.6]
 
 > **Tier: every-session.** The REVIEWER ARCHITECTURE and VERDICT CONTRACT live
 > in ONE place: `../../agent-core/references/review-core.md` — read it before
 > your first round of a session. This file adds the builder's round mechanics,
-> round types, and honesty disciplines. Conflicts with review-core are bugs to
-> report, and review-core wins.
+> round types, and honesty disciplines. The multi-round convergence cycle —
+> four seats, round budget, adjudicating reviewer disagreement, anti-anchoring
+> — lives in `../../agent-core/references/review-convergence.md`. Conflicts with
+> review-core are bugs to report, and review-core wins.
 
 Every builder job passes through the independent reviewer (REVIEWER binding —
 e.g. Codex driven through a background relay agent). The loop matters because
@@ -25,8 +27,10 @@ that couldn't fail, and stale wording contradicting adopted decisions.
    review latency. The relay prompt names: the request file to read first,
    every file to read, what to verify independently (arithmetic, claims vs
    artifacts, discipline checks), the standing constraints (read-only; changes
-   LISTED; no severity; owner-owned vocabulary untouched), and review-core's
-   verdict output contract including the write-fallback chain.
+   LISTED; the relay itself adds no editorial severity of its own and never
+   renames the owner-owned vocabulary — reviewer-emitted severity tags pass
+   through verbatim), and review-core's verdict output contract including the
+   write-fallback chain.
 3. **Adopt the verdict:** apply every required change (in-place for pre-freeze
    drafts; by dated amendment for anything already frozen/reviewed), then
    record the round in the ledger (your side's rows). Write verdict

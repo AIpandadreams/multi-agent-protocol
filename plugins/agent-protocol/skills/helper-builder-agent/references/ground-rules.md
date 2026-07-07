@@ -1,4 +1,4 @@
-# Builder agent — ground rules, with the failures that earned them [PROTOCOL v2.5]
+# Builder agent — ground rules, with the failures that earned them [PROTOCOL v2.6]
 
 > **Tier: once per project** (and after any protocol version bump). The
 > session-card carries the every-resume distillation.

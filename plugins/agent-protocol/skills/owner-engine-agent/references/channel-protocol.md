@@ -1,4 +1,4 @@
-# Channel protocol — owner side [PROTOCOL v2.5]
+# Channel protocol — owner side [PROTOCOL v2.6]
 
 > **Tier: every-session.** The rules live in ONE place:
 > `../../agent-core/references/channel-core.md` — read it before your first

@@ -1,4 +1,4 @@
-# Binding-slot glossary [PROTOCOL v2.5]
+# Binding-slot glossary [PROTOCOL v2.6]
 
 > The skills define ROLES and PROTOCOLS; each project supplies BINDINGS. Slots
 > are shared vocabulary across all role skills; each role's START_SESSION
@@ -18,6 +18,8 @@
 | SHARED_ARTIFACTS | the ONLY artifacts writable across ownership boundaries; per artifact: path, writer(s), conditions (kept out of the commit surface, principal per-batch go, re-read immediately before edit, writes announced in the channel) | usually empty |
 | SIGNING | how canonical commits stay trustworthy: `gpg-local` (probe warmth first) / `webflow-api` (PR merged via GitHub-signed web flow) / `sign-on-merge` (principal merges) — never bypassed, only queued | |
 | HEARTBEAT | each role's periodic wake mechanism + cadence, offset from the others'; e.g. a scheduled task re-poking the live session, or a scheduled headless run spawning a cold successor | delete stale ones; delete at window end |
+| AUTONOMY | the autonomy dial level for this role: `attended` / `semi-autonomous` / `standing-duties` / `never-idle` | default `semi-autonomous`; `never-idle` requires a WATCHER binding — see `never-idle-core.md` |
+| WATCHER | per-role monitor mechanism + the list of lanes it watches + the cycle cadence | required when AUTONOMY = `never-idle`; the settled-change guard is the transport's own (channel-core / poller half-write rule) |
 | MODEL | the live model matrix — see `profiles/MODELS.md` in the multi-agent-protocol repo: per-role default + allowed alternates + escalation rules + quality presets; adjustable at instantiation, per task, and on the principal's word (change logged in git) | |
 | EMBARGOES / GATES | the standing list of what may never be written/named/sent without a go; size tripwires | |
 | PROXY_AUTH | `off` (default) or `on` + an ENUMERATED reversible/internal gate-class list and explicit exclusions — set/changed/revoked only by the principal speaking directly in the orchestrator session; never relayable. The irreversible/outward super-classes (outward-facing/publish, email SEND, new-money/new-recipient, destructive-to-others, canonical-repo merge, PROXY_AUTH/gate/embargo/protocol changes) are never listable or relayable | see proxy-auth-core.md; wildcards invalid |

@@ -53,6 +53,19 @@ You choose how much rope, per deployment, by binding:
   briefs you and parks anything gated. The common setting.
 - **Standing duties** — the orchestrator also initiates recurring work
   (reports, sweeps) on its own cadence.
+- **Never-idle** — a worker between assignments holds at intake-watch rather
+  than sleeping to the next tick: it responds to a settled event on a lane it
+  owns within one cycle, so nothing actionable waits for a scheduler. It may
+  self-assign only from a closed list (intake, memory checkpoints, drafting the
+  next queued unit's spec, in-scope QA, mechanical checks, retrospective notes)
+  and stops-and-surfaces at any gate exactly as at every other level. Requires
+  a WATCHER binding.
+
+At never-idle the team never sits idle waiting for a clock, yet the top of the
+dial adds no authority: a watching worker is bound by the same gates and the
+same review rounds as an assigned one. The full rules — the at-watch posture,
+watcher-driven intake, and the closed MAY / MUST-NOT self-assign lists — are in
+[never-idle-core.md](../plugins/agent-protocol/skills/agent-core/references/never-idle-core.md).
 
 Turning the dial up never widens what an agent may do without you — it only
 changes how often it acts on what it already may.

@@ -1,10 +1,12 @@
-# Review protocol — owner side [PROTOCOL v2.5]
+# Review protocol — owner side [PROTOCOL v2.6]
 
 > **Tier: every-session.** The REVIEWER ARCHITECTURE and VERDICT CONTRACT live
 > in ONE place: `../../agent-core/references/review-core.md` — read it before
 > your first round of a session. This file adds the owner's setup, dispatch
-> craft, and the defect classes rounds catch. Conflicts with review-core are
-> bugs to report, and review-core wins.
+> craft, and the defect classes rounds catch. The multi-round convergence cycle
+> — four seats, round budget, adjudicating reviewer disagreement, anti-anchoring
+> — lives in `../../agent-core/references/review-convergence.md`. Conflicts with
+> review-core are bugs to report, and review-core wins.
 
 Every commit is preceded by a review round from an independent reviewer
 (REVIEWER binding — e.g. a Codex-class reviewer). The round is adversarial

@@ -1,4 +1,4 @@
-# Ops gotchas — burned lessons [PROTOCOL v2.5]
+# Ops gotchas — burned lessons [PROTOCOL v2.6]
 
 > **Tier: once per project** — then maintain the per-project list in memory and
 > consult it when symptoms match.

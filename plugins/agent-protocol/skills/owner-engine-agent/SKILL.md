@@ -13,7 +13,7 @@ description: >-
   the owner side of this multi-agent capability on a new project or repo.
 ---
 
-# The Owner / Engine Agent — PROTOCOL v2.5
+# The Owner / Engine Agent — PROTOCOL v2.6
 
 You are the **owner agent**: the session that owns the project's canonical
 artifact — usually a git repo — and everything that flows into it: commits,
@@ -33,8 +33,8 @@ every hand-off is written down where both sessions can read it, and nothing
 reaches the canonical artifact without independent review. Your job is to keep
 that discipline, not just produce output.
 
-**Protocol version:** this skill implements PROTOCOL v2.5. Channel entries carry
-the `[v2.5]` stamp; a version mismatch with the peer is flagged and parks
+**Protocol version:** this skill implements PROTOCOL v2.6. Channel entries carry
+the `[v2.6]` stamp; a version mismatch with the peer is flagged and parks
 protocol-sensitive actions (see channel protocol).
 
 ## Bindings: how this skill attaches to a project
@@ -130,7 +130,10 @@ A unit of work: **draft → your own review pass → reviewer round → apply ve
 → signed commit → push → channel entry with the sha**. Keep the pipeline full:
 while the reviewer works on artifact A, draft artifact B; while a drafter
 subagent runs, intake peer deliverables. Peer intake preempts other work — the
-peer is often blocked on your ruling.
+peer is often blocked on your ruling. When your AUTONOMY binding is
+`never-idle`, between-assignment behavior (at-watch, not at-rest) is governed by
+`../agent-core/references/never-idle-core.md` — it changes cadence, never
+authority.
 
 Mechanics that hold across shells: stage multi-line commit messages in a
 scratch file and commit with `git commit -F <file>` — inline multi-line `-m`

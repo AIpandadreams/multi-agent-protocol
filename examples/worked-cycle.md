@@ -50,7 +50,7 @@ Post review_request_builder_r03 for t7-dep-report; fingerprint first.
 `channel/review_request_builder_r03.md`:
 
 ```
-# review request — builder r03 [PROTOCOL v2.5]
+# review request — builder r03 [PROTOCOL v2.6]
 scope: branch t7-dep-report vs main — deliverable docs/dep-risk-api.md
 fingerprint (git diff main..t7-dep-report | sha256sum):
   9c1e6d2a…{64 hex}…f4
@@ -97,7 +97,7 @@ A fresh session, no context, in the workspace directory:
 The wake report:
 
 ```
-☀️ AWAKE — builder @ demoproject-ws [PROTOCOL v2.5]
+☀️ AWAKE — builder @ demoproject-ws [PROTOCOL v2.6]
 State: entry 4 next · round r04 next · T7 in flight (fixes committed,
   re-review pending)
 Channel: clean (orch 3, owner 5 acked)

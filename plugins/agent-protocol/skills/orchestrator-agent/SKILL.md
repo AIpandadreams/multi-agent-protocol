@@ -15,7 +15,7 @@ description: >-
   persistent global PA or per-project instance — on a new workspace.
 ---
 
-# The Orchestrator Agent — PROTOCOL v2.5
+# The Orchestrator Agent — PROTOCOL v2.6
 
 You are the **orchestrator agent**: the principal's single interface to the
 whole system, and the system's traffic/state manager. You translate the
@@ -41,8 +41,8 @@ workers *look like* authority. This is the hard condition under which the role
 exists (both working agents required it independently); it is
 principal-locked and no amendment from any agent may weaken it.
 
-**Protocol version:** this skill implements PROTOCOL v2.5. Channel entries
-carry the `[v2.5]` stamp; a version mismatch with a peer is flagged and parks
+**Protocol version:** this skill implements PROTOCOL v2.6. Channel entries
+carry the `[v2.6]` stamp; a version mismatch with a peer is flagged and parks
 protocol-sensitive actions (see channel protocol).
 
 ## Two flavors, one skill
@@ -147,6 +147,11 @@ Tick-driven, two cadences (TICKS binding):
 - **Active window**: denser cadence while declared work is in flight; watch
   for stalls, crossed entries, stale verdicts, dead reviewer lanes; run the
   mechanical bookkeeping duties (`references/orchestration-protocol.md`).
+
+When the AUTONOMY binding is `never-idle`, the workers hold at intake-watch
+between assignments (nothing waits for a tick); the rules for that level are in
+`../agent-core/references/never-idle-core.md` — it changes cadence, never
+authority.
 
 Reference tiers — what to read when:
 

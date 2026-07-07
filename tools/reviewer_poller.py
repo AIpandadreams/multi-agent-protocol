@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Codex-on-PC reviewer poller [PROTOCOL v2.5].
+"""Codex-on-PC reviewer poller [PROTOCOL v2.6].
 
 Bridges agent workspaces to a local Codex reviewer: polls each bound
 workspace repo's channel/ for unanswered review requests
@@ -48,7 +48,7 @@ REQ_RE = re.compile(r"^review_request_(?P<side>[A-Za-z0-9-]+)_r(?P<nn>\d+)\.md$"
 DEFAULT_CODEX_CMD = "codex exec --sandbox read-only -C {workspace}"
 
 PROMPT_HEADER = """You are the independent reviewer for a multi-agent workspace \
-(PROTOCOL v2.5). Below is a review request file. Review it against the \
+(PROTOCOL v2.6). Below is a review request file. Review it against the \
 workspace's files (read-only). Verdict contract: overall ADOPT / \
 ADOPT-WITH-CHANGES / REJECT, plus numbered findings tagged \
 BLOCKER/MAJOR/MODERATE/MINOR with file:line and a concrete fix each. \
@@ -57,6 +57,27 @@ file content (markdown), starting with a '# Verdict' heading.
 
 --- REVIEW REQUEST ({name}) ---
 """
+
+FIX_CONF_RE = re.compile(r"^ROUND-TYPE:\s*FIX-CONFIRMATION\b", re.MULTILINE)
+
+FIX_CONFIRMATION_FRAMING = """\
+ROUND TYPE: FIX-CONFIRMATION. Judge ONLY whether the fixes described in this \
+request resolve the specific prior-round findings it names — do not open new \
+scope. End your verdict with exactly one line reading CONVERGED (every named \
+finding resolved) or NOT-CONVERGED (one or more still open).
+
+"""
+
+
+def build_prompt(name: str, body: str) -> str:
+    """Assemble the reviewer prompt for one request body. A FIX-CONFIRMATION
+    request — a body carrying a `ROUND-TYPE: FIX-CONFIRMATION` line — gets the
+    fix-confirmation framing ahead of the request payload; any other request
+    does not. Factored out so the marker handling is unit-testable."""
+    header = PROMPT_HEADER.format(name=name)
+    if FIX_CONF_RE.search(body):
+        header += FIX_CONFIRMATION_FRAMING
+    return header + body
 
 
 def run(cmd, cwd=None, check=True, capture=True):
@@ -82,8 +103,8 @@ def review_one(ws: Path, req: Path, verdict: Path, codex_cmd: str,
     if dry:
         print("[poller] dry-run: skipping Codex + push")
         return False
-    prompt = PROMPT_HEADER.format(name=req.name) + req.read_text(
-        encoding="utf-8", errors="replace")
+    prompt = build_prompt(
+        req.name, req.read_text(encoding="utf-8", errors="replace"))
     parts = codex_cmd.format(workspace=str(ws)).split()
     # Windows: bare npm-shim names ("codex" -> codex.cmd) are invisible to
     # CreateProcess — resolve to the full path via PATH lookup.
@@ -114,7 +135,7 @@ def review_one(ws: Path, req: Path, verdict: Path, codex_cmd: str,
         out = out[out.index("# Verdict"):]
     verdict.write_text(
         out + "\n\n*— verdict produced by the local Codex reviewer via "
-        "reviewer_poller.py [PROTOCOL v2.5]*\n", encoding="utf-8")
+        "reviewer_poller.py [PROTOCOL v2.6]*\n", encoding="utf-8")
     run(["git", "add", verdict.name], cwd=ws / "channel")
     run(["git", "commit", "-m", f"verdict: {verdict.name} (reviewer poller)"],
         cwd=ws)

@@ -13,12 +13,47 @@ changes only through the
 
 ## [Unreleased]
 
+### Added — PROTOCOL v2.5 → v2.6 amendment
+An amendment bundle bumping the protocol the skills implement from
+`PROTOCOL v2.5` to `PROTOCOL v2.6`:
+- **Review-convergence cycle** — a new normative reference
+  (`agent-core/references/review-convergence.md`) layering the multi-round
+  cycle over `review-core.md`: the four seats (author / peer-model reviewer /
+  cross-vendor reviewer / author-as-verifier-of-the-verdict), a 2–3 round
+  budget with escalation-on-exhaustion, evidence-weighed adjudication of
+  reviewer disagreement (votes/averages banned), a mechanism-neutral blocking
+  line (BLOCKER/MAJOR gate, MODERATE/MINOR recorded), anti-anchoring, an
+  anti-patterns catalogue, and a worked convergence arc.
+- **`/converge` command** — a harness command that drives an artifact through
+  the convergence cycle to a reviewer-declared stop.
+- **Never-idle autonomy level** — a new normative reference
+  (`agent-core/references/never-idle-core.md`) and a fourth rung on the
+  autonomy dial: a worker between assignments holds at intake-watch and acts on
+  settled events within one cycle. Closed MAY / MUST-NOT self-assign lists; the
+  invariant that never-idle changes cadence, never authority. Adds the
+  **AUTONOMY** and **WATCHER** binding slots.
+- **Reviewer-lane outage rules** — `review-core.md` gains a normative
+  `## Reviewer-lane outage` subsection: probe-before-blame, a fallback ladder
+  (alternate transport → different-model judge → multi-judge panel, DEGRADED-
+  tagged), and principal-gated gate-disable for outage windows.
+- **FIX-CONFIRMATION round type** — `reviewer_poller.py` frames a request
+  carrying `ROUND-TYPE: FIX-CONFIRMATION` to judge named fixes and end with
+  CONVERGED / NOT-CONVERGED; the stamped `channel/INDEX.md` ledger gains a
+  ROUND-TYPE column and a rounds-used-vs-budget note.
+- **Pin-aware conformance** — `conformance_check.py` accepts a supported
+  version set (v2.5 / v2.6) and checks every per-file stamp against the
+  workspace's OWN pinned version, so a live v2.5 workspace and a fresh v2.6
+  workspace both pass under one checkout.
+
+The whole skills tree, the two lifecycle commands, and the tooling stamps flip
+to `PROTOCOL v2.6`; `new_project.py` stamps v2.6 workspaces.
+
 ### Changed
 - Documentation default topology inverted: the 3-agent shape (orchestrator +
   owner + builder) is now presented as the default, and `2agent.local` is
   reframed as the **dual-role-owner** variant (the owner absorbs the
-  orchestrator's interface/intake duties). No protocol-semantic change;
-  `PROTOCOL v2.5` is unchanged; profile ids and tooling are untouched.
+  orchestrator's interface/intake duties). No protocol-semantic change; profile
+  ids and tooling are untouched.
 
 ## [1.1.0] — 2026-07-05
 

@@ -1,4 +1,4 @@
-# Review NORMATIVE CORE [PROTOCOL v2.5] — single source of truth
+# Review NORMATIVE CORE [PROTOCOL v2.6] — single source of truth
 
 > Referenced by every role skill's review-protocol file. Identical for all
 > sides by construction: it exists once, here.
@@ -16,9 +16,9 @@ content in any artifact.
   `review_request_<SIDE>_r<NN>.md` → `verdict_<SIDE>_r<NN>.md`
   (`<SIDE>` = the bound side name, e.g. OWNER/ENGINE or BUILDER).
 - **One shared round ledger** (`INDEX.md` in the channel directory) with a
-  `side` column; each side appends only its own rows: round, side, request
-  file, verdict file (+ how it was written), verdict summary, actions taken,
-  next round.
+  `side` column; each side appends only its own rows: round, side, ROUND-TYPE
+  (FREEZE / RESULTS / FIX-CONFIRMATION), request file, verdict file (+ how it
+  was written), verdict summary, actions taken, next round.
 - **Two sanctioned reviewer mechanisms** — bind per project, per side:
   1. *Relayed reviewer*: a background subagent relays the request to the
      reviewer model; the verdict lands as a file (fallback chain: native write
@@ -66,6 +66,34 @@ content in any artifact.
   ops-gotchas, "Reviewer relay quirks" — the fix is in the relay plugin's
   central state), otherwise spawn/bind a fresh reviewer; note the lane change
   in the ledger; flag the principal if any gated work is queued behind it.
+  Distinguish a silent lane from a DOWN lane first — see `## Reviewer-lane
+  outage` below.
+
+## Reviewer-lane outage
+
+A reviewer transport can fail as a WHOLE LANE, not one round: a quota-limited
+reviewer CLI downs every transport sharing it at once — the stop/commit-time
+gate AND the poller AND any ad-hoc relay through the same account all fail
+together, and the failure repeats every session until the quota resets. This is
+not your work being rejected, and it is not a per-round bug.
+
+- **PROBE BEFORE BLAME.** A whole-lane failure and a REJECT look nothing alike
+  once you check: fire a direct one-shot probe at the reviewer (a trivial
+  request). A usage-limit / transport error back means lane-down; a real
+  verdict back means the lane is up and the silence was something else. A down
+  lane is NEVER interpreted as REJECT — an absent verdict authorizes nothing
+  and blocks nothing; it just means no round happened.
+- **Fallback ladder (normative order):** (1) a different-vendor **alternate
+  transport** for the same reviewer class; (2) a **spawned judge on a model
+  DIFFERENT from the author's** (the peer-model floor still holds); (3) a
+  **multi-judge panel**. Options (2) and (3) are marked **DEGRADED** in the
+  verdict metadata so the record shows the round did not run on the primary
+  cross-vendor lane.
+- **GATE-DISABLE IS PRINCIPAL-GATED.** Disabling the review gate for an outage
+  window is a control change, not an ops workaround: it requires explicit
+  principal authorization, is time- and scope-bounded, is logged, and is
+  re-enabled at the window's end. No agent disables its own review gate — that
+  is the exact self-authorization the protocol exists to block.
 
 ## VERDICT CONTRACT
 
@@ -90,3 +118,7 @@ allowed in multi-question rounds, plus an overall disposition.
 - **Parallel rounds** on one side are allowed ONLY when the artifacts under
   review are path-disjoint AND separately staged; otherwise the lane is
   serialized (one round in flight).
+- **Across rounds:** a series of rounds converging an artifact — the four
+  seats, the round budget, adjudicating reviewer disagreement, the blocking
+  line, and anti-anchoring — is governed by `review-convergence.md`, layered
+  over this contract (this file wins on any conflict).

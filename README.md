@@ -6,7 +6,7 @@ work — without losing control of authorization, history, or quality.**
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml/badge.svg)](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml)
 [![Release](https://img.shields.io/github/v/release/AIpandadreams/multi-agent-protocol?sort=semver)](https://github.com/AIpandadreams/multi-agent-protocol/releases)
-[![Protocol](https://img.shields.io/badge/protocol-v2.5-informational)](docs/PROTOCOL.md)
+[![Protocol](https://img.shields.io/badge/protocol-v2.6-informational)](docs/PROTOCOL.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A2BE2)](docs/QUICKSTART.md#1-install-the-plugin)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen)](#trust-properties)

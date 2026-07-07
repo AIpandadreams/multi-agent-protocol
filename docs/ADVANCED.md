@@ -147,24 +147,27 @@ It verifies, profile-aware:
 
 - every required file for the profile exists (orchestrator-only files are
   required only for `3agent.local`);
-- `PROTOCOL_VERSION` is v2.5 and the profile's role set matches the `memory/`
-  tree;
+- `PROTOCOL_VERSION` is one of the supported versions (v2.5 or v2.6) and the
+  profile's role set matches the `memory/` tree;
 - the **PROXY_AUTH guard is intact** — the six never-listable super-classes
   are all still named in the slot (a deployer who edits the slot and drops
   one silently weakens the safety property; this catches it), and if the lane
   is switched on the never-listable/relayable clause is still present;
 - the auth-log chain is clean (it folds in `validate_auth_log.py`);
-- each auth-log and the channel ledger carry their v2.5 headers.
+- each auth-log and the channel ledger carry the header stamp for the
+  workspace's own pinned version (checked pin-aware, not against a fixed
+  literal).
 
 Findings are tagged by severity, and the split is deliberate:
 
 - **BLOCKER** (nonzero exit) — structurally broken or unsafe: a missing
   required file, a wrong/unknown profile, a role set that disagrees with the
-  profile, a `PROTOCOL_VERSION` that isn't v2.5, a weakened PROXY_AUTH guard,
-  or a broken auth-log chain.
+  profile, a `PROTOCOL_VERSION` outside the supported set (v2.5 / v2.6), a
+  weakened PROXY_AUTH guard, or a broken auth-log chain.
 - **WARN** (exit 0 unless `--strict`) — stamped but not yet fully bound, or
-  cosmetic drift: an unfilled `{{FILL}}` slot, or a missing per-file v2.5
-  stamp / header on an auth-log or the channel ledger. These don't make the
+  cosmetic drift: an unfilled `{{FILL}}` slot, or a per-file stamp / header on
+  an auth-log or the channel ledger that doesn't match the workspace's pinned
+  version. These don't make the
   workspace unsafe, so they don't fail a plain run; `--strict` promotes them.
 
 So a freshly stamped workspace passes with warnings for its unfilled slots; a

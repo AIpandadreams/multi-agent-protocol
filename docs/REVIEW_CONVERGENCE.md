@@ -1,5 +1,9 @@
 # Independent review convergence record
 
+> See also: [review-convergence.md](../plugins/agent-protocol/skills/agent-core/references/review-convergence.md)
+> — the normative *rules* for the multi-round convergence cycle. This file is
+> this repository's own applied evidence trail of that cycle.
+
 This repository practices what it documents: every round of work is gated by
 an **independent, different-vendor reviewer** (see
 [PROTOCOL](PROTOCOL.md) and [DESIGN](DESIGN.md)). The release itself was

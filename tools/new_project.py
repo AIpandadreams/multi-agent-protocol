@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stamp a dedicated per-project agent workspace (PROTOCOL v2.5).
+"""Stamp a dedicated per-project agent workspace (PROTOCOL v2.6).
 
 Creates the "dedicated, not generic" instantiation: a workspace directory
 (intended to become its own private repo) holding bindings, channel skeleton,
@@ -26,7 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-BINDINGS_TEMPLATE = """# BINDINGS — {name} agent workspace [PROTOCOL v2.5]
+BINDINGS_TEMPLATE = """# BINDINGS — {name} agent workspace [PROTOCOL v2.6]
 
 Instantiated {date} from the multi-agent-protocol repo (profile: {profile}).
 Slot glossary: plugins/agent-protocol/skills/agent-core/references/binding-slots.md
@@ -45,9 +45,11 @@ Slot glossary: plugins/agent-protocol/skills/agent-core/references/binding-slots
 | SHARED_ARTIFACTS | none (add per agent-core conditions if needed) |
 | SIGNING | {{{{FILL: gpg-local / webflow-api / sign-on-merge}}}} |
 | HEARTBEAT | {{{{FILL: per role, offset}}}} |
+| AUTONOMY | semi-autonomous (dial: attended / semi-autonomous / standing-duties / never-idle) |
+| WATCHER | {{{{FILL: per-role monitor + lane list + cadence, or "none" — required if AUTONOMY = never-idle}}}} |
 | MODEL | see MODELS.md (active preset + overrides) |
 | EMBARGOES / GATES | {{{{FILL: standing list + size tripwire}}}} |
-| PROTOCOL_VERSION | v2.5 |
+| PROTOCOL_VERSION | v2.6 |
 {orch_slots}"""
 
 ORCH_SLOTS = """| FLAVOR | {{FILL: global-pa or project:<name>}} |
@@ -77,7 +79,7 @@ Roles: {roles}. Profile: {profile}.
 """
 
 AUTH_LOG_VALIDATOR = r'''#!/usr/bin/env python3
-"""Auth-log chain validator [PROTOCOL v2.5] — mechanical enforcement of the
+"""Auth-log chain validator [PROTOCOL v2.6] — mechanical enforcement of the
 exactly-one-landed-CONSUMED audit rule (proxy-auth-core.md) over every
 memory/<role>/auth-log.md in this workspace:
 
@@ -509,11 +511,16 @@ def main() -> int:
     # side appends only its own rows. Stamped on init so the channel dir is
     # tracked and START_SESSION's "read INDEX.md" step finds a well-formed file.
     (dest / "channel" / "INDEX.md").write_text(
-        f"# REVIEW-ROUND LEDGER — {args.name} [PROTOCOL v2.5]\n\n"
-        "Append-only. Each side appends ONLY its own rows.\n\n"
-        "| round | side | request file | verdict file (how written) | "
+        f"# REVIEW-ROUND LEDGER — {args.name} [PROTOCOL v2.6]\n\n"
+        "Append-only. Each side appends ONLY its own rows. ROUND-TYPE is one of\n"
+        "FREEZE / RESULTS / FIX-CONFIRMATION (see review-convergence.md).\n"
+        "Rounds used vs budget: default 2-3 substantive rounds per artifact "
+        "(overridable in the REVIEWER binding notes); budget exhausted without "
+        "the reviewer's own convergence declaration escalates to the principal "
+        "— never auto-loop.\n\n"
+        "| round | side | ROUND-TYPE | request file | verdict file (how written) | "
         "verdict summary | actions taken | next round |\n"
-        "|---|---|---|---|---|---|---|\n",
+        "|---|---|---|---|---|---|---|---|\n",
         encoding="utf-8")
     (dest / "start").mkdir()
     for role in roles:
@@ -538,7 +545,7 @@ def main() -> int:
                 "line with the concrete next action before /sleep.\n",
                 encoding="utf-8")
         (dest / "memory" / role / "auth-log.md").write_text(
-            f"# AUTH-RECORD — {args.name} / {role} [PROTOCOL v2.5]\n\n"
+            f"# AUTH-RECORD — {args.name} / {role} [PROTOCOL v2.6]\n\n"
             "Append-only, event-sourced. Single-writer: this role's sessions\n"
             "only, only for words the principal spoke into this session (or\n"
             "a relay verified per proxy-auth-core.md when PROXY_AUTH is on).\n"
@@ -568,13 +575,13 @@ def main() -> int:
             "Overwrite this line with the concrete next action before /sleep.\n",
             encoding="utf-8")
         (dest / "memory" / "orchestrator" / "dispatch-log.md").write_text(
-            f"# DISPATCH LOG — {args.name} [PROTOCOL v2.5]\n\n"
+            f"# DISPATCH LOG — {args.name} [PROTOCOL v2.6]\n\n"
             "Append-only. One line per dispatch:\n"
             "| id | date | task ref | target role | model (rule) | status | result |\n"
             "|---|---|---|---|---|---|---|\n",
             encoding="utf-8")
         (dest / "TASKQUEUE.md").write_text(
-            f"# TASKQUEUE — {args.name} [PROTOCOL v2.5]\n\n"
+            f"# TASKQUEUE — {args.name} [PROTOCOL v2.6]\n\n"
             "T1-T3 below are EXAMPLE standing duties seeded by the stamp —\n"
             "when filling BINDINGS, prune/replace them to match the DUTIES\n"
             "binding (a duty in the queue that is not in DUTIES, or vice\n"

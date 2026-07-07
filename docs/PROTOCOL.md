@@ -8,6 +8,8 @@ a reference file ever disagree, the reference file wins.
 |---|---|
 | channel | `channel-core.md` |
 | review rounds | `review-core.md` |
+| review convergence (multi-round cycle) | `review-convergence.md` |
+| never-idle autonomy | `never-idle-core.md` |
 | memory | `memory-discipline.md` |
 | proxy authorization | `proxy-auth-core.md` |
 | binding slots | `binding-slots.md` |
@@ -46,7 +48,18 @@ Every unit of consequence gets an independent review round before it lands:
    nothing** — re-request on the current bytes.
 
 Round filenames are side-prefixed so two sides' counters never collide.
-Convergence = a round whose verdict carries no blocking findings.
+Convergence = a round whose verdict carries **no blocking findings AND the
+reviewer's own convergence declaration** (never author-declared, never inferred
+from the absence of blockers).
+
+A series of rounds converges an artifact under a small budget (2–3 substantive
+rounds by default; overridable in the REVIEWER binding notes). What **blocks**
+is a REJECT and every required change of an ADOPT-WITH-CHANGES — where the
+mechanism emits severity tags, BLOCKER/MAJOR gate and MODERATE/MINOR are
+recorded, non-blocking. Budget exhausted without a convergence declaration
+**escalates to the principal** with the full round history — the loop never
+auto-repeats past its budget. The cross-round rules (four seats, adjudicating
+disagreement, anti-anchoring) live in `review-convergence.md`.
 
 ## Memory discipline
 
