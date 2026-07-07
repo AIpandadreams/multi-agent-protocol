@@ -41,6 +41,11 @@ Optional note from the principal to weave into the handover: $ARGUMENTS
    appended) by **explicit path** — never a bare `git add -A` — and push.
    If the push fails, resolve it now; an unpushed checkpoint is not a
    checkpoint, and you must not declare sleep on top of one.
+   - **git-sync transport:** the push includes every state branch you
+     advanced this session, not just the default branch — channel, auth-log,
+     and any reservation-class `state/**` branch. A checkpoint that leaves a
+     state branch unpushed strands the peer at the old tip, so reconcile and
+     push each before declaring sleep (fetch first if the push is rejected).
 
 4. **Change log.** List exactly what changed this session, file by file
    (required even when small).

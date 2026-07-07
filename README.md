@@ -145,6 +145,7 @@ examples/                   a worked end-to-end cycle you can read like a story
 - [FEDERATION](docs/FEDERATION.md) — many separate teams under one principal, isolated by construction
 - [PROTOCOL](docs/PROTOCOL.md) — channel rules, review rounds, verdicts, memory discipline
 - [ADVANCED](docs/ADVANCED.md) — proxy authorization, integrity CI, reviewer bridge, model presets
+- [CLOUD](docs/CLOUD.md) — running peers on separate machines over a git remote (the git-sync transport)
 - [DESIGN](docs/DESIGN.md) — what's proven, what's deliberately simplified, what's roadmap
 - [REVIEW_CONVERGENCE](docs/REVIEW_CONVERGENCE.md) — the independent-review evidence trail behind this release
 - [FAQ](docs/FAQ.md)
@@ -160,11 +161,15 @@ examples/                   a worked end-to-end cycle you can read like a story
   human merge — no agent can amend its own rules
   ([self-improvement protocol](plugins/agent-protocol/skills/agent-core/references/self-improvement-protocol.md)).
 
-## Roadmap
+## Cloud / distributed peers
 
-- Cloud transport (scheduled cold-successor wakes over git, integrity-gated
-  automerge of state PRs) — running upstream, will be released once the
-  platform surface it depends on stabilizes.
+- Running peers on **separate machines** (or a live session plus a scheduled
+  cloud twin) over a git remote is a **shipped transport** — the `git-sync`
+  profiles (`2agent.git-sync` / `3agent.git-sync`) bind it. See the
+  [git-sync transport profile](transports/git-sync.md) and
+  [docs/CLOUD.md](docs/CLOUD.md), which is deliberately honest about the
+  hosted-cloud host class and the platform surface its automerge recipe leans
+  on.
 
 ## License
 

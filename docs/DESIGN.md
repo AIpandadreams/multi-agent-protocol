@@ -31,14 +31,18 @@ added in that reviewed lineage, not bolted on.
   deployments never need it — first-hand approval in whichever session
   asks is simpler and equally safe. The lane is fully included and
   documented for when the relay round-trip becomes a real cost.
-- **Local transport only.** The upstream system also runs a cloud
-  transport: scheduled cold-successor wakes over git, workers publishing
-  state via branch → PR → integrity-gated automerge (with base-sha trust
-  evaluation, protected-path guards, and head-pinned merges — the two
-  TOCTOU findings above are from hardening exactly that path). It is
-  excluded here because it depends on a hosting platform surface that is
-  still moving; releasing a recipe that stops matching the platform would
-  be worse than a roadmap line.
+- **Local transport is the default; git-sync ships alongside it.** The
+  channel verbs bind to either one shared filesystem (`local-fs`) or a git
+  remote (`git-sync`) for peers on separate machines — scheduled
+  cold-successor wakes over git, workers publishing state via
+  branch → PR → integrity-gated automerge (with base-sha trust evaluation,
+  protected-path guards, and head-pinned merges — the two TOCTOU findings
+  above are from hardening exactly that path). See
+  [transports/git-sync.md](../transports/git-sync.md) and
+  [CLOUD.md](CLOUD.md). What stays deliberately honest rather than promised
+  is the **hosted-cloud** host class: its automerge recipe leans on a hosting
+  platform surface that is still moving, so CLOUD.md marks that seam and its
+  blind spots explicitly instead of pretending it is settled.
 - **Wave census is an appendix.** Powerful for large evidence jobs,
   irrelevant to a first deployment.
 - **One worked reviewer path.** The protocol only requires "independent

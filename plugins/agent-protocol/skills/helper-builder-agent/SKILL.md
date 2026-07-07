@@ -48,7 +48,7 @@ builder's bindings are instantiated once per project via the
 | ROLE_LOCK | this session's role on this project ("builder"), recorded at first bind |
 | SIDE_NAMES | the two sides' short names used in filenames and entries — both sessions bind the SAME pair |
 | BUILDER_HOME / OWNER_REPO / SNAPSHOT_DIR | your home dir; the owner's repo (read-only); frozen-snapshot location for waves |
-| CHANNEL | the channel transport instance (the workspace repo's `channel/` on a shared filesystem; a git-synced channel-repo variant is on the roadmap); your outbound file; owner's file (read-only) — per the filename grammar |
+| CHANNEL | the channel transport instance (the workspace repo's `channel/`, bound to a shared filesystem or a git remote per the TRANSPORT slot — see `transports/`); your outbound file; owner's file (read-only) — per the filename grammar |
 | SHARED_ARTIFACTS | the ONLY cross-boundary writable artifacts + their conditions (usually none) |
 | MEMORY | the workspace repo's committed `memory/builder/` (index + topic files) — persistent state lives in git (principle #2) |
 | WORKPAPERS_DIR | OPTIONAL off-repo scratch for bulk/transient wave outputs too large to commit; never the home of persistent state, and identifiers are allowed here only if the principal designated it |

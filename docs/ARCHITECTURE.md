@@ -151,9 +151,11 @@ Every stamped workspace ships `.github/workflows/integrity.yml`:
 
 - The protocol coordinates agents under a principal's gates; it does not
   sandbox them. OS/harness-level permissions remain your responsibility.
-- Local transport assumes the sessions share a filesystem. The cloud
-  transport (cold-successor wakes over git, integrity-gated automerge of
-  state PRs) exists upstream and is roadmap here.
+- The `local-fs` transport assumes the sessions share a filesystem; the
+  `git-sync` transport (cold-successor wakes over git, integrity-gated
+  automerge of state PRs) drops that assumption for peers on separate
+  machines. Both ship — see [transports/git-sync.md](../transports/git-sync.md)
+  and [CLOUD.md](CLOUD.md).
 - The reviewer gate is as good as the reviewer's independence — a fallback
   reviewer on the author's own model is a smell the protocol explicitly
   forbids.

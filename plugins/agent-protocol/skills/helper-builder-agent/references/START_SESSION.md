@@ -48,6 +48,10 @@ and record the answer in BINDINGS.md.
 
 ## 1. Read state (in this order)
 
+- Git-sync transport: fetch the workspace repo first; diverged or
+  un-pushable state is the FIRST problem to solve — a wake that cannot push
+  cleanly must not claim progress.
+
 1. `MEMORY.md` — full read of the "start here" block. It tells you: what
    converged, what is in flight (round numbers, background agent ids), the
    next channel entry number, the principal-gated queue, and the resume order.

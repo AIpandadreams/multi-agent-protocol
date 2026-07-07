@@ -44,6 +44,23 @@ An amendment bundle bumping the protocol the skills implement from
   version set (v2.5 / v2.6) and checks every per-file stamp against the
   workspace's OWN pinned version, so a live v2.5 workspace and a fresh v2.6
   workspace both pass under one checkout.
+- **git-sync transport (cloud / distributed peers)** — a new transport profile
+  (`transports/git-sync.md`) binds the abstract channel verbs
+  (POLL/READ/APPEND/PUBLISH/INTEGRITY) to git over a remote, for peers on
+  separate machines or a live session plus a scheduled cloud twin. Ships with:
+  the load-bearing disjoint-owned-paths invariant (any rebase conflict is a
+  protocol-violation detector); two commit classes with two retry rules
+  (append-class rebases, reservation-class re-verifies — a consume commit is
+  never carried through the generic retry loop); self-managed vs hosted-cloud
+  host classes; the credential doctrine (headless sessions never self-clone —
+  a missing checkout aborts loudly); required force-push/branch-deletion
+  protection; and a helper `tools/git_sync.py`. New **TRANSPORT**,
+  **WORKSPACE_REMOTE**, and **SECRETS** binding slots; new
+  `2agent.git-sync` / `3agent.git-sync` stamp profiles;
+  `conformance_check.py` gains a `check_transport` pass (profile↔transport
+  agreement, unknown-value block, repo-relative-path guard). See
+  [docs/CLOUD.md](docs/CLOUD.md) for the deployment recipes and their honest
+  hosted-cloud caveats.
 
 The whole skills tree, the two lifecycle commands, and the tooling stamps flip
 to `PROTOCOL v2.6`; `new_project.py` stamps v2.6 workspaces.

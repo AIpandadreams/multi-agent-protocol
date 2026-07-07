@@ -43,7 +43,17 @@ from pathlib import Path
 PROFILE_ROLES = {
     "2agent.local": {"owner", "builder"},
     "3agent.local": {"owner", "builder", "orchestrator"},
+    "2agent.git-sync": {"owner", "builder"},
+    "3agent.git-sync": {"owner", "builder", "orchestrator"},
 }
+
+# Transports the TRANSPORT slot may bind. The `.git-sync` / `.local` profile
+# suffix implies which one; a stamped value that disagrees is a BLOCKER.
+KNOWN_TRANSPORTS = ("local-fs", "git-sync")
+# A CHANNEL/MEMORY value that carries an absolute path (drive-letter, POSIX
+# root, or UNC) rather than a repo-relative one — a host-profile leak under
+# git-sync, where both must resolve inside the synchronized workspace repo.
+ABS_PATH_RE = re.compile(r"[A-Za-z]:[\\/]|(?:^|\s)/[^\s/]|\\\\[^\s\\]")
 
 # Protocol versions this suite knows how to validate. A workspace pinned outside
 # the set is a BLOCKER (its file/stamp expectations are undefined here); a
@@ -403,6 +413,49 @@ def check_side_names(slots, roles, f: Findings):
     _report_uncovered(missing, "the ROLE_ALIASES row has no entry for them", f)
 
 
+def check_transport(slots, f: Findings):
+    """Validate the TRANSPORT binding (v2.6) against the profile + paths.
+
+    The slot is OPTIONAL and pin-aware by omission: a workspace with no
+    TRANSPORT row is never flagged here — a v2.5 workspace predates the slot,
+    and a v2.6 workspace that simply hasn't adopted it defaults to local-fs
+    semantics. The check only acts on a PRESENT value:
+
+    - an unknown value is a BLOCKER (its verb bindings are undefined);
+    - a value that disagrees with the profile's `.git-sync` / `.local` suffix
+      is a BLOCKER (the profile and the transport must name the same thing);
+    - under git-sync, an absolute path in CHANNEL or MEMORY is a WARN — those
+      must be repo-relative so they resolve inside the synchronized workspace
+      on every host (an absolute path is a leaked host profile).
+    """
+    if slots is None:
+        return
+    transport = slots.get("TRANSPORT", "").strip()
+    if not transport:
+        return  # absent slot never flags (pin-aware by omission)
+
+    if transport not in KNOWN_TRANSPORTS:
+        f.blocker(f"TRANSPORT '{transport}' is unknown — expected one of "
+                  f"{{{', '.join(KNOWN_TRANSPORTS)}}}")
+        return
+
+    profile = slots.get("PROFILE", "")
+    if profile in PROFILE_ROLES:
+        expected = "git-sync" if profile.endswith("git-sync") else "local-fs"
+        if transport != expected:
+            f.blocker(f"TRANSPORT '{transport}' disagrees with PROFILE "
+                      f"'{profile}' (which binds {expected})")
+
+    if transport == "git-sync":
+        for key in ("CHANNEL", "MEMORY"):
+            val = slots.get(key, "")
+            if ABS_PATH_RE.search(val):
+                f.warn(f"{key} holds an absolute path under git-sync "
+                       f"('{val}') — CHANNEL/MEMORY must be repo-relative so "
+                       "they resolve inside the synchronized workspace on "
+                       "every host (looks like a leaked host profile)")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -427,6 +480,7 @@ def main() -> int:
     check_structure(ws, roles, f)
     check_bindings(ws, slots, roles, pinned, f)
     check_side_names(slots, roles, f)
+    check_transport(slots, f)
     check_auth_logs(ws, roles, pinned, f)
     check_channel(ws, pinned, f)
 

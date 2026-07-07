@@ -98,7 +98,12 @@ heartbeat → add to the principal's queue. Never intake unannounced.
 **Announce-before-sync (the sender's half of the same rule):** never let your
 deliverable files appear in the shared inbox without an announcing entry —
 sync and announce in the same work unit, or announce first. The fix for a held
-package is on the sender, not the holder.
+package is on the sender, not the holder. (Transport note: under `git-sync`
+this is ATOMIC — the deliverable and its announcing entry ride the SAME push,
+so a peer can never fetch the file ahead of the entry; and the holder's
+hold-timeout clocks start at fetch-visibility, i.e. the first fetch in which
+the announcing entry appears, not the sender's local commit time — see the
+transport profiles.)
 
 **Rollback rule (forward-only amendment):** posted entries are never edited or
 rewritten. If you discover you acted under a stale picture (the peer posted

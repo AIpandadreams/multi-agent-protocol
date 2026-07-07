@@ -39,15 +39,31 @@ Requested role: $ARGUMENTS
      `memory/<role>/`, `start/START_SESSION.<role>.md` — always use the
      canonical role, never the display name.
 
-3. **Run the role's start procedure** —
+3. **Sync the transport first (git-sync only).** If `TRANSPORT` binds
+   `git-sync`, the workspace repo is the rendezvous and it may be stale or
+   diverged — resolve that BEFORE reading any state:
+   - **Fetch first**, then reconcile against `WORKSPACE_REMOTE`'s branch. A
+     divergence (local commits the remote lacks, or vice versa) is the FIRST
+     problem to solve — un-pushable state means a later checkpoint cannot
+     land, so a wake that can't reconcile must say so and stop, not read on.
+   - **No workspace present on a headless wake = ABORT, loudly.** A scheduled
+     / cold-successor session that finds no checkout does NOT self-clone
+     (credentials live in the host env / connector per the `SECRETS` binding,
+     never in the repo, and a self-clone would be an unprovisioned identity).
+     The scheduler provisions the checkout; its absence is a setup failure to
+     report, not to paper over.
+   - Under `local-fs` this step is a no-op (the shared filesystem is the
+     rendezvous) — proceed to step 4.
+
+4. **Run the role's start procedure** —
    `start/START_SESSION.<role>.md`, top to bottom, no steps skipped:
    bind to BINDINGS.md, verify integrity, read `memory/<role>/MEMORY.md`
    (⚡ working-state block FIRST), poll the channel for unacked peer entries.
 
-4. **Lock the role** for this session: state plainly that you are the
+5. **Lock the role** for this session: state plainly that you are the
    <role> for this workspace and will not act as any other role here.
 
-5. **Report the resume point**, then act:
+6. **Report the resume point**, then act:
 
    ```
    ---

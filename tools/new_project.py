@@ -44,15 +44,17 @@ Slot glossary: plugins/agent-protocol/skills/agent-core/references/binding-slots
 |---|---|
 | PROJECT | {name} |
 | PROFILE | {profile} |
-| SIDE_NAMES | {side_names} |
+| TRANSPORT | {transport} |
+{remote_row}| SIDE_NAMES | {side_names} |
 {alias_row}| CANONICAL_REPO | {{{{FILL: work repo path + remote + branch}}}} |
-| CHANNEL | {dest}/channel/ (this workspace repo) |
-| MEMORY | {dest}/memory/<role>/ |
+| CHANNEL | channel/ (repo-relative; this workspace repo) |
+| MEMORY | memory/<role>/ (repo-relative) |
 | REVIEWER | {{{{FILL: per side — mechanism + model}}}} |
 | PRINCIPAL | {principal} |
 | PINNED_RESOURCES | {{{{FILL: exact IDs/paths, or "none"}}}} |
 | SHARED_ARTIFACTS | none (add per agent-core conditions if needed) |
 | SIGNING | {{{{FILL: gpg-local / webflow-api / sign-on-merge}}}} |
+| SECRETS | none committed — git credentials/tokens live in the host env or platform connector only, never here |
 | HEARTBEAT | {{{{FILL: per role, offset}}}} |
 | AUTONOMY | semi-autonomous (dial: attended / semi-autonomous / standing-duties / never-idle) |
 | WATCHER | {{{{FILL: per-role monitor + lane list + cadence, or "none" — required if AUTONOMY = never-idle}}}} |
@@ -398,6 +400,23 @@ jobs:
               sys.exit(1)
           print("secret scan clean")
           EOF
+      - name: protected paths (no state-branch PR touches governance files)
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'state/')
+        run: |
+          # git-sync reservation-class publishing rides state/** branches; those
+          # branches carry channel/auth-log/state ONLY. A PR from state/** that
+          # also edits governance surfaces (bindings, CI, the auth validator,
+          # the provenance map, the model matrix) is a privilege-escalation
+          # shape — fail loudly. Inert on every non-state-branch PR.
+          BAD=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD \
+            | grep -E '^(BINDINGS\\.md|MODELS\\.md|\\.auth-provenance\\.json|\\.github/workflows/|tools/validate_auth_log\\.py)' || true)
+          if [ -n "$BAD" ]; then
+            echo "PR from state branch '${{ github.head_ref }}' edits protected governance paths:"
+            echo "$BAD"
+            echo "state/** branches carry channel + auth-log + state only; governance changes land through a normal branch"
+            exit 1
+          fi
+          echo "protected-path guard clean"
 """
 
 SETTINGS_TEMPLATE = {
@@ -493,7 +512,8 @@ def main() -> int:
     ap.add_argument("--name", required=True)
     ap.add_argument("--dest", required=True)
     ap.add_argument("--profile", default="3agent.local",
-                    choices=["2agent.local", "3agent.local"])
+                    choices=["2agent.local", "3agent.local",
+                             "2agent.git-sync", "3agent.git-sync"])
     ap.add_argument("--owner-side", default="owner")
     ap.add_argument("--builder-side", default="builder")
     ap.add_argument("--orch-side", default="orch")
@@ -625,8 +645,16 @@ def main() -> int:
     alias_row = (f"| ROLE_ALIASES | {', '.join(alias_pairs)} |\n"
                  if alias_pairs else "")
 
+    # Transport binding: the `.git-sync` profiles bind the git-sync transport
+    # and need a WORKSPACE_REMOTE row (FILL at instantiation); the `.local`
+    # profiles bind local-fs and carry no remote row.
+    transport = "git-sync" if args.profile.endswith("git-sync") else "local-fs"
+    remote_row = ("| WORKSPACE_REMOTE | {{FILL: remote URL + default branch}} |\n"
+                  if transport == "git-sync" else "")
+
     bindings_text = BINDINGS_TEMPLATE.format(
         name=args.name, date=today, profile=args.profile,
+        transport=transport, remote_row=remote_row,
         dest=dest.as_posix(), side_names=" / ".join(side_parts),
         alias_row=alias_row,
         orch_slots=ORCH_SLOTS if orch else "", principal=args.principal)

@@ -39,7 +39,9 @@ your commit *is*:
   only then reserve again. (This is the git-sync expression of proxy-auth-core's
   "losing a push race means re-verify".)
 
-Mixing the two in one push is a bug: reservation commits publish alone.
+Mixing the two in one push is a bug: reservation commits publish alone. Put
+plainly, and to match proxy-auth-core.md verbatim: the generic PUBLISH verb
+with its pull-rebase retry loop **must never carry a consume commit**.
 
 ## Host classes (bind per machine, in the host profile)
 

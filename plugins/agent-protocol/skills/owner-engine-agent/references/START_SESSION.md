@@ -44,6 +44,10 @@ bindings live in ITS memory, not here.)*
 
 ## 1. Read state (in order)
 
+- Git-sync transport: fetch the workspace repo first; diverged or
+  un-pushable state is the FIRST problem to solve — a wake that cannot push
+  cleanly must not claim progress.
+
 1. The memory index — full read. Its current-status section tells you: HEAD
    sha, committed vs in-flight work, next channel entry number, next review
    round number, the gated-items queue, open lanes.

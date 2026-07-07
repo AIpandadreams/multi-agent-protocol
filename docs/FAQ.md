@@ -64,8 +64,12 @@ scheduled-task-first because that's where they've run longest; cron
 equivalents are one-liners.
 
 **Where's the cloud version?**
-Upstream and running, deliberately not in v1 — see the roadmap note in
-[DESIGN.md](DESIGN.md#what-this-release-deliberately-simplifies).
+Shipped. Peers on separate machines (or a live session plus a scheduled
+cloud twin) coordinate over a git remote via the `git-sync` transport —
+stamp a `2agent.git-sync` / `3agent.git-sync` workspace and read
+[transports/git-sync.md](../transports/git-sync.md) +
+[CLOUD.md](CLOUD.md). CLOUD.md is deliberately honest about the hosted-cloud
+host class and the platform surface its automerge recipe depends on.
 
 **Can I change the protocol for my deployment?**
 Bind anything bindable (that's most things: cadences, models, gates,
