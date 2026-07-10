@@ -35,12 +35,14 @@ own reviews.
 
 bind + version check → integrity (channel tail vs counter, auth-log pointer,
 queue/ledger parse) → read state (memory block, peer tails, ledgers,
-registry) → re-create ticks + standing queue items → fire overdue → drain:
-preempts, anomalies (stale verdicts, missing crossing-acks, dead lanes),
-oldest first → checkpoint.
+registry) → re-create ticks + wake monitors (arm-and-verify: interrupts/
+compaction kill monitors silently; unarmed = deaf seat) + standing queue
+items → fire overdue → drain: preempts, anomalies (stale verdicts, missing
+crossing-acks, dead lanes), oldest first → checkpoint.
 
 ## Bookkeeping watchlist (each tick)
 
 stale idle echoes (dedup by round #) · verdict older than tree fingerprint ·
 crossed entries without acks · agent/lane silent past heartbeat+grace ·
-wedged reviewer transport · queue items aging blocked · spend vs caps.
+own wake monitors still armed · wedged reviewer transport · queue items
+aging blocked · spend vs caps.

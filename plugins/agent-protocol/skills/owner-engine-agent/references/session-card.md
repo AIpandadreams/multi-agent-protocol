@@ -6,12 +6,15 @@ At a true session boundary (fresh/compaction/successor), run the full
 
 ## Resume in this order
 
-1. Memory index "current status": HEAD sha · next entry # · next round # ·
+1. Wake monitors ARMED? — list live monitors and verify yours exist.
+   Interrupts and compaction kill them silently; not armed = deaf seat.
+   Re-arm and verify BEFORE anything else.
+2. Memory index "current status": HEAD sha · next entry # · next round # ·
    gated queue · in-flight units.
-2. `git status` + log vs memory; `git fetch` — divergence = investigate first.
-3. Channel integrity: own file tail == counter; peer entries contiguous.
-4. Peer entries past last-seen → intake NOW (peer intake preempts).
-5. Resume in-flight units in dependency order; never restart finished work.
+3. `git status` + log vs memory; `git fetch` — divergence = investigate first.
+4. Channel integrity: own file tail == counter; peer entries contiguous.
+5. Peer entries past last-seen → intake NOW (peer intake preempts).
+6. Resume in-flight units in dependency order; never restart finished work.
 
 ## Standing disciplines (all times)
 

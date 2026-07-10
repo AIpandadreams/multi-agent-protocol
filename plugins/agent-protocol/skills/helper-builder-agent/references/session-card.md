@@ -6,14 +6,17 @@ At a true session boundary (fresh/compaction/successor), run the instantiated
 
 ## Resume in this order
 
-1. Memory "start here": converged · in-flight (rounds, agent ids) · next entry
+1. Wake monitors ARMED? — list live monitors and verify yours exist.
+   Interrupts and compaction kill them silently; not armed = deaf seat.
+   Re-arm and verify BEFORE anything else.
+2. Memory "start here": converged · in-flight (rounds, agent ids) · next entry
    # · gated queue · resume order.
-2. Ledger `INDEX.md` tail (YOUR side's rows) vs memory — mismatch =
+3. Ledger `INDEX.md` tail (YOUR side's rows) vs memory — mismatch =
    investigate first.
-3. Channel integrity: own file tail == counter; owner entries contiguous.
-4. Background tasks: completed-but-unprocessed relay/wave return = first work
+4. Channel integrity: own file tail == counter; owner entries contiguous.
+5. Background tasks: completed-but-unprocessed relay/wave return = first work
    item. Reviewer lane not squatted by a stale job.
-5. Owner entries past last-seen → intake NOW, before choosing new work.
+6. Owner entries past last-seen → intake NOW, before choosing new work.
 
 ## Standing disciplines (all times)
 

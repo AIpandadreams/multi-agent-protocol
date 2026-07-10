@@ -44,6 +44,17 @@ tasks buffer until EOF and look frozen. Redirect to per-run log files instead.
 **Stale locks.** Crashed/parallel sessions leave stale lock files (e.g. zero-byte
 `.git/index.lock`). Verify no live process, then remove and retry.
 
+**Shared live trees (index sweeps).** In a repo another agent session actively works,
+`git add <file>` + a bare `git commit` commits the ENTIRE index — the peer's
+staged-but-uncommitted work rides your commit silently. Always commit with an explicit
+pathspec (`git commit -- <paths> -m "..."`) in shared trees. If a sweep happens:
+disclose to the peer immediately; never rewrite shared history unilaterally.
+
+**Silent credential prompts.** Credential-manager outages make git network operations
+HANG on an invisible username prompt (no error, no output — looks like a wedged push).
+Keep `GIT_TERMINAL_PROMPT=0` in agent shells so they fail fast instead; repair the
+credential helper (e.g. `gh auth setup-git`) rather than retrying the hang.
+
 **Tool-capability holes.** Some harness tools silently depend on binaries the machine
 lacks (e.g. PDF page rendering needing poppler). Record the working alternative next to
 the broken path.

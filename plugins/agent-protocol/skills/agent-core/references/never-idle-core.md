@@ -31,6 +31,12 @@ still required before a deliverable is intook, untrusted-input still holds, a
 half-written file is still never read. Never-idle makes intake prompt; it does
 not make it credulous.
 
+A monitor is not durable: session interrupts and context compaction kill it
+silently, and an unarmed watcher is indistinguishable from a quiet lane.
+Arm-and-verify at every wake and resume (start contracts, machinery step) —
+and treat "no events for suspiciously long" as a prompt to re-verify the
+monitor is still armed, not as evidence the lane is quiet.
+
 ## What a worker MAY self-assign
 
 A CLOSED list. Between assignments, at watch, a worker may on its own initiative:

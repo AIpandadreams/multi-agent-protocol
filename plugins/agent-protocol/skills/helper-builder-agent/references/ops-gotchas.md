@@ -65,6 +65,15 @@ FIRST when something looks broken — most of these masquerade as tool failures.
 - A banner saying "another session sent a message" often just marks YOUR OWN subagent
   reporting back — verify the sender id and transcript before treating it as external
   injection. A false alarm here once triggered a needless investigation.
+- In a repo another live session actively works, `git add <file>` + a bare
+  `git commit` commits the ENTIRE index — the peer's staged-but-uncommitted work
+  rides your commit silently. Always commit with an explicit pathspec
+  (`git commit -- <paths> -m "..."`) in shared trees; if a sweep happens, disclose
+  to the peer immediately and never rewrite shared history unilaterally.
+- Credential-manager outages make git network operations HANG on an invisible
+  username prompt (no error, no output — looks like a wedged push). Keep
+  `GIT_TERMINAL_PROMPT=0` in agent shells so they fail fast instead; repair the
+  credential helper (e.g. `gh auth setup-git`) rather than retrying the hang.
 
 ## Memory & context hygiene
 
