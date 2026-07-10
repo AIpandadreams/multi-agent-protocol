@@ -66,6 +66,12 @@ active preset: <name> · ledger tail: <last row #>
 
 - Heartbeat/tick schedule per TICKS (idle vs active-window cadence) — verify
   it exists, re-create if the platform lost it.
+- Wake monitors (arm-and-verify): if the deployment uses persistent harness
+  monitors as the wake path (channel watch, inbox watch), arm them NOW and
+  verify each is live before dispatching anything. Session interrupts and
+  context compaction silently kill armed monitors; a resume that skips
+  re-arm is a deaf seat. Self-expiring pollers are not a valid wake path;
+  arm-and-verify runs at EVERY wake and resume, not just fresh starts.
 - Standing queue items (briefings, rollups) present in TASKQUEUE; re-seed any
   missing from the DUTIES binding.
 

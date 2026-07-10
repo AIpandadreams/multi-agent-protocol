@@ -75,13 +75,20 @@ and record the answer in BINDINGS.md.
 
 1. **Heartbeat** per binding (one only; delete stale ones; delete at window
    end).
-2. Background tasks: list running/completed tasks; a completed-but-unprocessed
+2. **Wake monitors (arm-and-verify)** — if the deployment uses persistent
+   harness monitors as the wake path (channel watch, inbox watch), arm them
+   NOW and verify each is live before any other work. Session interrupts and
+   context compaction silently kill armed monitors; a resume that skips
+   re-arm is a deaf seat — peer posts pile up unsighted until the principal
+   manually intervenes. Self-expiring pollers are not a valid wake path;
+   arm-and-verify runs at EVERY wake and resume, not just fresh starts.
+3. Background tasks: list running/completed tasks; a completed-but-unprocessed
    relay or wave return is your first work item.
-3. Reviewer lane: confirm no stale "running" relay job is squatting the
+4. Reviewer lane: confirm no stale "running" relay job is squatting the
    serialized lane (see ops-gotchas for the central-state repair). Silent
    after 2 nudges spanning 2 heartbeats → dead-lane escalation
    (review-loop-protocol).
-4. Snapshot integrity: if a wave is in flight, confirm the frozen snapshot
+5. Snapshot integrity: if a wave is in flight, confirm the frozen snapshot
    still matches its pin. Also `git fetch` in your read-only clone/snapshot
    source and note if the owner's remote moved.
 
