@@ -391,6 +391,26 @@ class MigratePreservesProtectedContentTest(unittest.TestCase):
             self.assertIn("# helper [PROTOCOL v2.6] banner", out)
             self.assertNotIn("[PROTOCOL v2.5]", out)
 
+    def test_bom_prefixed_banner_stamp_flips_and_bom_survives(self):
+        # a real live channel file began with a UTF-8 BOM before its `# ...`
+        # banner (Windows-editor artifact, found 2026-07-09): str.lstrip() does not
+        # strip U+FEFF, so the banner was misclassified as prose and skipped.
+        # The stamp must flip AND the BOM must be preserved byte-for-byte.
+        with tempfile.TemporaryDirectory() as d:
+            ws = Path(d) / "ws"
+            _stamp(ws, ["--profile", "2agent.local"])
+            _downgrade(ws)
+            doc = ws / "BOMMED.md"
+            content = "﻿# channel file 2026-07-06b [PROTOCOL v2.5]\nbody\n"
+            doc.write_text(content, encoding="utf-8")
+
+            mw.migrate(ws)
+
+            out = doc.read_text(encoding="utf-8")
+            self.assertTrue(out.startswith("﻿# channel file"))
+            self.assertIn("[PROTOCOL v2.6]", out)
+            self.assertNotIn("[PROTOCOL v2.5]", out)
+
     def test_mixed_stamp_on_the_banner_is_not_corrupted(self):
         # even on the banner line, the exact token requires the closing bracket,
         # so `[PROTOCOL v2.5 / v2.6]` is left intact.

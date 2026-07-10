@@ -146,8 +146,11 @@ def _text_files(ws):
 def _is_stamp_line(line):
     """Looks like a stamp banner: a heading or docstring/comment line (never a
     `|`-row or prose). Necessary but not sufficient — it must ALSO be the file's
-    banner line (see _banner_index) to be flipped."""
-    return line.lstrip().startswith(_STAMP_LINE_PREFIXES)
+    banner line (see _banner_index) to be flipped. A leading UTF-8 BOM is
+    tolerated in DETECTION only (str.lstrip() does not strip U+FEFF — a
+    BOM-prefixed real banner must not be misread as prose); the BOM byte itself
+    is never rewritten."""
+    return line.lstrip("﻿").lstrip().startswith(_STAMP_LINE_PREFIXES)
 
 
 def _banner_index(segments):

@@ -38,6 +38,15 @@ changes only through the
   conformance means a not-yet-migrated workspace stays green under a v2.6
   checkout, so workspaces migrate independently, each at its own freeze boundary.
 
+### Fixed
+- `tools/migrate_workspace.py` — banner detection now tolerates a leading UTF-8
+  BOM (`U+FEFF`). A BOM-prefixed banner line (as written by some Windows
+  editors) previously failed the stamp-prefix match and was mis-reported as an
+  off-banner token, silently leaving the file on the old version stamp. The BOM
+  is stripped for DETECTION only — the byte itself survives the rewrite
+  unchanged. Found by a cross-vendor review pass against a live workspace copy;
+  regression-tested (BOM survives, stamp flips).
+
 ## [1.2.0] — 2026-07-07
 
 ### Added — PROTOCOL v2.5 → v2.6 amendment
