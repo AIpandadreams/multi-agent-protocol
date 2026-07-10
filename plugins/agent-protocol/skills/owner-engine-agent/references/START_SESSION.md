@@ -74,10 +74,17 @@ bindings live in ITS memory, not here.)*
 
 1. **Heartbeat** per binding (one only; delete stale ones; delete at window
    end).
-2. **Reviewer lane** — re-establish fresh; state the verdict contract
+2. **Wake monitors (arm-and-verify)** — if the deployment uses persistent
+   harness monitors as the wake path (channel watch, inbox watch), arm them
+   NOW and verify each is live before any other work. Session interrupts and
+   context compaction silently kill armed monitors; a resume that skips
+   re-arm is a deaf seat — peer posts pile up unsighted until the principal
+   manually intervenes. Self-expiring pollers are not a valid wake path;
+   arm-and-verify runs at EVERY wake and resume, not just fresh starts.
+3. **Reviewer lane** — re-establish fresh; state the verdict contract
    (ADOPT / ADOPT-WITH-CHANGES / REJECT; side-prefixed round files or ledger
    rows for a harness-gate reviewer; read-only).
-3. **Signing probe** — run the fail-fast warmth check. Cold = commits queue
+4. **Signing probe** — run the fail-fast warmth check. Cold = commits queue
    until the principal warms it themselves.
 
 ## 4. Poll the channel
