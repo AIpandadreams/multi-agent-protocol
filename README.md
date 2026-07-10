@@ -156,6 +156,8 @@ for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 - [CLOUD](docs/CLOUD.md) — running peers on separate machines over a git remote (the git-sync transport)
 - [DESIGN](docs/DESIGN.md) — what's proven, what's deliberately simplified, what's roadmap
 - [REVIEW_CONVERGENCE](docs/REVIEW_CONVERGENCE.md) — the independent-review evidence trail behind this release
+- [CREATOR-SEAT-BOOTSTRAP](docs/CREATOR-SEAT-BOOTSTRAP.md) — a single-file handoff that turns a fresh Claude session into a protocol creator: design interview, SOP catalog, runbook library, incident case studies
+- [SOP-REGISTRY](docs/SOP-REGISTRY.md) — principal-ruled standing orders over the protocol, and the cross-team registry pattern
 - [FAQ](docs/FAQ.md)
 
 ## Trust properties

@@ -31,11 +31,18 @@ still required before a deliverable is intook, untrusted-input still holds, a
 half-written file is still never read. Never-idle makes intake prompt; it does
 not make it credulous.
 
-A monitor is not durable: session interrupts and context compaction kill it
-silently, and an unarmed watcher is indistinguishable from a quiet lane.
+A monitor is not durable: session interrupts and context compaction can kill
+it silently, and an unarmed watcher is indistinguishable from a quiet lane.
 Arm-and-verify at every wake and resume (start contracts, machinery step) —
 and treat "no events for suspiciously long" as a prompt to re-verify the
 monitor is still armed, not as evidence the lane is quiet.
+
+The inverse failure also occurs: a monitor can SURVIVE an interrupt the seat
+assumed killed it, so a blind re-arm leaves TWO monitors firing on the same
+lane (duplicate intake events, double-processing risk). **Re-arm is
+stop-then-arm:** before arming, enumerate your live monitors and stop any
+prior monitor on the same lane by its id — never arm on the assumption the
+predecessor is dead.
 
 ## What a worker MAY self-assign
 

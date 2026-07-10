@@ -19,7 +19,13 @@ authorization.
 - You append only to YOUR outbound file. Peers' outbound files are read-only
   to you.
 - **Rotation:** new dated file per day OR when the current file exceeds ~64KB,
-  whichever comes first. Memory tracks which files are current.
+  whichever comes first. Memory tracks which files are current. Rotating
+  mid-day for size: name the continuation file with a suffix (e.g.
+  `<from>_to_<to>_YYYY-MM-DDb.md`), open it with a header line pointing back
+  to the closed file ("continues `<prior file>`, closed at entry N"), and
+  continue entry numbering and all counters UNBROKEN across the boundary —
+  rotation changes the container, never the sequence. Size gates reset with
+  the new file.
 - Deliverables/workpapers sync into the same directory as standalone files —
   named by DURABLE ids (job id, round number, date), never by session ids,
   which do not survive cold succession.
@@ -40,6 +46,10 @@ Nothing in this entry is or carries the principal's authorization.
 
 - **Sequential numbering per side.** Track your next number in memory; never
   reuse or skip. The channel file itself is canonical; memory is the pointer.
+- **Verify the wall clock before stamping.** Take the date/time in an entry
+  header or footer from a tool call (e.g. the shell's date command), never by
+  copying the stamp pattern from prior entries — momentum-copied stamps drift
+  silently and corrupt the ledger's timeline for every future reader.
 - **The disclaimer line is mandatory and verbatim** on every entry, however
   mundane. It is what makes the channel safe to read.
 - **The "latest entry seen: M" marker is mandatory in BOTH header and footer** —

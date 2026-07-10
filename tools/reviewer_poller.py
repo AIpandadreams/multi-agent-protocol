@@ -145,7 +145,7 @@ def review_one(ws: Path, req: Path, verdict: Path, codex_cmd: str,
 
 
 def cycle(workspaces, codex_cmd, dry):
-    total = 0
+    done, failed = 0, 0
     for w in workspaces:
         ws = Path(w)
         channel = ws / "channel"
@@ -156,8 +156,11 @@ def cycle(workspaces, codex_cmd, dry):
             run(["git", "fetch"], cwd=ws, check=False)
             run(["git", "pull", "--rebase"], cwd=ws, check=False)
         for req, verdict in pending_requests(channel):
-            total += review_one(ws, req, verdict, codex_cmd, dry)
-    return total
+            if review_one(ws, req, verdict, codex_cmd, dry):
+                done += 1
+            elif not dry:
+                failed += 1
+    return done, failed
 
 
 def dir_signature(channel: Path) -> frozenset:
@@ -298,7 +301,11 @@ def main() -> int:
             cycle(workspaces, codex_cmd, args.dry_run)
             time.sleep(args.interval)
     else:
-        cycle(workspaces, codex_cmd, args.dry_run)
+        # --once propagates failure: exit nonzero when any attempted review
+        # failed, so a scheduling wrapper can surface the outage instead of
+        # reading a swallowed reviewer error as success.
+        _, failed = cycle(workspaces, codex_cmd, args.dry_run)
+        return 1 if failed else 0
     return 0
 
 

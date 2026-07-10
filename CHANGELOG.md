@@ -8,13 +8,32 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.1 | v2.6 | live-operation hardening: wake-monitor arm-and-verify, incident-driven ops-gotchas, `migrate_workspace.py`, creator-seat + SOP-registry docs, `--once` failure propagation |
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
 
-## [Unreleased]
+## [1.2.1] — 2026-07-10
+
+Hardening release distilled from the first full week of PROTOCOL v2.6 live
+operation (a same-day two-workspace v2.5→v2.6 migration plus the incidents it
+surfaced). Protocol text stays `v2.6` — every change is a clause-level
+strengthening within the existing version, adopted through principal rulings
+and carried through cross-vendor + isolated-judge convergence review.
 
 ### Added
+- **`docs/CREATOR-SEAT-BOOTSTRAP.md` (+ `.html`)** — a complete, self-contained
+  handoff document that turns a fresh Claude session into a *multi-agent
+  protocol creator*: the system in one page, the creator-seat role definition
+  (duties + incident-derived boundaries), a topology-design interview (tandem /
+  hub / multi-team, e.g. 3+2 and 3+2+2), a generalized SOP catalog, a runbook
+  library (onboarding, live hash-pinned migration, archive hardening,
+  failure surfacing, reviewer-outage recovery), and nine incident case
+  studies that each became protocol.
+- **`docs/SOP-REGISTRY.md`** — the SOP layer: principal-ruled standing orders
+  over the protocol, master-number rules, the cross-team `SOPS.md` registry
+  file, and the numbering-collision lesson (document + team-qualify, never
+  renumber).
 - `tools/migrate_workspace.py` — migrates a stamped `PROTOCOL v2.5` workspace up
   to `v2.6`. Mechanical, idempotent, and reversible. The rewrite is
   line-structured, not a blind whole-file replace: it flips a `[PROTOCOL v2.5]`
@@ -38,7 +57,51 @@ changes only through the
   conformance means a not-yet-migrated workspace stays green under a v2.6
   checkout, so workspaces migrate independently, each at its own freeze boundary.
 
+### Hardened (incident-driven protocol text, within v2.6)
+- **Wake monitors: arm-and-verify** — all three role START_SESSION contracts
+  gain a machinery step, all three session cards gain resume STEP 1 ("Wake
+  monitors ARMED?"), and `never-idle-core.md` gains the monitor-durability
+  rule. Root incident: a session interrupt + context compaction silently
+  killed a live seat's monitors and its resume path had no re-arm step — the
+  seat sat deaf while peer posts accumulated. An unarmed watcher is
+  indistinguishable from a quiet lane; self-expiring pollers are not a valid
+  wake path.
+- **`ops-gotchas.md` (owner + builder): two new burned-lesson classes** —
+  *Shared live trees (index sweeps)*: in a repo another session actively
+  works, a bare `git commit` after `git add <file>` commits the ENTIRE index,
+  silently sweeping the peer's staged work — always commit with an explicit
+  pathspec, disclose any sweep immediately, never rewrite shared history
+  unilaterally. *Silent credential prompts*: credential-manager outages hang
+  git network ops on an invisible prompt — set `GIT_TERMINAL_PROMPT=0` so
+  agents fail fast, repair the credential helper instead of retrying.
+- **`channel-core.md`: two clauses closing live gaps** — *Mid-day rotation
+  convention*: a size-triggered rotation file carries a suffix name, a header
+  pointing back to the closed file, and UNBROKEN entry numbering/counters
+  across the boundary (rotation changes the container, never the sequence;
+  codified from a first-try-successful live improvisation). *Tool-verified
+  timestamps*: entry stamps come from a tool call, never momentum-copied from
+  prior entries — the drift class this closes was observed to RECUR the same
+  day it was diagnosed, because the fix wasn't yet mechanical protocol text.
+- **`CREATOR-SEAT-BOOTSTRAP.md` runbooks 6.5/6.6** — principal HALT/RESUME
+  procedure (verify the durable relay artifact, relay to peer, checkpoint,
+  monitors stay armed as the resume signal path, full wake on resume) and two
+  review-lane escalation patterns (the self-ruled-extension rider R1/R2, the
+  contest-adoption confirm leg), all executed live before being written down.
+- **`never-idle-core.md`: re-arm is stop-then-arm** — the deaf-seat inverse:
+  a monitor can survive an interrupt the seat assumed killed it, so a blind
+  re-arm leaves two monitors firing on one lane. Enumerate and stop the
+  predecessor by id before arming (observed twice in one week live).
+- **Bootstrap additions from the second consult round** — scoped-pull rule
+  for shared live trees (`--ff-only`, in the index-sweep case study), the
+  "byte-blind gate" case study (parse-level gates are structurally blind to
+  byte-layer defects; data-unit gates need a raw-byte leg), and SOP catalog
+  entry 8 (single-writer fixed-time external status-board sync).
+
 ### Fixed
+- `tools/reviewer_poller.py` — `--once` now exits nonzero when any attempted
+  review failed, so scheduling wrappers can surface a reviewer outage. It
+  previously returned 0 unconditionally, which made reviewer failures (e.g.
+  quota exhaustion) look like success to a task scheduler indefinitely.
 - `tools/migrate_workspace.py` — banner detection now tolerates a leading UTF-8
   BOM (`U+FEFF`). A BOM-prefixed banner line (as written by some Windows
   editors) previously failed the stamp-prefix match and was mis-reported as an
