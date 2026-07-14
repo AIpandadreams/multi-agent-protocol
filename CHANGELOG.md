@@ -8,11 +8,44 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.3 | v2.6 | skill-less cloud-wake floor is the baseline (plugin = opportunistic layer; declared-but-not-loaded is the motivating case): routines follow the in-repo `START_SESSION` contract + a protocol checkout pinned to a fixed ref/sha, else ABORT; `CLOUD.md` arming gate revised (floor-hardened + representative-task dry-run) |
 | 1.2.2 | v2.6 | transport live-validation + second-migration hardening: hosted wake handshake, empirical remote-protection verification, declared≠loaded plugin rule, version-migration live-run notes, `validate_auth_log.py` argv fix |
 | 1.2.1 | v2.6 | live-operation hardening: wake-monitor arm-and-verify, incident-driven ops-gotchas, `migrate_workspace.py`, creator-seat + SOP-registry docs, `--once` failure propagation |
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.2.3] — 2026-07-14
+
+A single coherent hardening: make **skill-less operation the defined baseline
+for unattended/cloud routines**, closing the gap the v1.2.2 declared≠loaded rule
+exposed. When a scheduled wake finds the protocol plugin declared but not loaded
+— the normal case for a credential-less routine that cannot install a plugin
+from a private marketplace — the in-repo `START_SESSION.<role>.md` contract is
+followable on its own, drawing its core reference docs from a protocol checkout
+pinned to a fixed ref/sha. Protocol text stays `v2.6`; carried through a
+cross-vendor + isolated-judge convergence loop.
+
+### Added
+- **`START_SESSION.md` (all three role templates): "operating without the
+  plugin loaded (skill-less baseline)."** The contract is explicitly followable
+  with no plugin/skills loaded; obtain the cited reference docs from a checkout
+  of the protocol repo pinned to a fixed ref/sha (never a moving branch); the
+  plugin/`/wake` layer is an opportunistic convenience on top, not a dependency.
+
+### Changed
+- **`docs/CLOUD.md` go-live item 5 — from "gate on a proven load / stop when the
+  skill surface is absent" to "the skill-less floor is the baseline."** The
+  v1.2.2 rule correctly observed declaration ≠ load but treated an unloaded
+  plugin as a stop condition; a plugin from a private marketplace a
+  credential-less routine cannot fetch would then never run at all. The floor
+  inverts the default — routines operate from the in-repo START contract, the
+  plugin is a bonus — while preserving the valid caution that the *defined*
+  floor is not a protocol-less improvisation, with an explicit ABORT when
+  neither the plugin nor the pinned protocol checkout is present. The arming
+  gate is restated:
+  **arm once the floor is hardened AND one hosted dry-run completes the start
+  contract exercising a representative task (not recital).**
 
 ## [1.2.2] — 2026-07-13
 

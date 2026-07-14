@@ -85,15 +85,28 @@ What makes this safe, in order:
 4. **Pre-approved git surface.** The stamped `.claude/settings.json` already
    allow-lists the git/gh commands the channel loop needs, so an unattended wake
    doesn't stall on a permission prompt it cannot answer.
-5. **The plugin surface is PROVEN, not declared.** A plugin/marketplace
-   declaration in the checkout's settings does **not** mean the hosted runner
-   loads it — observed live: a hosted session on a workspace whose settings
-   declared the protocol plugin reported the plugin absent from its loaded
-   set. So: probe from INSIDE a live hosted session (have it list its loaded
-   plugins/skills) before scheduling wakes that depend on `/wake` or any
-   skill; **arming a scheduled wake gates on a proven load**; and write the
-   scheduled wake prompt to fail loudly and stop when the skill surface is
-   absent — never improvise a protocol-less resume.
+5. **The skill-less floor is the baseline; the plugin is an opportunistic
+   layer.** A plugin/marketplace declaration in the checkout's settings does
+   **not** mean the hosted runner loads it — observed live: a hosted session on
+   a workspace whose settings *declared* the protocol plugin reported it absent
+   from its loaded set, and a plugin from a private marketplace a
+   credential-less runner cannot fetch fails the same way (declaration ≠
+   installation; the install is machine-level state absent from a fresh clone).
+   So do **not** build the wake on the plugin loading. The **in-repo START
+   contract is followable without the plugin** — point the scheduled wake prompt
+   at `start/START_SESSION.<role>.md` directly, and that contract draws its core
+   reference docs from a checkout of the protocol repo **pinned to a fixed
+   ref/sha** (never a moving branch). That pinned protocol checkout is itself a
+   wake precondition — provided like the workspace in item 1 (scheduler /
+   host-profile), never self-cloned; **if it is absent too, that is the item-1
+   ABORT case**, because a doc-less resume *is* the forbidden protocol-less
+   improvisation. This defined floor is *not* a protocol-less improvisation
+   (still forbidden) — it is the accepted baseline for unattended routines.
+   The plugin/`/wake` layer is a convenience on top: probe it from inside a
+   live hosted session and use it if it loaded. **Arming a scheduled
+   wake gates on the skill-less floor being hardened AND one hosted dry-run that
+   completes the start contract exercising a representative task — not contract
+   recital.**
 
 State survives a mid-unit death because every shipped unit is checkpointed to
 the ⚡ working-state block in git before it counts ([AUTONOMY.md](AUTONOMY.md)) —

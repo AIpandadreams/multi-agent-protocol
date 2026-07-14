@@ -4,6 +4,24 @@ Follow at EVERY session boundary: fresh, resumed, or cold successor. On an
 unattended wake assume cold: nothing exists but the repo. A wake that cannot
 complete this file does not dispatch anything.
 
+## Operating without the plugin loaded (skill-less baseline)
+
+This contract is followable WITHOUT the agent-protocol plugin/skills loaded —
+the accepted baseline for unattended and cloud routines. A plugin *declared* in
+`.claude/settings.json` is not necessarily *loaded*: a credential-less routine
+cannot install a plugin from a private marketplace, and the install is
+machine-level state absent from a fresh clone (`docs/CLOUD.md`). If `/wake` and
+the skill surface are absent, do NOT stop — follow this file directly, drawing
+the reference docs it cites (`channel-core.md`, `proxy-auth-core.md`,
+`orchestration-protocol.md`, `transports/*`, …) from a checkout of the protocol
+repo **pinned to a fixed ref/sha** (never a moving branch — the ref your
+workspace records for this purpose). That pinned checkout is itself a wake
+precondition — provided like the workspace, never self-cloned; **if it is
+absent too, ABORT** as in the workspace-missing case, because a doc-less resume
+IS the forbidden protocol-less improvisation. This defined floor is not a
+protocol-less improvisation (still forbidden); the plugin/`/wake` layer is an
+opportunistic convenience on top.
+
 ## 0. Verify the workspace exists (unattended wakes — before ANY read)
 
 An unattended wake (a scheduled session) must find the workspace already
