@@ -453,10 +453,18 @@ before reinstall to force version bumps, and ALWAYS verify the served copy
 parse checks, semantic diffs, review — and still went out wrong: the gates
 all operated at the parse level, and the defect was a byte-level line-ending
 change that parse-level tools are STRUCTURALLY unable to see (CRLF-transparent
-readers report CR bytes as absent). *Became:* every data-unit gate carries a
-raw-byte leg alongside its semantic legs — byte size, hash, and raw-byte
-counts (`tr -dc '\r' | wc -c`), never line-oriented tools, for anything where
-bytes are the contract.
+readers report CR bytes as absent). *Became:* every gate over an artifact whose
+CONSUMER reads bytes carries a raw-byte leg alongside its semantic legs — byte
+size, hash, and raw-byte counts (`tr -dc '\r' | wc -c`), never line-oriented
+tools. **The rule then failed on its own SCOPE, not its content:** it was
+written as a *data-unit* rule, so nobody applied it to a release **manifest** —
+and a shell's "utf8" flag quietly wrote a BOM into the two JSON manifests of a
+release candidate, which parsed fine in every lenient reader, diffed as unchanged
+in every line-oriented tool, kept a green test suite, and would have failed the
+first strict parser downstream. (A reviewer caught it; the gates did not.) *Became, properly:* the byte leg is owed by **any**
+gate whose artifact is machine-read — data units, manifests, lockfiles,
+generated code — and each byte gate names what it EXCLUDES, because a byte gate
+scoped to one subtree certifies that subtree and nothing else.
 
 **The drifting clock.** Channel entries across two seats carried timestamps
 40–60 minutes ahead of wall time — each entry's stamp was momentum-copied

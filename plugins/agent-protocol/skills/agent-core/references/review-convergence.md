@@ -70,6 +70,14 @@ reviewers agreeing on a wrong reading are still wrong; one reviewer with the
 primary source beats two without it. The adjudication is itself round material:
 the record shows which reading won and the evidence that decided it.
 
+**Before weighing two verdicts, compare the SCOPES they were handed.** Verdicts
+over different bundles are not comparable, and a CONFIRM from the narrower one
+is not evidence of anything the wider one saw. A reviewer bounded to the
+touched-file set cannot report an omission — so its silence about a missing
+file is not a clean bill, it is a blind spot you built. When one voice finds
+something the other structurally could not have seen, that is not a split to
+adjudicate; it is a scope defect to fix and re-dispatch.
+
 ## The blocking line
 
 Mechanism-neutral statement of what gates the ship:
@@ -121,19 +129,37 @@ Each is a real way a review series produces false convergence:
 - **Over-blocking** — inflating MODERATE/MINOR notes to BLOCKER as performed
   rigor, or blocking to look thorough. Severity inflation is as much a defect
   as severity softening; both distort the blocking line.
+- **The mis-scoped bundle** — the quietest false convergence of all, because
+  every seat performs perfectly. A bundle scoped to the touched-file set cannot
+  surface the file you FORGOT to touch, so a CONFIRM over it certifies only the
+  files you already knew about — and reads exactly like a clean bill. Scope the
+  bundle to the ARTIFACT SET (review-core), name co-maintained twins even when
+  unchanged, and ask each seat outright: *what should have changed here and
+  didn't?* Unanimous agreement across seats that were all handed the same blind
+  spot is not convergence; it is a chorus.
 
 ## A worked convergence arc
 
 Fictional, generic project: a small spec, `parser-spec.md`, defining a
-config-file grammar. Builder side (SIDE_NAMES bind `builder`). Fingerprints via
-review-core's pinned recipe (`git diff <base>..HEAD -- parser-spec.md |
-sha256sum`).
+config-file grammar, with a generated `parser-spec.schema.json` that must track
+it. The **artifact set** is both files — the schema is a co-maintained
+counterpart even in rounds that do not touch it (review-core), so it is named in
+every request and pinned by the fingerprint. Builder side (SIDE_NAMES bind
+`builder`). Fingerprints via review-core's **set** recipe — the set's contents,
+not a diff, because an unchanged member emits no diff bytes:
+`( set -o pipefail; git rev-parse HEAD && git ls-files -s --error-unmatch --
+parser-spec.md parser-spec.schema.json | sha256sum )` (`--error-unmatch` errors on
+an untracked member; the `set -o pipefail` guard makes that failure propagate,
+which the bare pipe to sha256sum would mask as exit 0).
 
-**Round 1 — FREEZE.** Author stages the draft, fingerprints it
-(`fp=a1b2c3…`), writes `review_request_builder_r01.md` (ROUND-TYPE: FREEZE)
-quoting `fp=a1b2c3…`, the file under review, and numbered questions. The
-cross-vendor reviewer sweeps the tree directly and writes
-`verdict_builder_r01.md`, fingerprint `a1b2c3…` MATCH:
+**Round 1 — FREEZE.** Author stages the draft, fingerprints the set
+(`base=…, set=a1b2c3…`), writes `review_request_builder_r01.md`
+(ROUND-TYPE: FREEZE) quoting the artifact set (both files), the result of an
+omission search (*what else should move when the grammar does? — searched the
+README example block and the schema; schema in-set, README example unaffected*),
+the touched subset (`parser-spec.md`), and numbered questions. The cross-vendor
+reviewer sweeps the tree directly and writes `verdict_builder_r01.md`,
+fingerprint `a1b2c3…` MATCH:
 
 > Overall: **ADOPT-WITH-CHANGES**.
 > F1 (MAJOR): the grammar allows an unterminated quoted string — no rule closes
@@ -146,8 +172,8 @@ cross-vendor reviewer sweeps the tree directly and writes
 against the draft — real). F3 adopted. All three are round material; F1/F2 gate
 (MAJOR), F3 recorded.
 
-**Round 2 — FIX-CONFIRMATION.** Author fixes all three, re-fingerprints the
-moved tree (`fp=d4e5f6…`), writes `review_request_builder_r02.md`
+**Round 2 — FIX-CONFIRMATION.** Author fixes all three, re-fingerprints the set
+(`set=d4e5f6…`), writes `review_request_builder_r02.md`
 (ROUND-TYPE: FIX-CONFIRMATION) naming F1–F3 and the fixes, quoting `d4e5f6…`. A
 second seat (the peer-model reviewer, brought in for the fix-confirmation)
 returns `verdict_builder_r02.md`, fingerprint `d4e5f6…` MATCH:
@@ -162,7 +188,7 @@ F2 as "pick one, done"; r02's peer seat says the pick was applied inconsistently
 **Author adjudicates (seat 4), evidence cited in the record.** The author quotes
 §5 line for line: the example output does still lower-case the key. The r02 seat
 is right; the fix was partial. No vote is taken — the primary text (the artifact
-itself) decides. Author fixes §5, re-fingerprints (`fp=g7h8i9…`).
+itself) decides. Author fixes §5, re-fingerprints the set (`set=g7h8i9…`).
 
 **Round 3 — FIX-CONFIRMATION (scoped to F2).** `review_request_builder_r03.md`
 names only F2 and the §5 fix, quotes `g7h8i9…`. `verdict_builder_r03.md`,

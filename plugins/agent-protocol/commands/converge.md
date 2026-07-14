@@ -1,34 +1,66 @@
 ---
-description: "Run a multi-round convergence review of a committed artifact to a reviewer-declared stop"
-argument-hint: "<artifact> [--rounds N]"
+description: "Run a multi-round convergence review of a committed artifact SET to a reviewer-declared stop"
+argument-hint: "<artifact>... [--rounds N]"
 ---
 
 # /converge — drive a review series to convergence [PROTOCOL v2.6]
 
-Run the multi-round convergence cycle over one artifact: peer round →
+Run the multi-round convergence cycle over an **artifact set**: peer round →
 cross-vendor round → fix-confirmation round(s) → stop on the reviewer's own
 convergence declaration. The rules live in
 `agent-core/references/review-convergence.md` (layered over `review-core.md`);
 this command is the procedure that follows them — it references, never
 restates.
 
-Artifact + options: $ARGUMENTS
+Artifact set + options: $ARGUMENTS
 
 ## Steps (in order)
 
-0. **Resolve and freeze.** Resolve the REVIEWER binding (mechanism + model per
-   side) and the workspace from BINDINGS.md. Verify the artifact is COMMITTED
-   (an uncommitted tree cannot be fingerprinted honestly) and record its
-   fingerprint with review-core's pinned recipe
-   (`git diff <base>..HEAD -- <artifact> | sha256sum` — Bash, never PowerShell
-   capture). Default round budget is 2–3; `--rounds N` overrides it and is
-   recorded in the REVIEWER binding notes.
+0. **Resolve, SCOPE, and freeze.** Resolve the REVIEWER binding (mechanism +
+   model per side) and the workspace from BINDINGS.md.
+
+   **Scope the SET before you freeze it** (review-core: scope to the artifact
+   set, never the touched-file set — a bundle of only-what-you-changed cannot
+   surface what you forgot to change):
+   - List every **co-maintained counterpart** of each named artifact — a doc and
+     its rendered `.html`, a schema and its generated types, a file and its mirror
+     in another repo, a version that must agree across two manifests — and add it
+     to the set **even if it is unchanged**. Twins fail as a pair.
+   - Run an **omission search** across the repo: what SHOULD have changed under
+     this amendment and did not? Record the result (including "none") in the round
+     record; an unrecorded omission search did not happen.
+   - Carry both facts into the bundle: the artifact set, and separately the
+     touched/staged subset. They are not the same list, and the reviewer must be
+     told which is which.
+
+   Then verify the set is COMMITTED (an uncommitted tree cannot be fingerprinted
+   honestly) and record the fingerprint of the WHOLE SET with review-core's
+   set recipe — Bash, never PowerShell capture:
+
+   ```
+   # inspect — one line per member; a missing/mistyped member errors here:
+   git ls-files -s --error-unmatch -- <every set member>
+   # digest — pipefail propagates git's failure (sha256sum alone masks it, exit 0):
+   ( set -o pipefail; git rev-parse HEAD && git ls-files -s --error-unmatch -- <every set member> | sha256sum )
+   ```
+
+   Use the SET recipe, not a diff digest: an unchanged member emits no diff bytes,
+   so a diff-based fingerprint cannot tell a bundle that includes the unchanged
+   twin from one that omits it — it silently fails to pin exactly the members this
+   step exists to add. `--error-unmatch` makes an untracked member (a typo, a
+   generated file, an out-of-repo mirror) a hard error in the inspect step — but
+   piping to sha256sum would swallow git's exit status, so the digest form wraps
+   it in `set -o pipefail`; confirm the inspect output has one line per member. An
+   out-of-repo mirror carries its
+   own base+digest, quoted alongside. Default round budget is 2–3; `--rounds N`
+   overrides it and is recorded in the REVIEWER binding notes.
 
 1. **Peer round.** Dispatch a peer review: a spawned judge on a model DIFFERENT
    from the author's (the floor). Hand it a **label-free** bundle — the artifact
-   at its fingerprint, no prior verdict, no disposition history (anti-anchoring).
-   Ask it to re-derive every load-bearing claim from the artifact, not from any
-   summary. Verdict per review-core's contract.
+   SET at its fingerprint, no prior verdict, no disposition history
+   (anti-anchoring). Ask it to re-derive every load-bearing claim from the
+   artifacts, not from any summary, and to answer the omission question outright:
+   *what should have changed here and didn't?* Verdict per review-core's contract.
 
 2. **Adjudicate + fix.** As author-verifier (the named seat): adopt each finding
    or REFUTE it with cited evidence quoted in the round record — never silent
@@ -74,3 +106,8 @@ Artifact + options: $ARGUMENTS
   an absent blocker is not convergence.
 - Every round targets the tree at its CURRENT fingerprint; a verdict whose
   fingerprint no longer matches the tree authorizes nothing.
+- **A convergence over a mis-scoped set is not convergence.** Unanimous CONFIRMs
+  from seats that were all handed the same blind spot certify only the files you
+  already knew about (review-convergence, *the mis-scoped bundle*). If a round
+  reveals the SET was wrong, that is not a finding to adjudicate — re-scope and
+  re-dispatch.

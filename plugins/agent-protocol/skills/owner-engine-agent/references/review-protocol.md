@@ -28,8 +28,14 @@ artifact.
 
 A dispatch contains:
 
-1. **Exact file path(s) + version** under review, and what else is staged
-   (ideally "sole working-tree change").
+1. **The ARTIFACT SET + version** under review — not the touched-file set
+   (review-core). Name every co-maintained counterpart **including the unchanged
+   ones** (a doc and its rendered twin, a schema and its generated types, a file
+   and its mirror), state the result of your omission search (*what should have
+   changed and didn't?* — "none" is a valid answer, silence is not), and only
+   THEN disclose, separately, what is actually staged (ideally "sole
+   working-tree change"). A reviewer handed only your edits cannot report the
+   file you forgot.
 2. **One paragraph of frame** — what the artifact is, its parent doc, claims.
 3. **Your own decisions/changes, listed explicitly**, with the ask to verify
    each against primary evidence.

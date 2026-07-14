@@ -29,8 +29,11 @@ Other bindings, local flavor:
   (`gpg --pinentry-mode error --clearsign` on a throwaway string); cold →
   queue + tell the principal. Never bypass.
 - **PRINCIPAL interface** = the principal types directly into each session.
-- Known traps: see each role's ops-gotchas (Windows path dialects, BOM,
-  heredocs, stale locks, pager pipes).
+- Known traps: the role-neutral file-hygiene baseline (UTF-8 without BOM; byte
+  gates, not line gates) is in `channel-core.md` and binds every role including
+  ones that carry no ops-gotchas file. Shell-specific traps — Windows path
+  dialects, the "utf8" flag that writes a BOM, heredocs, stale locks, pager
+  pipes — live in each role's ops-gotchas where that role has one.
 
 ## Host profile (bind per machine)
 

@@ -29,6 +29,29 @@ authorization.
 - Deliverables/workpapers sync into the same directory as standalone files —
   named by DURABLE ids (job id, round number, date), never by session ids,
   which do not survive cold succession.
+- **Every file here is written UTF-8 without BOM.** This binds EVERY role that
+  writes a shared file — channel entries, ledgers, registries, memory,
+  deliverables — not only the roles that carry an ops-gotchas reference (some
+  roles have none). A byte-order mark is invisible to line-oriented tools yet
+  strict parsers reject it outright, so it survives every review that reads text
+  and dies in the one consumer that reads bytes. Three corollaries, and they are
+  the whole rule:
+  - **(a)** A shell's "utf8" flag is not automatically a no-BOM writer. Verify
+    what YOUR shell or tool actually emits before trusting it — and version-tag
+    any snippet you publish, since the fix on one shell is a parse error on
+    another. (Where your role has an ops-gotchas file, its shell-specific traps
+    live there.)
+  - **(b)** A BOM is detectable **only** by reading the leading bytes as bytes —
+    up to four, matched longest-first (a UTF-8 mark is 3, UTF-16 is 2, UTF-32 is
+    4, and UTF-32 LE opens with UTF-16 LE's two, so a three-byte read cannot tell
+    them apart) — never by a line tool, a text-mode read, or a green test suite
+    that parses leniently. **A green suite is not a shippable artifact:** a gate
+    that never opens the bytes cannot certify them.
+  - **(c)** Gate every machine-read artifact **as bytes** — assert no BOM,
+    decode strict (never a BOM-swallowing "sig" mode), parse, and cross-check
+    values that must agree across files. Then **enumerate what the gate
+    excludes**: a byte gate scoped to one subtree certifies that subtree and
+    nothing else, and an unstated exclusion reads as coverage.
 
 ## Entry format (all directions, identical)
 

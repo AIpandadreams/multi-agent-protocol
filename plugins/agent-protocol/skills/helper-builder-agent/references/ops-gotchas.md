@@ -44,12 +44,31 @@ FIRST when something looks broken — most of these masquerade as tool failures.
   or Write-to-temp + `cat temp >> target`.
 - Set `PYTHONIOENCODING=utf-8` on any Python invocation whose output may carry
   non-ASCII (en-dashes, section marks) — otherwise prints crash mid-script.
-- PowerShell 5.1: no `&&`/`||`, UTF-16 default file encoding (`-Encoding utf8` when
-  other tools will read the file), and native-command stderr wrapping. Prefer the Bash
-  tool for POSIX-shaped work.
-- Write shared/channel files as **UTF-8 without BOM**. PowerShell round-trips inject
-  BOM + mojibake (`â€"`, `Â§`) into transcribed verdicts and ledger rows — scan for and
-  repair mojibake BEFORE the file is cited by a round, a record, or the peer.
+- PowerShell 5.1: no `&&`/`||`, UTF-16 default file encoding, and native-command
+  stderr wrapping. Prefer the Bash tool for POSIX-shaped work.
+- ⚠ **Do NOT "fix" that UTF-16 default with `-Encoding utf8`** — on PS 5.1 that flag
+  writes UTF-8 **WITH a BOM** (`EF BB BF`), trading one bad artifact for a worse one:
+  a BOM is invisible to line tools yet strict parsers reject it (`json.loads` →
+  *"Unexpected UTF-8 BOM"*). Write no-BOM explicitly with
+  `[IO.File]::WriteAllText($path, $text, [Text.UTF8Encoding]::new($false))` (**PS 5+**
+  — method args are expression-mode, so pass VARIABLES not bare words, and pass an
+  ABSOLUTE path: `[IO.File]` resolves a relative one against the process working
+  directory, not `Get-Location`), or `-Encoding utf8NoBOM` (**PS 6+**), or an
+  editor/file-write tool. Detect a BOM by reading the first four **bytes**, matched
+  longest-first (UTF-32's mark is 4 bytes and shares UTF-16 LE's 2-byte prefix) —
+  `[IO.File]::ReadAllBytes($path)[0..3]` (PS 5+), `Get-Content -Encoding Byte
+  -TotalCount 4` (5.1) or `-AsByteStream -TotalCount 4` (6+); `Get-Content` in
+  default text mode cannot see one (same blind spot as stray CRs).
+- **Version-tag every shell snippet you publish, and get the boundary right.** Handing
+  a 5.1 reader a 6+-only parameter (`-AsByteStream`, `utf8NoBOM`) fails exactly like
+  the flag it warns about — and a wrongly-tagged snippet is worse than an untagged one.
+- The *rules* here — UTF-8 without BOM on shared files, byte gates with strict decode
+  and enumerated exclusions — are normative in
+  `../../agent-core/references/channel-core.md` and bind every role, shell or no
+  shell. The bullets above are only what PowerShell does to them. PowerShell
+  round-trips also inject mojibake (`â€"`, `Â§`) into transcribed verdicts and ledger
+  rows — scan for and repair it BEFORE the file is cited by a round, a record, or the
+  peer.
 - Edit-tool paths are case-sensitive in practice — match the on-disk casing exactly.
 - PDF tooling: check what's actually installed before relying on harness PDF features
   (in the originating environment the Read tool's `pages` param was broken because

@@ -41,6 +41,36 @@ content in any artifact.
   `git diff --cached | sha256sum` (or `git diff <base>..HEAD -- <paths> |
   sha256sum` for path-scoped rounds). PowerShell 5.1 string capture re-encodes
   bytes and MUST NOT be used for fingerprints.
+- **A diff digest does not bind the artifact SET.** An unchanged member emits no
+  diff bytes, so a diff-based fingerprint is byte-identical whether or not the
+  unchanged twin is in the bundle — it cannot pin the very members the artifact-
+  set rule exists to include. When the round's scope is a SET (the normal case
+  once co-maintained counterparts are named), fingerprint the set's CONTENTS,
+  not its delta:
+
+  ```
+  # inspect — one line per member; a missing/mistyped member errors HERE, where
+  # the exit status and stderr are visible (exit 1 + "did not match any file(s)"):
+  git ls-files -s --error-unmatch -- <every set member>
+  # digest — set -o pipefail makes that same failure propagate through the pipe;
+  # without it sha256sum's exit 0 masks git's, and the digest silently drops the
+  # missing member (fail-open — the gap --error-unmatch was added to close):
+  ( set -o pipefail; git rev-parse HEAD && git ls-files -s --error-unmatch -- <every set member> | sha256sum )
+  ```
+
+  which binds the base commit plus the current blob of every member, changed or
+  not. Adding a member changes the digest; that is the point. **`--error-unmatch`
+  is load-bearing:** without it, a member git does not track — a typo'd path, a
+  generated artifact, a not-yet-added file — contributes zero bytes and raises
+  nothing, so the digest silently fails to bind exactly the member you thought
+  you were pinning (the same silent-omission shape as the diff digest, one level
+  up). With it, that member is a hard error in the inspect step — but the digest
+  pipe alone would swallow git's exit status (sha256sum returns 0), which is why
+  the digest form wraps it in `set -o pipefail`. Verify the inspect output has one
+  line per named member, and quote both halves (base + digest).
+  **An out-of-repo mirror is not bindable this way** — `git ls-files` only sees
+  this repo; a twin living in another repo carries its OWN base+digest, quoted
+  alongside, and the round names both.
 - **Reviewers are read-only on the tree under review.** RED reproductions run
   in-memory or on copies — never `git checkout --`/`git restore` against the
   author's working tree.
@@ -55,6 +85,22 @@ content in any artifact.
   and a standing disclosure whenever a judge references out-of-bundle
   context. Judge returns captured from completion messages are parsed by
   documented mechanics; any normalization is disclosed.
+- **Scope the request to the ARTIFACT SET, not the touched-file set.** A
+  reviewer bounded to "the files I changed" is structurally incapable of
+  reporting the file you FORGOT to change — and an omission is a defect the
+  same as a bad edit. Every artifact with a **co-maintained twin** (a doc and
+  its rendered `.html`, a schema and its generated types, a file and its
+  byte-identical mirror in another repo) fails AS A PAIR: name the pair in the
+  bundle. Live case: a reviewer scoped to 4 changed files returned CONFIRM
+  while the 5th file — the co-maintained HTML twin of an edited doc — sat
+  un-updated, which would have shipped a registry advertising nine entries and
+  linking to a rendering showing eight. Note WHY the diff alone could not save
+  it: the forgotten file **was not in the diff** — that is what "forgotten"
+  means. What caught it was a reviewer told to hunt **OMISSIONS across the
+  repo**, not merely to audit the change. Ask your reviewer the question only an
+  artifact-set scope can answer: *what should have changed here and didn't?*
+  When two voices disagree, suspect the SCOPE you handed them before you suspect
+  the voices — verdicts over different bundles are not comparable.
 - **Shared-reviewer caveat:** the same reviewer instance serving multiple
   sides becomes a de-facto context bridge between sessions that must not talk
   directly. Acceptable ONLY because the reviewer is read-only and speaks only
@@ -62,9 +108,10 @@ content in any artifact.
   peer — that is channel traffic.
 - **Dead-lane escalation:** reviewer silent after 2 nudges spanning 2
   heartbeats → mark the lane dead in memory; for a relayed reviewer, first
-  repair a stale relay job squatting the lane (see the role skill's
-  ops-gotchas, "Reviewer relay quirks" — the fix is in the relay plugin's
-  central state), otherwise spawn/bind a fresh reviewer; note the lane change
+  repair a stale relay job squatting the lane (where your role has an
+  ops-gotchas file, see its "Reviewer relay quirks" — the fix is in the relay
+  plugin's central state; some roles carry no such file, and the repair is the
+  same), otherwise spawn/bind a fresh reviewer; note the lane change
   in the ledger; flag the principal if any gated work is queued behind it.
   Distinguish a silent lane from a DOWN lane first — see `## Reviewer-lane
   outage` below.

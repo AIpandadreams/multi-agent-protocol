@@ -8,6 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.5 | v2.6 | corrects shipped guidance that caused a real defect, and the SCOPE of two rules that were already right: PS 5.1's `-Encoding utf8` WRITES a BOM (the docs recommended it as the fix for the UTF-16 default); the byte-gate rule existed but was scoped to "data units", so nobody applied it to a release manifest; and review scope is now the ARTIFACT SET, not the touched-file set — a reviewer handed your diff cannot report the file you forgot. Twins now fail as a pair *mechanically*: the BOM gate scans every file (no suffix allowlist), the doc/HTML twin and the three copies of the amendment header get parity gates, and the file-hygiene baseline moves once into a role-neutral core so the orchestrator inherits it. Every new gate ships with a mutation test — the first drafts of three of them were green *and* defeated. Suite 171 → 206 |
 | 1.2.4 | v2.6 | the no-idle ledger at the top of the autonomy dial: never-idle made a worker prompt about work that ARRIVES but said nothing about work already stalled — every deliverable is now IN FLIGHT / SURFACED / BLOCKED-WITH-BLOCKER-NAMED ("idle" is not a fourth state), with an anti-invention clamp and gate-preserving surfacing rules; SOP catalog row 9 |
 | 1.2.3 | v2.6 | skill-less cloud-wake floor is the baseline (plugin = opportunistic layer; declared-but-not-loaded is the motivating case): routines follow the in-repo `START_SESSION` contract + a protocol checkout pinned to a fixed ref/sha, else ABORT; `CLOUD.md` arming gate revised (floor-hardened + representative-task dry-run) |
 | 1.2.2 | v2.6 | transport live-validation + second-migration hardening: hosted wake handshake, empirical remote-protection verification, declared≠loaded plugin rule, version-migration live-run notes, `validate_auth_log.py` argv fix |
@@ -15,6 +16,168 @@ changes only through the
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.2.5] — 2026-07-14
+
+**Guidance that caused the defect it warned about — and two rules that were
+right but mis-scoped.** Shipping 1.2.4 burned three lessons the same afternoon.
+None of them is a new idea. One was the protocol telling you to do the exact
+thing that broke the release; the other two were rules this repo already
+published, applied to a set too small to contain the defect.
+
+- **`ops-gotchas.md` (both role copies) — the "utf8" flag that writes a BOM.**
+  The docs said *"write shared files as UTF-8 without BOM"* and, in the same
+  breath, *"prefer an explicit `-Encoding utf8`"*. On Windows PowerShell 5.1
+  those two instructions contradict each other: `-Encoding utf8` emits UTF-8
+  **with** a BOM. It doesn't fix the UTF-16 default — it trades one bad artifact
+  for a worse one, because a BOM is invisible to every line-oriented tool while
+  strict parsers reject it outright (`json.loads` → *"Unexpected UTF-8 BOM"*).
+  Corrected to writers that are actually no-BOM, **version-tagged**:
+  `[IO.File]::WriteAllText($path, $text, [Text.UTF8Encoding]::new($false))` on
+  **PS 5+** (`::new()` arrived in 5.0); `-Encoding utf8NoBOM` on **PS 6+** (it
+  does not exist on 5.1). Detection likewise — read the first **four** bytes,
+  matched longest-first (UTF-32's mark is 4 bytes and shares UTF-16 LE's opening
+  two): `[IO.File]::ReadAllBytes($p)[0..3]` on 5+, `Get-Content -Encoding Byte
+  -TotalCount 4` on 5.1, `-AsByteStream -TotalCount 4` on 6+. **Every
+  shell snippet a protocol file publishes now carries the versions it runs on** —
+  an untagged snippet is a trap with a green face. This took three passes to get
+  right, and the misses are the lesson: draft 1 was unrunnable on the shell it
+  targeted (PowerShell method arguments are expression-mode, so bare words are a
+  parser error), and draft 2 carried two **wrong** version boundaries. A
+  wrongly-tagged snippet is worse than an untagged one — it fails exactly like
+  the flag it was warning about. The writer snippet also now says what nobody
+  documents: `[IO.File]` resolves a **relative** path against the process working
+  directory, not `Get-Location`, so a relative name lands somewhere you are not
+  standing. Pass an absolute path.
+- **The byte-gate rule was not missing. Its SCOPE was.** *"Gate anything whose
+  consumer reads bytes with a byte leg"* has been in the bootstrap case studies
+  since 1.2.1 — written as a **data-unit** rule. So when a BOM landed in the two
+  release **manifests**, nobody recognized a manifest as the kind of thing that
+  rule covers: it passed the full test suite *and* the structural doc gate, and
+  would have shipped JSON that a strict parser rejects. The rule is restated
+  where it belongs — the byte leg is owed by **any** gate whose artifact is
+  machine-read (data units, manifests, lockfiles, generated code) — and the
+  gates were widened to match:
+  - `tests/test_manifest_integrity.py` (shipped in 1.2.4) reads both manifests
+    as raw bytes: no BOM, strict decode (never the BOM-swallowing `utf-8-sig`),
+    parse, and versions that must agree across files.
+  - `tools/mirror_check.py`'s BOM gate now scans **every file git tracks, plus
+    the working tree**, of any name, reading bytes — and checks **every** BOM
+    (UTF-8, UTF-16 LE/BE, UTF-32), not just UTF-8. It took three narrowings to
+    get here, and each one looked reasonable at the time: scoped to the skills
+    subtree (missed the manifests); widened to the repo but gated on a **suffix
+    allowlist** (missed every extensionless file — `.github/CODEOWNERS`, the
+    mechanical backstop for principal-locked paths, plus `.gitignore` and
+    `LICENSE`); widened to all files but checking only `EF BB BF` (missed
+    **UTF-16 — which is Windows PowerShell 5.1's default output encoding**, i.e.
+    the likeliest BOM to land here by accident). A fourth miss never shipped but
+    is the sharpest: resolving "what git tracks" returned an **empty set** when
+    git was unavailable, so the gate scanned *nothing* and passed — fail-open. It
+    now fails **closed**: no git means the publish scope is unknowable, which is
+    itself a finding, and the gate widens to the whole tree (minus `.git`) so a
+    real BOM is still caught alongside the scope warning. Reviewers defeated each
+    version with a planted BOM before it shipped. The gate **enumerates its
+    exclusions** in-line — tool caches, VCS internals, and vendored trees, *and
+    only if git does not track them* — because an unstated exclusion reads as
+    coverage. `tests/test_bom_gate_scope.py` plants a real BOM on every surface
+    the narrow versions missed (including file types the gate has never heard of,
+    so coverage never again depends on remembering to add an extension), proves
+    every BOM signature the gate lists — UTF-8, UTF-16 LE/BE, UTF-32 LE/BE — is
+    caught on the extensionless `CODEOWNERS` surface, and exercises the
+    git-unavailable branch on purpose. A clean-tree canary in the guard suite
+    (`FixtureCanaryTest`, `tests/test_mirror_guards.py`) proves the mutation tests
+    fail on their mutation, not on a stray background finding.
+  - **The fingerprint that couldn't see the set.** Naming an unchanged twin in
+    the bundle is worthless if the bundle's fingerprint can't tell it's there —
+    and a `git diff` digest can't: an unchanged member emits no diff bytes, so
+    the digest is byte-identical with or without it. Every fingerprint recipe for
+    a set-scoped round (`review-core.md`, `/converge`, `docs/PROTOCOL.md`,
+    `CONTRIBUTING.md`, the PR template, the worked example) now digests the
+    **contents** of the set, so adding a member changes the digest. `--error-unmatch`
+    makes a mistyped or untracked member error — but *only in git*: piped into
+    `sha256sum`, git's nonzero exit is masked and the pipeline returns 0,
+    computing a plausible digest over the tracked members alone (fail-open — the
+    very gap `--error-unmatch` was added to close; both round-5 reviewers
+    reproduced it). So the published recipe wraps the pipe in a guard —
+    `( set -o pipefail; git rev-parse HEAD && git ls-files -s --error-unmatch --
+    <set> | sha256sum )` — which propagates the failure while leaving the digest
+    value byte-for-byte unchanged; `tests/test_fingerprint_recipe.py` proves both
+    halves (the guarded recipe goes nonzero on a missing member, the bare pipe is
+    shown fail-open) and that every published digest recipe is guarded *at the
+    command* — the check binds `pipefail` to each `git ls-files … | sha256sum`, not
+    merely to the file (an earlier draft asserted the word anywhere in the doc, and
+    both round-6 reviewers reverted one recipe to the bare pipe with the prose
+    mention intact and the test stayed green — the guard wearing the hole it
+    guards). That is the point.
+- **`review-core.md` — scope the review to the ARTIFACT SET, not the touched
+  files.** A reviewer bounded to "the files I changed" is structurally incapable
+  of reporting the file you *forgot* to change, and an omission is a defect like
+  any other. Artifacts with a **co-maintained twin** (a doc and its rendered
+  `.html`, a schema and its generated types, a file and its mirror in another
+  repo) fail **as a pair** and must be named as a pair in the bundle. Live case:
+  a reviewer scoped to 4 changed files returned CONFIRM while the un-updated
+  HTML twin of an edited doc sat outside its window; a second reviewer handed
+  the whole repo caught it at once. **Unanimous agreement across seats that were
+  all handed the same blind spot is not convergence; it is a chorus** — when
+  voices disagree, suspect the scope you handed them before you suspect the
+  voices. The rule now binds the surfaces that actually dispatch rounds:
+  `/converge` takes an artifact SET and freezes it (naming co-maintained
+  counterparts even when unchanged, plus an explicit omission search), both role
+  review-dispatch files require the same, `docs/PROTOCOL.md` restates it, and
+  `review-convergence.md` names **the mis-scoped bundle** as an anti-pattern.
+  The amendment header — which exists in **three** places, and where a field
+  added to one is a field the other two silently drop — gains `artifact set:` and
+  `omission search:` alongside `files touched:` in all three: `CONTRIBUTING.md`,
+  `.github/PULL_REQUEST_TEMPLATE.md` (the copy GitHub actually injects into every
+  PR), and `.github/ISSUE_TEMPLATE/protocol_amendment.md`. The first draft of
+  this release amended only the guide — the two templates that *deliver* it were
+  the omission, caught by the omission search this release adds. `/converge`'s
+  worked example (`examples/worked-cycle.md`) now shows the request shape with a
+  set that names two files the round never touched. That is the whole argument
+  for the rule, made at our own expense.
+- **Twins get a mechanical gate, because "remember the other copy" is not a
+  control.** `mirror_check.py` now compares `CREATOR-SEAT-BOOTSTRAP.md` and its
+  rendered `.html` on the **identities** of the three structures that carry the
+  catalog — section headings, bold/`<strong>` runs, and table-row leading cells —
+  and fails on any that exists in one twin and not the other. Identities
+  (presence in one twin but not its pair), not counts, order, or prose: it does
+  **not** diff body paragraphs or HTML nesting, a re-worded sentence stays a
+  reviewer's catch, and that exclusion is stated in the gate because an unstated
+  one reads as coverage. Identities rather than counts because *the first version
+  of this gate compared counts and a title-shaped regex, and both reviewers
+  walked a renamed heading and a new catalog row straight past it* — and a
+  catalog row is exactly the drift that motivated the gate. It also fails **loud
+  if either twin is missing** (deleting one used to skip the check) and masks
+  fenced/indented code so a `##` or `**x**` inside a matched example is not read
+  as a real heading or bold run. A second gate keeps the three amendment-header
+  copies in parity: the field set is **derived from the copies**, not hard-coded,
+  so a field added to one drifts as loudly as a field dropped from another, and
+  labels are matched anchored (deleting the `artifact set:` label while the words
+  survive in prose no longer passes). A third fails when a count claimed in prose
+  outruns what it counts — `SOP-REGISTRY.md` advertising nine SOPs against a
+  catalog that defines eight is the "registry says nine, rendering shows eight"
+  defect this repo already names — and fails **closed** if that prose sentence
+  stops matching at all, rather than silently disarming. Every guard ships with a
+  mutation test (`tests/test_mirror_guards.py`) that breaks exactly one thing and
+  asserts the gate names it: **a gate that has never been seen to fail is not a
+  gate** — which is how the first drafts of these three shipped green while
+  defeated.
+- **`channel-core.md` — file hygiene is role-neutral.** UTF-8-without-BOM and
+  "gate as bytes" lived only in the two role `ops-gotchas` files, so the
+  orchestrator — which carries none — inherited neither, while writing channel
+  entries, auth-logs, and registries like everyone else. The baseline now lives
+  **once**, in the core every role reads; the role files keep their
+  shell-specific traps and point at it. (Our own first draft restated it in all
+  three files while claiming otherwise — the old dedup guard matches *headings*
+  and cannot see a rule restated as prose.) The new guard is a **tripwire**, not
+  a paraphrase detector: it fails if a role file repeats one of the baseline's
+  load-bearing sentences, which catches the copy-paste that actually happens and
+  is honest that a re-worded restatement remains a reviewer's catch, not a gate's.
+  `transports/local-fs.md` no longer points readers at "each role's ops-gotchas"
+  for a rule one role could never find.
+- Suite **171 → 206** (the count against the released 1.2.4 base, `1c1fc43` —
+  not against an intermediate draft of this release); `tools/mirror_check.py`
+  gains four gates.
 
 ## [1.2.4] — 2026-07-14
 

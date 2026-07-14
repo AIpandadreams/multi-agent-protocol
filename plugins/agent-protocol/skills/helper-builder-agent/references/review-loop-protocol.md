@@ -20,7 +20,10 @@ that couldn't fail, and stale wording contradicting adopted decisions.
 1. **Write the request file** in the shared inbox:
    `review_request_<SIDE>_r<NN>.md` (your side's series, per review-core). The
    request states: round type, crossed-round state (latest counterpart entries
-   seen, latest ledger row), the exact files under review (paths), an
+   seen, latest ledger row), the **artifact set** under review (paths — the
+   artifact set, NOT merely the files you touched: name co-maintained twins even
+   when unchanged, and record your omission search — *what should have changed
+   and didn't?*; then list the touched subset separately), an
    execution summary, any mandated disclosures, and **numbered questions** the
    reviewer must answer with explicit per-question verdicts.
 2. **Launch the relay** as a background subagent so you keep working during
@@ -33,9 +36,10 @@ that couldn't fail, and stale wording contradicting adopted decisions.
    write-fallback chain.
 3. **Adopt the verdict:** apply every required change (in-place for pre-freeze
    drafts; by dated amendment for anything already frozen/reviewed), then
-   record the round in the ledger (your side's rows). Write verdict
-   transcriptions as UTF-8 without BOM; repair mojibake before the file is
-   cited anywhere (ops-gotchas).
+   record the round in the ledger (your side's rows). Verdict transcriptions are
+   shared files — the file-hygiene baseline (UTF-8 without BOM, byte-gated) is in
+   `../../agent-core/references/channel-core.md`; repair mojibake before the file
+   is cited anywhere (ops-gotchas).
 4. **Blockers** ⇒ the next round is a fix-confirmation round scoped to the
    blockers, not a results round.
 

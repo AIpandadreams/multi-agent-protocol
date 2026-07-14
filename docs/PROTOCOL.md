@@ -40,12 +40,23 @@ keeps its own live monitor): see [MIGRATION.md](MIGRATION.md).
 
 Every unit of consequence gets an independent review round before it lands:
 
-1. Author stages the work and computes a **byte-exact fingerprint** of the
-   tree under review (`git diff <base>..<head> | sha256sum` — one
-   canonical command, because fingerprints computed by different tools on
-   different line endings do not match).
+1. Author stages the work and computes a **byte-exact fingerprint** of what is
+   under review — one canonical command, because fingerprints computed by
+   different tools on different line endings do not match. For a diff-shaped
+   round: `git diff <base>..<head> | sha256sum`. For a round scoped to an
+   artifact **set** (the normal case, below):
+   `( set -o pipefail; git rev-parse HEAD && git ls-files -s --error-unmatch -- <set> | sha256sum )` —
+   because an unchanged member emits no diff bytes, so a diff digest cannot pin
+   the twins the set exists to include (`--error-unmatch` errors on an untracked
+   member; the `set -o pipefail` guard makes that failure propagate through the
+   pipe, which sha256sum's exit 0 would otherwise mask).
 2. Author writes `channel/review_request_<SIDE>_rNN.md` quoting the
-   fingerprint and the review scope.
+   fingerprint and the review scope — where **scope means the ARTIFACT SET, not
+   the files you touched**: every file the change governs, including
+   co-maintained counterparts left unchanged (a doc and its rendered twin, a
+   schema and its generated types), plus the result of an explicit omission
+   search (*what should have changed and didn't?*). A reviewer handed only your
+   edits cannot report the file you forgot to make.
 3. The reviewer (different vendor; different model at minimum) answers with
    `channel/verdict_<SIDE>_rNN.md`: **ADOPT** / **ADOPT-WITH-CHANGES** /
    **REJECT**, findings quoted against the fingerprinted tree.

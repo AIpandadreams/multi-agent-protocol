@@ -30,10 +30,47 @@ Code, a `!`-prefixed command; a command pasted as a chat message did NOT run).
 
 **Encoding defaults.** Console codepages break on non-ASCII output (set
 `PYTHONIOENCODING=utf-8` or equivalent before scripts that print arbitrary text).
-Write shared/channel files as **UTF-8 without BOM**; PowerShell round-trips inject
-BOM + mojibake (`â€"`, `Â§`) into transcribed verdicts and ledgers — repair before
-the file is cited anywhere, and prefer the Bash tool or an explicit `-Encoding
-utf8` for any file another tool will read.
+The *rules* about encoding — shared files are UTF-8 without BOM; machine-read
+artifacts are gated as BYTES with strict decode, a parse, and their exclusions
+enumerated — are normative in `../../agent-core/references/channel-core.md`, and
+bind you whatever shell you are in. What follows is only what YOUR shell does to
+them. PowerShell round-trips inject BOM + mojibake (`â€"`, `Â§`) into transcribed
+verdicts and ledgers — repair before the file is cited anywhere.
+
+⚠ **The "utf8" flag that writes a BOM.** The obvious fix for a UTF-16 default is
+the shell's own utf8 flag — and on Windows PowerShell 5.1 that flag
+(`-Encoding utf8`) emits UTF-8 **WITH a BOM** (`EF BB BF`). It does not solve the
+encoding problem; it trades a UTF-16 artifact for a BOM artifact, which is worse
+because a BOM is invisible to every line-oriented tool while strict parsers reject
+it outright (`json.loads` → *"Unexpected UTF-8 BOM"*; Node `JSON.parse` →
+SyntaxError). Never reach for it on a machine-read artifact.
+
+Write no-BOM **explicitly**. Two traps in one line: method arguments are
+expression-mode (pass variables, never bare words), and `[IO.File]` resolves a
+RELATIVE path against the process working directory, not `Get-Location` — so a
+relative name silently lands somewhere you are not standing. Pass an absolute path.
+
+```powershell
+[IO.File]::WriteAllText($path, $text, [Text.UTF8Encoding]::new($false))  # PS 5+, $path ABSOLUTE
+Set-Content -LiteralPath $path -Value $text -Encoding utf8NoBOM          # PS 6+
+```
+
+Detect a BOM only at the **byte** level — read the first four bytes and match the
+longest signature first (UTF-32's mark is 4 bytes and shares UTF-16 LE's opening
+two, so three bytes cannot tell them apart); `Get-Content` in its default text
+mode cannot see one, the same blind spot as stray CR bytes:
+
+```powershell
+[IO.File]::ReadAllBytes($path)[0..3]                              # PS 5+
+Get-Content -LiteralPath $path -Encoding Byte -TotalCount 4       # PS 5.1 (dropped in 6+)
+Get-Content -LiteralPath $path -AsByteStream -TotalCount 4        # PS 6+
+```
+
+**Version-tag every shell snippet you publish — and get the boundary right.**
+Handing a 5.1 reader a 6+-only parameter (`-AsByteStream`, `utf8NoBOM`) fails
+exactly like the flag it was warning about. This file has now shipped that class
+twice: once recommending the BOM-writing flag, once mis-tagging its replacement.
+An untagged snippet is a trap with a green face; a wrongly-tagged one is worse.
 
 **Quoting cliffs.** Inline heredocs/strings break on mixed-quote content — stage long
 text via a file-write tool, then append/pipe it.

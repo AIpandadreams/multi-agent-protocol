@@ -51,12 +51,24 @@ Post review_request_builder_r03 for t7-dep-report; fingerprint first.
 
 ```
 # review request — builder r03 [PROTOCOL v2.6]
-scope: branch t7-dep-report vs main — deliverable docs/dep-risk-api.md
-fingerprint (git diff main..t7-dep-report | sha256sum):
-  9c1e6d2a…{64 hex}…f4
+artifact set:    docs/dep-risk-api.md · docs/dep-risk-api.html (rendered twin,
+                 UNCHANGED — twins fail as a pair) · data/deps.lock (the input
+                 the report's claims are derived from, unchanged)
+omission search: searched for other surfaces naming a dependency risk —
+                 README dep table (no risk claims, unaffected), SECURITY.md
+                 (points at the report, no restated facts). None missed.
+files touched:   docs/dep-risk-api.md
+fingerprint ( set -o pipefail; git rev-parse HEAD && git ls-files -s --error-unmatch -- <the set above> | sha256sum ):
+  base 4f2ab19 · set 9c1e6d2a…{64 hex}…f4
 asks: verify every claimed unmaintained dep against its actual repo
 activity; flag any risk claim without a cited source.
 ```
+
+The artifact set names two files the round did not touch. That is the point: a
+reviewer handed only `docs/dep-risk-api.md` can tell you whether the file is
+wrong, but never that the rendered twin beside it still shows last week's
+numbers. And the fingerprint digests the SET rather than the diff — an unchanged
+member emits no diff bytes, so a diff digest cannot pin it.
 
 The reviewer (Codex, via the poller) answers in
 `channel/verdict_builder_r03.md`:

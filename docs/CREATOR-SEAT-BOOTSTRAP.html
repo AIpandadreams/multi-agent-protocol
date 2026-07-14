@@ -48,7 +48,7 @@ em { color: #444; }
 <body>
 <h1 id="the-creator-seat-bootstrapping-a-custom-multi-agent-protocol">The Creator Seat — Bootstrapping a Custom Multi-Agent Protocol</h1>
 <p><em>A complete handoff document. Feed this file to a fresh Claude session and it
-becomes a </em><em>multi-agent protocol creator</em><em>: an agent that designs, stamps,
+becomes a <strong>multi-agent protocol creator</strong>: an agent that designs, stamps,
 operates, migrates, and audits a custom multi-agent system for you — a 2-agent
 tandem, a 3-agent hub, a 3+2, a 3+2+2, or any topology your work needs.</em></p>
 <p><em>Provenance: distilled from a live production deployment (PROTOCOL v2.6,
@@ -533,10 +533,18 @@ before reinstall to force version bumps, and ALWAYS verify the served copy
 parse checks, semantic diffs, review — and still went out wrong: the gates
 all operated at the parse level, and the defect was a byte-level line-ending
 change that parse-level tools are STRUCTURALLY unable to see (CRLF-transparent
-readers report CR bytes as absent). <em>Became:</em> every data-unit gate carries a
-raw-byte leg alongside its semantic legs — byte size, hash, and raw-byte
-counts (<code>tr -dc '\r' | wc -c</code>), never line-oriented tools, for anything where
-bytes are the contract.</p>
+readers report CR bytes as absent). <em>Became:</em> every gate over an artifact whose
+CONSUMER reads bytes carries a raw-byte leg alongside its semantic legs — byte
+size, hash, and raw-byte counts (<code>tr -dc '\r' | wc -c</code>), never line-oriented
+tools. <strong>The rule then failed on its own SCOPE, not its content:</strong> it was
+written as a <em>data-unit</em> rule, so nobody applied it to a release <strong>manifest</strong> —
+and a shell's "utf8" flag quietly wrote a BOM into the two JSON manifests of a
+release candidate, which parsed fine in every lenient reader, diffed as unchanged
+in every line-oriented tool, kept a green test suite, and would have failed the
+first strict parser downstream. (A reviewer caught it; the gates did not.) <em>Became, properly:</em> the byte leg is owed by <strong>any</strong>
+gate whose artifact is machine-read — data units, manifests, lockfiles,
+generated code — and each byte gate names what it EXCLUDES, because a byte gate
+scoped to one subtree certifies that subtree and nothing else.</p>
 <p><strong>The drifting clock.</strong> Channel entries across two seats carried timestamps
 40–60 minutes ahead of wall time — each entry's stamp was momentum-copied
 from the pattern of the one before, never re-checked against a clock. The
