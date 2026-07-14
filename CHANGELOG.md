@@ -8,12 +8,52 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.4 | v2.6 | the no-idle ledger at the top of the autonomy dial: never-idle made a worker prompt about work that ARRIVES but said nothing about work already stalled — every deliverable is now IN FLIGHT / SURFACED / BLOCKED-WITH-BLOCKER-NAMED ("idle" is not a fourth state), with an anti-invention clamp and gate-preserving surfacing rules; SOP catalog row 9 |
 | 1.2.3 | v2.6 | skill-less cloud-wake floor is the baseline (plugin = opportunistic layer; declared-but-not-loaded is the motivating case): routines follow the in-repo `START_SESSION` contract + a protocol checkout pinned to a fixed ref/sha, else ABORT; `CLOUD.md` arming gate revised (floor-hardened + representative-task dry-run) |
 | 1.2.2 | v2.6 | transport live-validation + second-migration hardening: hosted wake handshake, empirical remote-protection verification, declared≠loaded plugin rule, version-migration live-run notes, `validate_auth_log.py` argv fix |
 | 1.2.1 | v2.6 | live-operation hardening: wake-monitor arm-and-verify, incident-driven ops-gotchas, `migrate_workspace.py`, creator-seat + SOP-registry docs, `--once` failure propagation |
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.2.4] — 2026-07-14
+
+**The no-idle ledger.** Never-idle made a worker prompt about work that
+*arrives* — watcher-driven intake — but said nothing about work that already
+exists and is going nowhere: the queued unit nobody started, the finished unit
+waiting on a gate no one presented, the item stalled on a peer's seam. A seat
+could be perfectly responsive on every watched lane, sit on a pile of stalled
+deliverables, and report itself — honestly and uselessly — as *idle*.
+
+- **`never-idle-core.md`** — the **three-state ledger**, owed at every
+  checkpoint and before any report of having nothing to do: every deliverable
+  in the seat's lane is **IN FLIGHT**, **SURFACED**, or **BLOCKED WITH ITS
+  BLOCKER NAMED** (what blocks it, who clears it, what it unblocks). *"Idle" is
+  not a fourth state.* A seat that reports itself idle is usually a BLOCKED seat
+  that never named its blocker — which was the one fact the principal needed in
+  order to clear it. The ledger turns silent waiting into a decision someone
+  can act on.
+- **The anti-invention clamp** — the ledger is TRIAGE over work that already
+  exists (queue, channel, standing duties), never a licence to manufacture
+  scope: "put everything possible in flight" is about work that EXISTS and is
+  stalled. An honest ledger with *nothing* in flight is a COMPLETE report. And
+  its near neighbor, which wears a real queue item's name: **a queued unit that
+  has not received its go is BLOCKED (blocker: the go), never IN FLIGHT** — the
+  ledger does not launder a pending authorization into a status line.
+- **Gate-preserving surfacing** — surfacing a gated item is **not** clearing its
+  gate; the item moves to the principal's desk and stops there. A **gated**
+  item's surfacing target is the *principal*: handing it to a peer does not
+  discharge a gate, and a peer's ack is never authorization (*authorization
+  never rides the channel*). Peer hand-off is for a SEAM, never a GATE. The
+  ledger exists to make gates VISIBLE, never to route around them.
+- **`docs/AUTONOMY.md`** — the never-idle dial bullet carries the ledger.
+- **`docs/CREATOR-SEAT-BOOTSTRAP.md`** (+ HTML twin) — SOP catalog **row 9**,
+  *no-idle / continuous forward progress*; plus an explicit note that the
+  catalog's numbers are its own illustrative sequence, not any deployment's
+  master ledger — which matters, sitting beside the registry's "master numbers,
+  never renumbered" rule.
+- **`docs/SOP-REGISTRY.md`** — stale catalog count corrected (a stale registry
+  is worse than none, by its own rule).
 
 ## [1.2.3] — 2026-07-14
 

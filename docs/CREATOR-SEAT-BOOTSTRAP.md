@@ -278,10 +278,13 @@ document the collision and require team-qualified citations ("t1-SOP-2");
 | 6 | **Reviewer model pin** | The reviewer CLI runs one pinned model at pinned effort via config. Nobody passes a per-run model flag; the principal may override per-round by explicit live word only, never standing. Record each pin's EFFECTIVE DATE — ledger rows predating it are conforming under the prior pin, not violations (a dated pin preempts false-positive audit findings). |
 | 7 | **Convergence before decisions** | Every decision package presented to the principal for click-through ruling first passes a convergence review: the cross-vendor reviewer + an isolated strong-Claude judge, one pass per batch. Both confirm → present, citing it. A surviving split is DISCLOSED in the question itself. Reviewer down → single-judge + disclose. Package FACTS are written in STRICT tense — past for resolved-during-prep, future for still-open: a reviewer cannot converge an ambiguous tense, and the principal cannot rule on one. |
 | 8 | **External status-board sync** | If the principal reads a status board outside git (a doc, a dashboard), ONE designated seat per team writes it, at fixed times (e.g. twice daily). The board is a VIEW of git-canonical state — never a second source of truth, never written mid-work by whoever happens to finish something. |
+| 9 | **No-idle / continuous forward progress** | Unblocked work proceeds continuously — the overnight queue-emptying target (row 5 above) extended to ALL hours. Every deliverable is IN FLIGHT, SURFACED as a decision when it is ready but gated, or BLOCKED WITH ITS BLOCKER NAMED; "idle" is not a fourth state, and a seat reporting itself idle is usually a blocked seat that never named its blocker. Autonomous mode means acting within EXISTING authority without waiting to be prompted — it grants none: every gate, embargo, first-hand-only super-class, proxy-auth boundary, pre-flight and convergence rule stands, and surfacing a gated item is never clearing it. Pairs with the never-idle dial level; the normative rules (closed MAY-list, the ledger, the anti-invention clamp) are in [never-idle-core.md](../plugins/agent-protocol/skills/agent-core/references/never-idle-core.md). |
 
-Adopt what fits, renumber freely at YOUR deployment's birth (you have no
-legacy), and keep the registry from day one — the collision mess above came
-from not having one.
+The numbers above are THIS catalog's illustrative sequence, not any
+deployment's master ledger — a live deployment may carry additional or
+differently numbered SOPs. Adopt what fits, renumber freely at YOUR
+deployment's birth (you have no legacy), and keep the registry from day one —
+the collision mess above came from not having one.
 
 ---
 

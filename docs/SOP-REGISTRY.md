@@ -45,11 +45,12 @@ you never need this lesson.
 
 ## A generalized starter catalog
 
-A worked catalog of eight battle-tested SOPs (principal-comms routing,
-fan-out pre-flight gate, rolling decisions sheet, fixed fallback judge,
-persistent wake monitors, end-of-turn honesty guard, overnight
-queue-emptying, reviewer model pin, convergence-before-decisions,
-external status-board sync) is in
-[docs/CREATOR-SEAT-BOOTSTRAP.md](CREATOR-SEAT-BOOTSTRAP.md), Part 5. Adopt
+A worked catalog of nine numbered SOPs — eleven rules, since two numbers carry
+an a/b split — is in
+[docs/CREATOR-SEAT-BOOTSTRAP.md](CREATOR-SEAT-BOOTSTRAP.md), Part 5:
+principal-comms routing, fan-out pre-flight gate, rolling decisions sheet,
+fixed fallback judge, persistent wake monitors, end-of-turn honesty guard,
+overnight queue-emptying, reviewer model pin, convergence-before-decisions,
+external status-board sync, no-idle continuous forward progress. Adopt
 what fits; the registry pattern above is the part every deployment should
 keep regardless.

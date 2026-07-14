@@ -58,8 +58,12 @@ You choose how much rope, per deployment, by binding:
   owns within one cycle, so nothing actionable waits for a scheduler. It may
   self-assign only from a closed list (intake, memory checkpoints, drafting the
   next queued unit's spec, in-scope QA, mechanical checks, retrospective notes)
-  and stops-and-surfaces at any gate exactly as at every other level. Requires
-  a WATCHER binding.
+  and stops-and-surfaces at any gate exactly as at every other level. It also
+  owes a **three-state ledger**: every deliverable in its lane is *in flight*,
+  *surfaced* (to you, or to the peer whose seam it needs), or *blocked with the
+  blocker named* — "idle" is not a fourth state, and a seat that reports itself
+  idle is usually a seat that never named its blocker. Requires a WATCHER
+  binding.
 
 At never-idle the team never sits idle waiting for a clock, yet the top of the
 dial adds no authority: a watching worker is bound by the same gates and the
