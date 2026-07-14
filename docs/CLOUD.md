@@ -12,10 +12,13 @@ the transport under the channel does.
 
 **Honesty scope.** The distributed-peers pattern is what this protocol was
 distilled from and is production-proven. The **hosted-cloud** pattern below is
-**documented and production-derived, but this repo does NOT claim verified
-hosted operation** — the recipes are written from real deployment experience,
-not from a CI job that exercises a hosted runner. Treat the hosted-cloud
-sections as a tested-by-us-elsewhere design you should verify in your own
+documented and production-derived, and as of 2026-07 the maintainers have
+verified a **live one-off hosted round-trip** against a real workspace remote:
+a hosted session fetched pushed state and published a reply over the real
+hosted auth path (the marker + nonce handshake, battery item 7). What this
+repo still does **NOT** claim is verified **scheduled** hosted operation — no
+CI job here exercises a hosted runner on a timer. Treat the hosted-cloud
+sections as a design verified once by hand that you must verify in your own
 environment (the go-live battery at the end is exactly how).
 
 ## Two patterns
@@ -82,6 +85,15 @@ What makes this safe, in order:
 4. **Pre-approved git surface.** The stamped `.claude/settings.json` already
    allow-lists the git/gh commands the channel loop needs, so an unattended wake
    doesn't stall on a permission prompt it cannot answer.
+5. **The plugin surface is PROVEN, not declared.** A plugin/marketplace
+   declaration in the checkout's settings does **not** mean the hosted runner
+   loads it — observed live: a hosted session on a workspace whose settings
+   declared the protocol plugin reported the plugin absent from its loaded
+   set. So: probe from INSIDE a live hosted session (have it list its loaded
+   plugins/skills) before scheduling wakes that depend on `/wake` or any
+   skill; **arming a scheduled wake gates on a proven load**; and write the
+   scheduled wake prompt to fail loudly and stop when the skill surface is
+   absent — never improvise a protocol-less resume.
 
 State survives a mid-unit death because every shipped unit is checkpointed to
 the ⚡ working-state block in git before it counts ([AUTONOMY.md](AUTONOMY.md)) —
@@ -140,6 +152,21 @@ battery; each item is a real failure the protocol is supposed to survive:
 6. **A real fired-and-delivered scheduled run.** The deployment is live **only**
    once an actually-scheduled tick has fired and delivered on its own — a manual
    `claude -p "/wake"` proves the prompt, not the scheduler.
+7. **Hosted wake handshake (marker + nonce).** Before any hosted session
+   carries real work, prove it can see pushed state and publish over the real
+   hosted auth path — without touching a live lane:
+   1. Pre-stage a scratch **marker branch** (`smoke/<name>`) carrying a marker
+      file with a fresh **nonce** and the reply instructions.
+   2. The principal fires a **one-off hosted session** bound to the workspace
+      repo with a paste-prompt: read the marker branch, reply on a NEW work
+      branch with a reply file echoing the exact nonce plus the session's own
+      timestamp; touch nothing else (no default-branch writes, no channel
+      writes, no PRs).
+   3. An observer polls `git ls-remote` for the reply ref. **Verify by
+      CONTENT (the echoed nonce), never by branch NAME** — hosted platforms
+      may suffix or rename a requested branch per their own conventions.
+   4. Clean up both scratch refs and confirm the remote head-set is
+      byte-identical to pre-smoke.
 
 **Scheduler timezone / DST note:** pin the schedule to an explicit timezone and
 decide what a DST transition should do (a skipped or doubled hour can drop or

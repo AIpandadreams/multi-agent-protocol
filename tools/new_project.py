@@ -116,8 +116,12 @@ memory/<role>/auth-log.md in this workspace:
     scope (a grant spent once by relay and once directly is a double-spend)
 
 This is the CI layer; the reviewer's semantic audit (words in scope, gate
-class on the list, provenance) remains on top. Run from the workspace root.
-Exit 0 clean, 1 on violation. Stamped by new_project.py — edit upstream.
+class on the list, provenance) remains on top. Run from the workspace root,
+or pass the workspace root as the sole argument. Exit 0 clean, 1 on
+violation — or on an explicitly named root containing no logs (a named
+workspace must contain logs; a bare run finding none stays exit 0 so
+pre-first-grant workspaces pass CI). Exit 2 on usage error. Stamped by
+new_project.py — edit upstream.
 """
 import re
 import sys
@@ -239,8 +243,17 @@ def check(parsed: list, bad: list) -> None:
 
 
 def main() -> int:
-    logs = sorted(Path("memory").glob("*/auth-log.md"))
+    if len(sys.argv) > 2:
+        print("usage: validate_auth_log.py [workspace-root]")
+        return 2
+    explicit = len(sys.argv) == 2
+    root = Path(sys.argv[1]) if explicit else Path(".")
+    logs = sorted((root / "memory").glob("*/auth-log.md"))
     if not logs:
+        if explicit:
+            print(f"auth-log validator: no memory/*/auth-log.md under {root} "
+                  "(is this a workspace root?)")
+            return 1
         print("auth-log validator: no logs found (nothing to check)")
         return 0
     bad: list = []

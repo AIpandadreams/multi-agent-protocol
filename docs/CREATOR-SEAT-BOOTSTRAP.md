@@ -276,7 +276,7 @@ document the collision and require team-qualified citations ("t1-SOP-2");
 | 4b | **End-of-turn guard** | Never end a turn with a commissioned, ungated unit queued-but-unstarted while claiming progress. Execution wording stays honest: dispatched ≠ done. |
 | 5 | **Overnight queue-emptying** | Every team, every overnight window: the goal is an EMPTY unblocked-work queue by morning. Gated work is staged-to-ready; blockers are named. |
 | 6 | **Reviewer model pin** | The reviewer CLI runs one pinned model at pinned effort via config. Nobody passes a per-run model flag; the principal may override per-round by explicit live word only, never standing. Record each pin's EFFECTIVE DATE — ledger rows predating it are conforming under the prior pin, not violations (a dated pin preempts false-positive audit findings). |
-| 7 | **Convergence before decisions** | Every decision package presented to the principal for click-through ruling first passes a convergence review: the cross-vendor reviewer + an isolated strong-Claude judge, one pass per batch. Both confirm → present, citing it. A surviving split is DISCLOSED in the question itself. Reviewer down → single-judge + disclose. |
+| 7 | **Convergence before decisions** | Every decision package presented to the principal for click-through ruling first passes a convergence review: the cross-vendor reviewer + an isolated strong-Claude judge, one pass per batch. Both confirm → present, citing it. A surviving split is DISCLOSED in the question itself. Reviewer down → single-judge + disclose. Package FACTS are written in STRICT tense — past for resolved-during-prep, future for still-open: a reviewer cannot converge an ambiguous tense, and the principal cannot rule on one. |
 | 8 | **External status-board sync** | If the principal reads a status board outside git (a doc, a dashboard), ONE designated seat per team writes it, at fixed times (e.g. twice daily). The board is a VIEW of git-canonical state — never a second source of truth, never written mid-work by whoever happens to finish something. |
 
 Adopt what fits, renumber freely at YOUR deployment's birth (you have no
@@ -469,6 +469,27 @@ loop — from SIX DAYS EARLIER (the tool's log lines carried no timestamps).
 Nearly triggered an outage response against a healthy lane. *Became:*
 timestamp every log line you own; timestamp-check before alarming on any you
 don't.
+
+**The stale platform rationale.** A workspace binding recorded "the platform
+cannot enforce force-push protection on our plan" as the reason for a
+detection-only fallback — and the compensating watchdog was treated as
+sufficient for months. The platform had long since gained the capability;
+nobody re-probed. An empirical transport smoke then force-pushed and deleted
+a scratch branch with exit 0: the workspace default branch had been fully
+rewindable the whole time. *Became:* every "platform cannot X" rationale in a
+binding carries a DATE and is re-probed at every migration and audit; remote
+protection is verified empirically — arm the rule, prove the rejection on a
+temporarily-covered scratch ref, narrow back to the default branch, and never
+rewind-test the live branch (transports/git-sync.md, Remote protection).
+
+**Declared ≠ loaded.** A hosted verification session was asked to confirm the
+protocol plugin it would need for scheduled wakes. The checkout's settings
+DECLARED the plugin — and the live session reported it absent from its loaded
+set. Every plan that assumed "settings say it, so the wake will have it" was
+resting on nothing. *Became:* a declaration is not a load; probe from inside
+a live hosted session before relying on any skill in a scheduled wake, gate
+the wake's arming on a proven load, and write wake prompts to fail loudly
+when the skill surface is absent (docs/CLOUD.md, cold-successor wake rule 5).
 
 ---
 

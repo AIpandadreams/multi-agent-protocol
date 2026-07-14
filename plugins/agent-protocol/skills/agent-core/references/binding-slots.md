@@ -29,3 +29,10 @@
 | PROXY_AUTH | `off` (default) or `on` + an ENUMERATED reversible/internal gate-class list and explicit exclusions — set/changed/revoked only by the principal speaking directly in the orchestrator session; never relayable. The irreversible/outward super-classes (outward-facing/publish, email SEND, new-money/new-recipient, destructive-to-others, canonical-repo merge, PROXY_AUTH/gate/embargo/protocol changes) are never listable or relayable | see proxy-auth-core.md; wildcards invalid |
 | AUTH_PROVENANCE | how auth-log writer identity is proven: `per-role-identity` (per-role keys/accounts + path protection + CI author check; default when gate classes include irreversible/outward) or `single-identity` (trust-based; principal's acceptance recorded; mandatory compensating checks) | see proxy-auth-core.md §Provenance |
 | PROTOCOL_VERSION | the protocol version all sessions run (stamped on entries) | mismatch = park + flag |
+
+**Bare cells for tooling-parsed slots.** Slots that tooling parses by exact
+match — `PROFILE` (in the stamped BINDINGS), `TRANSPORT`,
+`PROTOCOL_VERSION` — hold the BARE canonical value only (`3agent.git-sync`,
+`git-sync`, `v2.6`). Provenance, dates, and rationale ride the commit message
+or a `## MIGRATION` section, never inline in the cell: an annotated cell
+reads fine to a human and fails conformance's exact match.

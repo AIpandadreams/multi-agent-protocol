@@ -44,6 +44,16 @@ stop-then-arm:** before arming, enumerate your live monitors and stop any
 prior monitor on the same lane by its id — never arm on the assumption the
 predecessor is dead.
 
+**The monitor-less seat.** A seat operating WITHOUT a persistent monitor (an
+interactive or direct session working a lane by hand) owes a **manual poll**
+of every owed lane immediately after any reply-requesting post, and at every
+wake and checkpoint. Posting a question does not page you; the reply lands
+silently, and waiting for a monitor you never armed is the deaf-seat failure
+without a monitor to blame. One immediate poll is not enough on its own — it
+normally lands before the peer can answer. **While a reply is owed**, poll at
+a bound cadence, and always before switching work or ending a turn, until the
+reply arrives or the ask is explicitly parked.
+
 ## What a worker MAY self-assign
 
 A CLOSED list. Between assignments, at watch, a worker may on its own initiative:

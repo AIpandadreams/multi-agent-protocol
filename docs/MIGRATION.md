@@ -128,6 +128,36 @@ places, so there is nothing to reconcile on the way back.
 *Rationale: a migration you cannot safely abort is a migration you should not
 start; the untouched-until-last-step ordering is what buys the escape hatch.*
 
+## Version migrations: live-run notes
+
+The *version* axis of migration (`tools/migrate_workspace.py`, carrying a
+stamped workspace across a PROTOCOL version bump) is mechanically simple —
+but two live runs earned these notes:
+
+- **Expected one-time integrity-CI red-X.** If the workspace CI enforces
+  append-only on files whose BANNER line the migrator re-stamps (auth-log
+  headers are the common case), the migration commit itself trips that check
+  **once**. This is expected and benign: disclose it in advance, quiesce
+  sessions for the window, and never "fix" it by rewriting history — the
+  next ordinary append is green again.
+- **Finding adjudication: pre-existing vs regression.** A defect surfaced by
+  post-migration verification is not automatically a migration defect. Probe
+  whether it **pre-exists** the migration (the git history of the relevant
+  config answers this), and if it does: close the migration, and register
+  the finding as its own scoped follow-up gate. Holding a completed
+  migration open against an inherited defect conflates two workstreams.
+- **Transport adoption is profile adoption.** Conformance hard-couples the
+  `.git-sync` profiles to the git-sync transport: a workspace cannot adopt
+  `TRANSPORT: git-sync` while keeping a `.local` profile — "transport now,
+  profile later" is not a smaller change, it is a BLOCKED state. Move the
+  profile, `TRANSPORT`, `WORKSPACE_REMOTE`, and `SECRETS` in one reviewed
+  change.
+- **Run the auth-log validator from the workspace root** — or pass the root
+  explicitly (`validate_auth_log.py path/to/workspace`): it discovers logs
+  under the selected workspace root (the working directory only when the
+  argument is omitted), and naming a root that contains none is an error,
+  not a pass.
+
 ## See also
 
 - `tools/watcher.py` — multi-lane watcher; watch the moved lane and every stayed

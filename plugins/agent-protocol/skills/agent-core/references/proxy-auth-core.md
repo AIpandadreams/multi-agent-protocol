@@ -113,6 +113,11 @@ Rules:
   non-authorizing bookkeeping:** the orchestrator appends it only after
   verifying the receiver's log; its absence blocks nothing receiver-side
   and only feeds the status picture.
+- **Auth-log appends commit SOLO.** An auth-log append is a single-purpose
+  commit touching only the auth-log file — never bundled with channel or
+  memory edits. This keeps the chain's git history a clean sequence of auth
+  events, keeps the same-subtree CI signal sharp, and keeps every auth event
+  independently citable by its own sha.
 
 ## Provenance — who wrote the log line
 

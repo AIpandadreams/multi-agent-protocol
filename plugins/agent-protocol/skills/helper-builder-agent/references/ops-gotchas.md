@@ -70,10 +70,28 @@ FIRST when something looks broken — most of these masquerade as tool failures.
   rides your commit silently. Always commit with an explicit pathspec
   (`git commit -- <paths> -m "..."`) in shared trees; if a sweep happens, disclose
   to the peer immediately and never rewrite shared history unilaterally.
+- Same class, two more traps: (a) **peer pull-rebase re-hash** — when a peer's
+  pull-rebase carries your local commit to the remote, the LANDED sha differs
+  from the one you minted; cite the remote sha, never your pre-rebase local
+  one. (b) When the shared tree holds a peer's live uncommitted WIP, publish
+  via an **isolated worktree** instead of committing in place: fetch →
+  `git worktree add <tmp> origin/<branch>` → cherry-pick your commit there →
+  push from the worktree → remove it (your local duplicate dedups on the next
+  rebase).
 - Credential-manager outages make git network operations HANG on an invisible
   username prompt (no error, no output — looks like a wedged push). Keep
   `GIT_TERMINAL_PROMPT=0` in agent shells so they fail fast instead; repair the
   credential helper (e.g. `gh auth setup-git`) rather than retrying the hang.
+
+## Harness-hook wedges
+
+- A stuck harness hook process (spawned per tool call, blocking on a pipe) can freeze
+  a session mid-turn INDEFINITELY — stuck tool spinner, queued messages unprocessed,
+  the harness waiting on the hook forever. Diagnose: an orphaned hook process with an
+  old creation time and ~0 CPU. Kill the HOOK process (not the session) — the session
+  self-resumes within seconds and the interrupted tool call errors back cleanly.
+- Prevention: hooks need hard kill-timers and exit-after-write; a scheduled janitor
+  that kills over-age hook processes converts a fleet-freezing class into a non-event.
 
 ## Memory & context hygiene
 

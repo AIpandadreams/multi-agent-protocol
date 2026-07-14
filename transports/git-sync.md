@@ -114,6 +114,28 @@ cloud side are typically permanent from that side; pruning stale `state/**`
 branches is **principal housekeeping** done from a privileged context, not
 something a role does.
 
+**Verify the protection empirically — never assume it from the platform
+tier.** Two production-earned rules:
+
+- **Platform-capability rationales go stale.** A binding that records
+  "the platform cannot enforce this on our plan" as the reason for a
+  detection-only fallback MUST carry a **date**, and MUST be **re-probed at
+  every migration and audit** — platforms gain capabilities silently. A real
+  deployment carried exactly that rationale for months after the platform
+  had gained the feature; an empirical smoke then found the workspace
+  default branch fully rewindable.
+- **The verification pattern:** arm the protection rule, then prove it on a
+  **temporarily-covered scratch ref** — a force-push and a branch-delete
+  against the covered ref must both be REJECTED by the remote — then narrow
+  the rule back to the default branch **and read back the final active
+  configuration** (an authoritative API/settings read asserting the default
+  branch is covered, force-push and deletion are blocked, and no unintended
+  bypass applies). Both legs are required: the covered-ref test proves the
+  rule MECHANISM rejects, the read-back proves the final TARGETING — because
+  narrowing edits the rule's target selector after the thing you tested.
+  Never rewind-test the live default branch itself: a live rewind attempt
+  adds risk, not information.
+
 ## Concurrent same-role foreign commits = single-active-writer alarm
 
 git-sync's headline failure mode is **two live sessions of the same role**

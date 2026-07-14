@@ -8,10 +8,109 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.2 | v2.6 | transport live-validation + second-migration hardening: hosted wake handshake, empirical remote-protection verification, declared≠loaded plugin rule, version-migration live-run notes, `validate_auth_log.py` argv fix |
 | 1.2.1 | v2.6 | live-operation hardening: wake-monitor arm-and-verify, incident-driven ops-gotchas, `migrate_workspace.py`, creator-seat + SOP-registry docs, `--once` failure propagation |
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.2.2] — 2026-07-13
+
+Hardening release distilled from the git-sync transport's first full
+**empirical validation** over a live remote — a seven-point smoke battery
+(verb round-trip, both retry-rule classes, the collision detector, the
+credential doctrine, remote protection, and a live hosted-session handshake)
+— plus a second real v2.5→v2.6 workspace migration and the incidents three
+more days of live multi-team operation surfaced. Protocol text stays `v2.6`
+— every change is a clause-level strengthening within the existing version,
+carried through a three-voice cross-vendor + isolated-judge convergence loop.
+
+### Added
+- **`docs/CLOUD.md`: the hosted wake handshake (marker + nonce)** — go-live
+  battery item 7: prove a hosted session can see pushed state and publish
+  over the real hosted auth path before it carries any real work. Pre-stage
+  a scratch marker branch carrying a nonce; a one-off hosted session replies
+  on a new work branch echoing the nonce + its own timestamp; an observer
+  polls `ls-remote`. Verify by CONTENT, never by branch NAME — hosted
+  platforms may suffix or rename a requested branch per their own
+  conventions. The honesty-scope note is updated to match what this earned:
+  a live one-off hosted round-trip is now maintainer-verified (2026-07);
+  *scheduled* hosted operation remains not-CI-proven.
+- **`docs/MIGRATION.md`: "Version migrations: live-run notes"** — what two
+  real `migrate_workspace.py` runs earned: the expected ONE-TIME
+  integrity-CI red-X when the migrator re-stamps banner lines in
+  append-only-checked files (disclose, quiesce, never history-rewrite);
+  finding adjudication (probe whether a verification finding PRE-EXISTS the
+  migration before treating it as a migration defect — close the migration,
+  register a scoped follow-up gate); transport adoption IS profile adoption
+  (conformance hard-couples them — "transport now, profile later" is a
+  blocked state, not a smaller change); run the auth-log validator from the
+  workspace root or pass it explicitly.
+- `tests/test_validate_auth_log.py` — pins the validator's new invocation
+  contract (below).
+
+### Hardened (incident-driven protocol text, within v2.6)
+- **`transports/git-sync.md`: verify remote protection EMPIRICALLY** — two
+  production-earned rules under the existing REQUIRED clause: (1) platform-
+  capability rationales go stale — a "platform cannot enforce this" binding
+  rationale must carry a date and be re-probed at every migration/audit (a
+  real deployment's default branch sat fully rewindable for months behind
+  exactly such a stale rationale); (2) the verification pattern — arm the
+  rule, prove the rejection on a temporarily-covered scratch ref, narrow
+  back, then READ BACK the final active configuration (the covered-ref test
+  proves the mechanism, the read-back proves the final targeting); never
+  rewind-test the live default branch.
+- **`docs/CLOUD.md`: declared ≠ loaded** — cold-successor wake rule 5: a
+  plugin declaration in the checkout's settings does not mean the hosted
+  runner loads it (observed live). Probe from inside a live hosted session;
+  arming a scheduled wake gates on a proven load; wake prompts fail loudly
+  when the skill surface is absent.
+- **`channel-core.md`: the timezone leg of the wall-clock rule** — a
+  tool-verified stamp can still corrupt the timeline if its zone is misread
+  (some tools emit UTC). Never relabel a UTC output as local; stamp from a
+  local-clock call or carry the zone designator verbatim.
+- **`never-idle-core.md`: the monitor-less seat** — a seat with no
+  persistent monitor owes a manual poll of every owed lane immediately after
+  any reply-requesting post and at every wake/checkpoint — and, while a
+  reply is owed, at a bound cadence until it arrives or the ask is parked
+  (one immediate poll normally lands before the peer can answer); posting a
+  question does not page you.
+- **`memory-discipline.md`: checkpoint stamps from a verified local clock** —
+  working-state timestamps follow the same tool-verified-clock rule as
+  channel entries, zone carried; a UTC value relabeled as local
+  future-stamps the canonical resume state, and a successor reading an
+  implausible stamp treats the block as suspect.
+- **`proxy-auth-core.md`: auth-log appends commit SOLO** — single-purpose
+  commits touching only the auth-log file keep the chain's history a clean
+  sequence of auth events and keep the same-subtree CI signal sharp.
+- **`binding-slots.md`: bare cells for tooling-parsed slots** — `PROFILE` /
+  `TRANSPORT` / `PROTOCOL_VERSION` cells hold the bare canonical value only;
+  provenance rides the commit message, never the cell (an annotated cell
+  reads fine to a human and fails conformance's exact match).
+- **`ops-gotchas.md` (owner + builder): shared-live-trees extension + a new
+  class** — peer pull-rebase re-hash (cite the landed remote sha, never your
+  pre-rebase local one) and the isolated-worktree publish pattern (fetch →
+  worktree add at the remote tip → cherry-pick → push → remove) for trees
+  holding a peer's live WIP; plus **harness-hook wedges**: a stuck harness
+  hook process can freeze a session mid-turn indefinitely — kill the HOOK
+  process, not the session; hooks need hard kill-timers and
+  exit-after-write, and a scheduled janitor converts the class to a
+  non-event.
+- **`CREATOR-SEAT-BOOTSTRAP.md`** — SOP-7 gains the strict-tense rule for
+  decision-package FACTS (past = resolved-during-prep, future = still-open;
+  a reviewer cannot converge an ambiguous tense), and Part 7 gains two new
+  case studies: *the stale platform rationale* and *declared ≠ loaded*.
+
+### Fixed
+- `tools/validate_auth_log.py` (and the byte-identical copy `new_project.py`
+  stamps into workspaces) — the validator previously ignored argv entirely
+  and globbed from the cwd, so `validate_auth_log.py <path>` silently
+  checked NOTHING and exited 0 ("no logs found") — a green that means "ran
+  from the wrong directory". New contract: optional single positional
+  workspace-root argument (default `.`); an explicitly named root containing
+  no logs exits 1 loudly; a bare invocation finding none keeps the
+  compatible exit-0 (pre-first-grant workspaces still pass CI); extra
+  arguments exit 2.
 
 ## [1.2.1] — 2026-07-10
 

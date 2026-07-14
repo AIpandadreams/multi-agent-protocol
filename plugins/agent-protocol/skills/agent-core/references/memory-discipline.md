@@ -29,6 +29,12 @@ so this discipline is the architecture, not a courtesy.
   compact block at the top of the memory index (counters, in-flight units,
   queue tips, last tick) that a cold successor reads FIRST. Prose below it is
   context; the block plus the underlying artifacts are the state.
+- **Checkpoint stamps come from a verified local clock.** Working-state and
+  checkpoint timestamps (last tick, checkpoint time) are taken from a tool
+  call with the zone carried — some tools emit UTC, and a UTC value relabeled
+  as local FUTURE-STAMPS the canonical resume state. A successor that reads
+  an implausible (future) stamp treats the block as SUSPECT and re-derives
+  the picture from the underlying artifacts before trusting it.
 - **Soft cap, trim-on-idle:** when the index outgrows a comfortable
   single-read, finish the in-flight unit first — trimming may wait for the
   next idle tick. Split topic files EARLY (at the first sign a theme

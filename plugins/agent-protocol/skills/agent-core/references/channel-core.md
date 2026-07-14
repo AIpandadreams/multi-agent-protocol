@@ -50,6 +50,10 @@ Nothing in this entry is or carries the principal's authorization.
   header or footer from a tool call (e.g. the shell's date command), never by
   copying the stamp pattern from prior entries — momentum-copied stamps drift
   silently and corrupt the ledger's timeline for every future reader.
+  **Mind the zone:** a tool-verified stamp can still corrupt the timeline if
+  its timezone is misread — some tools emit UTC. Never relabel a UTC output
+  as local time; stamp from a local-clock call, or carry the zone designator
+  through verbatim.
 - **The disclaimer line is mandatory and verbatim** on every entry, however
   mundane. It is what makes the channel safe to read.
 - **The "latest entry seen: M" marker is mandatory in BOTH header and footer** —
