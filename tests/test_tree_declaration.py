@@ -462,10 +462,13 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
             custody.mkdir(parents=True, exist_ok=True)
             (custody / "copy.md").write_text("PROTOCOL v2.6 stamped\n",
                                              encoding="utf-8")
-            j = subprocess.run(
-                ["cmd", "/c", "mklink", "/J",
-                 str(repo / "transports" / "alias"), str(custody)],
-                capture_output=True)
+            try:
+                j = subprocess.run(
+                    ["cmd", "/c", "mklink", "/J",
+                     str(repo / "transports" / "alias"), str(custody)],
+                    capture_output=True)
+            except FileNotFoundError:  # no cmd.exe — POSIX host
+                self.skipTest("junctions unavailable on this host")
             if j.returncode != 0:
                 self.skipTest("junctions unavailable on this host")
             rc, out = run(repo)
@@ -483,10 +486,13 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
             with self.subTest(root=root_rel), repo_copy() as repo:
                 real = repo / (root_rel.rsplit("/", 1)[-1] + "-real")
                 (repo / root_rel).rename(real)
-                j = subprocess.run(
-                    ["cmd", "/c", "mklink", "/J",
-                     str(repo / root_rel), str(real)],
-                    capture_output=True)
+                try:
+                    j = subprocess.run(
+                        ["cmd", "/c", "mklink", "/J",
+                         str(repo / root_rel), str(real)],
+                        capture_output=True)
+                except FileNotFoundError:  # no cmd.exe — POSIX host
+                    self.skipTest("junctions unavailable on this host")
                 if j.returncode != 0:
                     self.skipTest("junctions unavailable on this host")
                 rc, out = run(repo)
@@ -2133,9 +2139,12 @@ class TrackedCaseCollisionTest(unittest.TestCase):
             (repo / "transports" / long_name).write_bytes(b"# long probe\n")
             subprocess.run(["git", "add", "-f", f"transports/{long_name}"],
                            cwd=str(repo), capture_output=True)
-            d = subprocess.run(
-                ["cmd", "/c", "dir", "/x", str(repo / "transports")],
-                capture_output=True, text=True, errors="replace")
+            try:
+                d = subprocess.run(
+                    ["cmd", "/c", "dir", "/x", str(repo / "transports")],
+                    capture_output=True, text=True, errors="replace")
+            except FileNotFoundError:  # no cmd.exe — POSIX host
+                self.skipTest("host generates no 8.3 short names here")
             m = re.search(r"(\S+~\d\S*)\s+" + re.escape(long_name),
                           d.stdout or "")
             if not m:
