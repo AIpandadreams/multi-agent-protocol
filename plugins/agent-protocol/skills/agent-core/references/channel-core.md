@@ -34,7 +34,7 @@ authorization.
   deliverables — not only the roles that carry an ops-gotchas reference (some
   roles have none). A byte-order mark is invisible to line-oriented tools yet
   strict parsers reject it outright, so it survives every review that reads text
-  and dies in the one consumer that reads bytes. Three corollaries, and they are
+  and dies in the one consumer that reads bytes. Four corollaries, and they are
   the whole rule:
   - **(a)** A shell's "utf8" flag is not automatically a no-BOM writer. Verify
     what YOUR shell or tool actually emits before trusting it — and version-tag
@@ -52,6 +52,29 @@ authorization.
     values that must agree across files. Then **enumerate what the gate
     excludes**: a byte gate scoped to one subtree certifies that subtree and
     nothing else, and an unstated exclusion reads as coverage.
+  - **(d)** **The rule is per-format — and at least one format INVERTS it.**
+    Windows PowerShell 5.1 script files are the known case: the 5.1 script reader
+    decodes a BOM-*less* UTF-8 script as ANSI and mangles every non-ASCII byte
+    (`§ — é` → `Â§ â€” Ã©`), so there the BOM is not tolerated but **required**.
+    A blanket "no BOM anywhere" gate pointed at one would *command the very
+    corruption* (a)–(c) exist to prevent — the same shape as guidance that causes
+    the defect it warns about, only now with a CI badge on it. So: know what a
+    format's real consumer does with the leading bytes **before** you gate it, and
+    when a format is an exception, **state the exception as a rule and enforce
+    it** — a PowerShell script carrying non-ASCII and no BOM is itself a finding.
+    **Scope the exception by the consumer, not by the extension you happened to
+    hit — and enumerate every consumer that has the behaviour:** the 5.1 script
+    reader loads `.ps1`, `.psm1` and `.psd1`, and the engine's data-file reader
+    (`Import-PowerShellDataFile`, which also loads role-capability and
+    session-configuration files) reads `.psrc` and `.pssc` the same way, so all
+    five invert; `.ps1xml` does not (the .NET XML reader parses it, and a BOM is
+    merely tolerated there). An exception scoped to the one suffix that bit you
+    leaves its siblings ungated while reading as covered — and an exception
+    scoped to the one CONSUMER that bit you does the same thing one level up:
+    this rule first said "the script reader, so all three invert" and the
+    data-file reader mangled a `.psrc` identically while the doc read as
+    complete. A carve-out that merely stops checking is not an exception — it is
+    a hole with a comment over it.
 
 ## Entry format (all directions, identical)
 

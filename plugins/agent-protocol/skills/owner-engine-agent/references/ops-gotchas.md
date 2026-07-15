@@ -72,6 +72,25 @@ exactly like the flag it was warning about. This file has now shipped that class
 twice: once recommending the BOM-writing flag, once mis-tagging its replacement.
 An untagged snippet is a trap with a green face; a wrongly-tagged one is worse.
 
+⚠ **PowerShell SCRIPT FILES INVERT the no-BOM rule — there the BOM is REQUIRED.**
+PowerShell 5.1 decodes a BOM-*less* UTF-8 script as ANSI and mangles every
+non-ASCII byte (`§ — é` → `Â§ â€” Ã©`). Note the loop that closes: that is not
+merely where this mojibake is *seen*, it is where it is **born**. Strip the BOM to
+satisfy a "no BOM" rule and you have authored the corruption this file warns
+about — the third time this file would have shipped that class, and the first
+time it would have done so from inside the fix. Save scripts WITH a BOM
+(`[IO.File]::WriteAllText($p, $t, [Text.UTF8Encoding]::new($true))`, **PS 5+**),
+or keep them pure ASCII — nothing to mangle, nothing to mark. **The inversion
+follows the readers, not one extension: the 5.1 script reader loads `.ps1`,
+`.psm1` and `.psd1`, the engine's data-file reader (`Import-PowerShellDataFile`)
+loads `.psrc` and `.pssc` the same way, and all five invert** (`.ps1xml` does not
+— .NET parses it as XML). Scoping this to `.ps1` because that is the file that
+bit you leaves the module and manifest ungated while the note reads as covering
+them — and scoping it to the script reader alone left the role-capability and
+session-configuration files ungated the same way, one consumer over. Every other
+shared file stays no-BOM per `channel-core` corollary (d), which is where the
+rule and its inversion are normative.
+
 **Quoting cliffs.** Inline heredocs/strings break on mixed-quote content — stage long
 text via a file-write tool, then append/pipe it.
 

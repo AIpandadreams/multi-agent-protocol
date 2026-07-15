@@ -62,6 +62,17 @@ FIRST when something looks broken — most of these masquerade as tool failures.
 - **Version-tag every shell snippet you publish, and get the boundary right.** Handing
   a 5.1 reader a 6+-only parameter (`-AsByteStream`, `utf8NoBOM`) fails exactly like
   the flag it warns about — and a wrongly-tagged snippet is worse than an untagged one.
+- ⚠ **PowerShell SCRIPT FILES INVERT the no-BOM rule: there the BOM is REQUIRED.**
+  PowerShell 5.1 decodes a BOM-*less* UTF-8 script as ANSI and mangles every non-ASCII
+  byte (`§ — é` → `Â§ â€” Ã©` — that is where this mojibake is BORN, not just where it
+  is seen). Strip the BOM to satisfy a "no BOM" rule and you have written the
+  corruption yourself. Save scripts with a BOM (`[IO.File]::WriteAllText($p, $t,
+  [Text.UTF8Encoding]::new($true))`, **PS 5+**) — or keep them pure ASCII, which needs
+  no BOM because it has nothing to mangle. **Scope it by the readers, not the suffix
+  that bit you: `.ps1`, `.psm1` and `.psd1` go through the 5.1 script reader, `.psrc`
+  and `.pssc` through the engine's data-file reader (`Import-PowerShellDataFile`),
+  and all five invert** (`.ps1xml` does not — .NET reads it as XML). Every other
+  shared file stays no-BOM per `channel-core` corollary (d).
 - The *rules* here — UTF-8 without BOM on shared files, byte gates with strict decode
   and enumerated exclusions — are normative in
   `../../agent-core/references/channel-core.md` and bind every role, shell or no

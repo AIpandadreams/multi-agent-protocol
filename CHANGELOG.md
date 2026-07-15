@@ -8,6 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.6 | v2.6 | the fix that reproduced the bug it fixed. 1.2.5 widened the no-BOM gate to every file — and `.ps1` **INVERTS** that rule: Windows PowerShell 5.1 decodes a BOM-*less* UTF-8 script as ANSI and mangles non-ASCII (`§ — é` → `Â§ â€” Ã©`), so the gate would have *commanded the very mojibake the protocol warns about*. PowerShell **script files** (`.ps1`/`.psm1`/`.psd1`/`.psrc`/`.pssc` — the exception follows the 5.1 script/data-file *reader*, not the one suffix that bit us) now REQUIRE the BOM and are checked for it (an exception you cannot state as a rule is a hole). 1.2.5 also fused two different claims — "this artifact must exist here" and "if it exists it must agree with its twin" — making the checker unrunnable in any tree that legitimately does not carry the docs (it went 10-findings red in the private mirror, and a gate nobody can see go green is one people learn to scroll past). A tree may now DECLARE itself in `.mirror-check.json`; relaxations are bounded, printed with reasons, tracked, stale entries are findings, a defective declaration grants NOTHING, and no declaration = the old strict behaviour exactly. Reviewers defeated cut after cut — the mojibake gate alone fell twenty-six times (lookback, span licence, fence claim, marker enumeration, a fence fix that skipped the delimiter line, a lead-set that was still an enumeration, a fence tracker blind to tilde/nested fence shapes, a truncation exception that named one prefix of a family, fences hidden behind list/blockquote markers, a container peel that manufactured fence CLOSERS out of literal marker lines inside a fence — disproving its own "over-peeling only widens scanning" claim — an indented run doing the same through the 4-space/tab hole, a span finder counting stray and escaped backticks as delimiters, a coverage gate sweeping the tree's own characters when corruption arrives as mangles of text that was never there, a liberal OPENER inverting fence phase by consuming the real opener as its closer, a fence-only machine blind to the seven CommonMark HTML-block kinds that swallow fence lines, a Latin-1 boundary that read mangled French œ as prose, a cannot-interrupt-a-paragraph rule built on a blank-line proxy when fences and headings end paragraphs too, and then FOUR block-model divergences in one round — link-reference definitions, container-scoped block state, ordered lists that cannot interrupt a paragraph, and a backtick in a backtick fence's info string — at which point the block model was RETIRED rather than repaired: the exemption no longer consults a document model at all — a candidate is exempt only when its entire line is byte-identical to one of five enumerated documentation lines keyed by exact path, every other line is scanned unconditionally whatever block it sits in, and the allowlist is gated live on stale, dead, and mis-keyed entries — after which the retirement's own first review round cut it twice more: the scanner's line unit was str.splitlines(), whose extra separators (VT/FF/NEL/U+2028/U+2029) let a renderer-visible modified line self-exempt a licensed suffix (lines now end only where markdown ends them), and resolve()-keyed paths let a symlink at an unlisted path inherit an exempt licence while an out-of-tree link crashed the checker (keying is lexical now, and a symlink in the guarded tree is itself a finding — a rule then re-cut one round later because it ran only on files the walk could SEE: rglob looks through neither a symlinked directory nor past a junction, so both guarded trees are now swept for reparse points of every kind, and the resolve()-keyed stamp-exemption map fell to the same junction alias and went lexical too — then cut twice more one round later: os.walk never stats the root it is handed, so a junction replacing an ENTIRE guarded tree walked through the sweep, and without an onerror callback the walk swallowed the OSError from an unlistable directory and called the corner it never read clean, so guarded roots are now reparse-checked before the walk and every unreadable path is a fail-closed finding, while a hostile declaration path — `..` or resolving outside the repo — now refuses the whole declaration instead of coexisting with its own active relaxations); the detector validates by byte round-trip with a stated cp1252-letter-aware prose side, derived truncation families, and a detector-coverage gate over a fixed support alphabet); the next round turned on the gate's own footing outside the mojibake lane: existence became its own gate (shipped transports, all four SKILL.md entrypoints — deletion of any was green), the whole-repo BOM enumeration fails closed instead of trusting rglob's silent error-suppression, case-colliding index entries are a finding (one visible worktree file was certifying a second, unseen released blob), and the declaration loader hardened four more ways (regular-file only — a tracked symlink sourced its relaxation from untracked bytes; duplicate JSON keys refused; duplicate entries refused; canonical POSIX spelling required); the round after THAT found the tracked names themselves hostile: git's UTF-8 pathnames were being decoded with the Windows locale, so a tracked non-ASCII name became a phantom path and its BOM'd blob invisible (BLOCKER), trailing-dot index aliases and NFC/NFD variants joined case collisions as findings, the loader now also requires the tree's exact on-disk spelling, the first existence list was completed (profiles, new_project.py — whose absence silently disarmed the auth-log drift gate — and docs/CLOUD.md, declarable with the docs tree), and scratch dirs the gate never claims are pruned so an unlistable node_modules cannot false-red it; and the round after that turned on the split between the two trees git actually keeps: every byte gate read WORKTREE bytes while a commit ships the INDEX blob, so a BOM'd blob swapped into the index behind a clean worktree twin was green (BLOCKER — divergent staged blobs now go through the byte gates themselves, while a routinely dirty tree stays green because an ordinary edit's staged blob is the last committed content), a tracked-but-deleted worktree path fell out of the tail silently (now a finding, with non-regular and unmerged index entries refused too), the non-portable list learned the names its first cut did not know (Win32-forbidden characters, `CONIN$`, superscript-digit `COM¹`), and an index name that merely RESOLVES to a differently spelled worktree file — an 8.3 short name, a lone case variant — is a finding by exact-spelling comparison, closing the alias family rather than its members; and the round after that beat the cure's own enumeration twice in one verdict — git diff ignores assume-unchanged/skip-worktree entries by design and never content-compares a same-size blob behind an unchanged stat cache, both green — so the scan stopped asking git which entries diverge and reads EVERY staged blob by object id in one cat-file batch (the flags are also findings in themselves), the staged mojibake leg selects on the normalized suffix, and the alias guard learned macOS's decomposed on-disk spellings without re-admitting case or 8.3 aliases — so every gate here is guarded by the mutation that beat its predecessor, and doc/gate suffix parity is itself a gate. Suite 206 → 332 |
 | 1.2.5 | v2.6 | corrects shipped guidance that caused a real defect, and the SCOPE of two rules that were already right: PS 5.1's `-Encoding utf8` WRITES a BOM (the docs recommended it as the fix for the UTF-16 default); the byte-gate rule existed but was scoped to "data units", so nobody applied it to a release manifest; and review scope is now the ARTIFACT SET, not the touched-file set — a reviewer handed your diff cannot report the file you forgot. Twins now fail as a pair *mechanically*: the BOM gate scans every file (no suffix allowlist), the doc/HTML twin and the three copies of the amendment header get parity gates, and the file-hygiene baseline moves once into a role-neutral core so the orchestrator inherits it. Every new gate ships with a mutation test — the first drafts of three of them were green *and* defeated. Suite 171 → 206 |
 | 1.2.4 | v2.6 | the no-idle ledger at the top of the autonomy dial: never-idle made a worker prompt about work that ARRIVES but said nothing about work already stalled — every deliverable is now IN FLIGHT / SURFACED / BLOCKED-WITH-BLOCKER-NAMED ("idle" is not a fourth state), with an anti-invention clamp and gate-preserving surfacing rules; SOP catalog row 9 |
 | 1.2.3 | v2.6 | skill-less cloud-wake floor is the baseline (plugin = opportunistic layer; declared-but-not-loaded is the motivating case): routines follow the in-repo `START_SESSION` contract + a protocol checkout pinned to a fixed ref/sha, else ABORT; `CLOUD.md` arming gate revised (floor-hardened + representative-task dry-run) |
@@ -16,6 +17,638 @@ changes only through the
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.2.6] — 2026-07-15
+
+**The fix reproduced the bug it fixed.** 1.2.5 was a release about rules that
+were right but mis-scoped. Porting it to a mirror tree exposed, within the hour,
+two mis-scoped rules **inside 1.2.5 itself**. That is not an embarrassment to
+bury in a patch note; it is the thesis holding, and the only honest thing to do
+with a thesis that holds is to say where it held.
+
+### `.ps1` inverts the no-BOM rule — and 1.2.5's gate would have caused the corruption it warns about
+
+Windows PowerShell 5.1 decodes a BOM-*less* UTF-8 `.ps1` as **ANSI**. Every
+non-ASCII byte is mangled. Verified on 5.1.26100, not recalled:
+
+| the same script, saved two ways | what PowerShell prints |
+|---|---|
+| UTF-8, **no** BOM | `sect=Â§ dash=â€” acc=Ã©` |
+| UTF-8, **with** BOM | `sect=§ dash=— acc=é` |
+
+`Â§`, `â€”` — that is the exact mojibake `ops-gotchas` has warned about for
+releases. This is where it is **born**, not merely where it is seen. So the
+repo-wide "no BOM anywhere" gate 1.2.5 shipped would, pointed at a `.ps1`, have
+**instructed you to author the corruption the protocol exists to prevent** — the
+same shape as the 1.2.4 defect that started this whole thread, now wearing a CI
+badge. (It never fired: this repo tracks no `.ps1`. It was a trap set for the
+first person to add one.)
+
+- PowerShell **script files** — `.ps1`, `.psm1`, `.psd1` — are exempt from the
+  no-BOM rule and get the **inverse** check: non-ASCII bytes with **no** BOM is a
+  finding that names the mangling. A silent carve-out would have been the lazy fix;
+  it leaves the real bug — a script that corrupts its own output — unguarded.
+  **An exception you cannot state as a rule is a hole.**
+  (The first cut of this fix keyed on `.ps1` alone. A reviewer verified that `.psm1`
+  goes through the same script reader and mangles identically — so the trap was still
+  armed one extension over, and *worse* than before: the docs now tell you to save
+  PowerShell with a BOM, so an author obeying them for a module file got red-gated by
+  the fix itself. The rule binds the **format that has the behaviour**, not the
+  example that revealed it. Excluded, stated: `.ps1xml`, which .NET reads as XML.
+  Round 2 then repeated round 1 verbatim: `.psrc` (role capability) and `.pssc`
+  (session configuration) are *data* files, but the engine loads both through the
+  same reader — `Import-PowerShellDataFile` mangles a BOM-less `.psrc` identically,
+  with no extension check anywhere on that path — and the fixed gate was still
+  red-gating a correctly BOM'd one. Same defect, same fix, one extension over,
+  inside the release that fixed it. All five suffixes are now bound, both
+  directions tested.
+  And round 3 found the fold had reached the code, the tests, and this CHANGELOG —
+  every surface except the **normative prose**: corollary (d) and both
+  `ops-gotchas` still taught the three-suffix set, so a reader obeying the
+  normative doc for a `.psrc` saved it BOM-less and walked straight into the gate
+  — three reviewers, independently, the same finding, one of them adding that a
+  maintainer who "simplified" the gate back to match the doc would re-open the
+  round-2 hole *with the doc as their justification*. The passages now enumerate
+  all five suffixes and name **both consumers**, and the agreement is a check,
+  not a claim: `mirror_check` derives each guidance file's documented suffix set
+  from its `.psX`-shaped tokens — **case-insensitive and two-tier** (round 4:
+  `.PS2` in caps and bare `.ps2` in prose were both invisible to a
+  lowercase-backticked-only pattern; round 5: deriving from *every* raw token
+  over-corrected, and a passing filename mention — "a fixture named
+  archive.ps2" — drifted the set and red-gated the file. A backticked token is
+  guidance wherever it sits; a bare token counts only on a line that speaks of
+  the BOM, because the inversion *is* about the BOM. Round 6: that cure was
+  itself two substrings too loose — the `.ps2` *tail* of `archive.ps2` matched
+  the bare pattern, and the `bom` inside "bombproof" activated the tier, so a
+  filename mention false-red'd the moment its line also genuinely discussed
+  the BOM. A bare token must be lexically **standalone** and the BOM term a
+  **bounded word**. Round 7: the round-6 bounding was itself mis-scoped one
+  alternation over — the boundaries bound only to `boms?`, leaving
+  `byte-order` an unbounded substring, so "byte-ordering" re-opened the same
+  false red; the boundaries now wrap the whole alternation, and all five
+  phrasings are pinned green) — and compares it with the
+  set the gate enforces, so prose can no longer regress on its own. The gate
+  holds the suffix **set** in parity, not the semantics: a doc listing all five
+  but attributing the wrong *reader* to one is a reviewer's catch, and says so
+  in the source.)
+- `channel-core` gains corollary **(d)**: the byte rule is **per-format**, at least
+  one format inverts it, and you must know what a format's real consumer does with
+  the leading bytes *before* you gate it.
+
+### A tree may now declare what it is (`.mirror-check.json`)
+
+1.2.5 fused two different claims: *"this artifact must exist here"* and *"if it
+exists it must agree with its twin."* Fusing them closed a real hole (deleting a
+twin used to pass the twin gate) — and made the checker structurally unrunnable
+in any tree that does not carry the docs by design. In the private mirror it went
+**10-findings red**, permanently. **A gate nobody can ever see go green is not a
+gate; it is a thing people learn to scroll past** — which is the failure this
+checker exists to prevent, so it must not be the failure the checker causes.
+
+A tree may now declare itself, and the declaration is **bounded** — an unbounded
+one is just a bypass with a config file in front of it:
+
+- it may switch off the docs-tree **existence** gates; it may **not** switch off
+  their consistency checks. Whatever *is* present is still compared — and **half a
+  twin pair is still a finding in every tree**, so the original hole stays shut.
+- it may exempt **enumerated** paths from the version-stamp gate, each with a
+  **non-empty reason** (stamp exemptions exist for files whose *bytes* are
+  load-bearing — a byte-identical custody copy, where stamping a banner destroys
+  the guarantee the file exists to give).
+- it may **never** switch off the BOM gate.
+- it may never be **silent**: every relaxation in force is printed, with its
+  reason, on every run — green or red. A reduced run that prints a bare "green" is
+  a lie by omission.
+- it must be **tracked**. A file that relaxes gates has to be visible in the diff
+  that relaxes them; an untracked declaration is refused. (Both reviewers used one
+  to relax a local run invisibly.)
+- a **stale** entry (exempting a path that isn't there) is itself a finding: a list
+  that outlives its files quietly becomes a bypass. Paths are confined to the tree.
+- an exemption names **where the file sits, never where a path points**. The
+  exemption map was keyed by *resolved* path, so a directory junction (or
+  symlink) at an unlisted path whose target was declared exempt **inherited the
+  exemption** — the declaration reviewed one path and quietly exempted another
+  (a junction is the alias shape `is_symlink()` cannot see). Keying and the
+  stamp lookup are lexical now; resolution serves only to confine entries to
+  the repo; a `..` segment — which would make the lexical key and the file it
+  names disagree — is refused outright.
+- a **hostile** path — a `..` segment, a path resolving outside the repo — refuses
+  the **whole declaration**, not just its own entry. It was first cut as a
+  per-entry finding inside the exemption pass, which runs *after* the other
+  declaration fields take effect: a declaration carrying one hostile entry kept
+  its `docs_tree` relaxation active while the red run under-reported. A hostile
+  path was never a typo and never legitimate drift — nothing else in a file
+  carrying one deserves trust. (A **stale** entry stays a per-entry finding:
+  drift is not hostility, and the run is red either way.)
+- the declaration file itself must be a **regular file**. The tracked-ness
+  control checked only the PATHNAME, so a tracked *symlink* (git mode 120000)
+  satisfied it while the effective bytes came from an **untracked target no
+  diff ever reviewed** — the reviewed bytes must BE the bytes.
+- **duplicate JSON keys are refused at every object level.** A plain parser
+  keeps the LAST duplicate, so `{"docs_tree": true, "docs_tree": false}` reads
+  as reviewed-strict while enforcing relaxed — it hid a full docs-artifact
+  deletion behind a green run. Duplicate `stamp_exempt` entries are refused
+  for the same reason one layer down: both reasons print, one is in force.
+- an exemption path must be spelled in **canonical repo-relative POSIX form**.
+  The loader accepted backslashes, trailing slashes, `.` segments, and
+  absolute in-repo paths, then *normalized* them into the lexical key — a
+  declaration whose visible spelling is not the enforced key, and which means
+  something different (or goes stale) on another OS. A lexical key has
+  exactly one spelling.
+- and that spelling must match the tree's **exact on-disk names**. Canonical
+  form was not enough: `is_file()` answers case-insensitively on Windows, so
+  `Transports/x.md` passed every check, printed its reason, exempted *nothing*
+  (the lexical key never matches the walked path) — and reads as stale on a
+  case-sensitive host. One declaration, one meaning, every host.
+- a defective declaration is **ALL-OR-NOTHING**: any defect — bad JSON, a BOM, an
+  unknown key, a non-boolean, a reason that is not a real non-empty string — grants
+  **nothing** and runs the full gate set. The first cut honoured a broken declaration
+  *piecemeal*: it stripped a BOM and carried on, and a typo'd key raised a finding
+  while the keys it understood still took effect. Both reviewers walked straight
+  through that. `"reason": null` was the sharpest case — the code did
+  `str(reason)`, which turns `null` into the perfectly non-empty string `"None"`, so
+  a reason-less exemption passed green. **Coercion is not validation**, and partial
+  trust in a config whose whole job is to weaken checks is a bypass with extra steps.
+- **no declaration = the previous strict behaviour, exactly.** The default is not
+  trusting; the default is strict.
+
+### Also
+
+- **Existence is its own gate.** Every content gate validates a file only if it
+  is PRESENT — so deleting `transports/` outright, either shipped transport
+  profile, a whole role tree, or any role's `SKILL.md` entrypoint was **green**:
+  an acceptance gate certifying a release that no longer ships what it says it
+  ships. The shipped transport profiles and all four skill entrypoints now have
+  explicit existence findings (the docs tree already had them; absence there is
+  declarable because a mirror legitimately lacks it — a transport-less or
+  role-less tree is not a mirror, it is a gap). And the first existence list
+  was itself treated as complete when it was not: `profiles/README.md`,
+  `profiles/MODELS.md`, and `tools/new_project.py` were still
+  deletable-to-green — the last one silently *disarming* the auth-log drift
+  gate, whose byte-match is conditional on both files being present — and
+  `docs/CLOUD.md`, the doc half of the shipped git-sync transport, joined the
+  docs-tree existence set (declarable, like its siblings).
+- **The whole-repo enumeration fails closed.** `Path.rglob()` *suppresses* the
+  OSError from a directory it cannot list, so the BOM gate — which claims every
+  shipped and untracked file — silently skipped an unlistable directory and the
+  untracked BOM'd file inside it. The enumeration now walks with the same
+  fail-closed onerror rule the guarded trees have: a directory the gate cannot
+  read is unknown, not clean. Scratch directories the gate never claims
+  (`node_modules`, caches, virtualenvs) are *pruned before descent* — an
+  unlistable one of those must not red the gate either, and tracked files
+  under them still arrive through the tracked-set tail, which is exactly the
+  path that reads them.
+- **The tracked-file names themselves are hostile input.** Three ways one
+  visible worktree file was certifying a released blob the gate never read:
+  git emits pathnames as UTF-8 bytes but `text=True` decoded them with the
+  *Windows locale* — a tracked `café.md` became a phantom path, the real file
+  read as untracked-and-skipped, and its BOM'd blob was invisible to the very
+  gate that claims tracked files; a segment ending in a dot or space (or
+  naming a Windows device) is stored fine in the index but ALIASES to its
+  trimmed twin on Windows — `x.md` clean and stamped, `x.md.` carrying an
+  unstamped BOM'd blob, green; and two index entries differing only in case
+  (or only in Unicode normalization) each carry their own blob while the
+  case-insensitive worktree shows ONE file. Tracked names are now decoded as
+  UTF-8 with undecodable names failing closed, non-portable segments are
+  findings, and collisions are detected on the raw `git ls-files` names under
+  an NFC + casefold + dot/space-trim key — Windows `Path` objects collapse
+  the variants before any later gate can see them.
+- **The index, not the worktree, is what git publishes.** Every byte gate read
+  worktree bytes — but a commit or archive ships the *index blob*, and the two
+  are not the same file: a BOM'd blob swapped into the index behind a clean
+  worktree twin was green, a tracked file deleted from the worktree fell out
+  of the tracked-set tail *silently*, and an index entry whose name cannot
+  even materialize on Windows was green three ways. Now the tail's silent drop
+  is a finding ("tracked path missing from the worktree"), non-regular and
+  unmerged index entries are findings (a symlink entry publishes its target
+  path as the blob; a gitlink publishes a commit the repo does not contain),
+  and every entry whose worktree bytes *diverge* from its staged blob has the
+  staged blob itself pushed through the byte gates — the BOM gate for every
+  file class, the mojibake scan for skill-tree `.md` files. A routinely dirty
+  tree stays green: the divergent blob of an ordinary uncommitted edit is the
+  last committed content, which passed these same gates when it landed. The
+  divergence enumeration itself then fell twice in one round: `git diff`
+  *ignores* entries flagged `assume-unchanged` or `skip-worktree` by design,
+  and a same-size staged blob behind an unchanged stat cache is never
+  content-compared at all — two green defeats of asking git *which* entries
+  diverge, one round after the channel "closed". So the scan stopped asking:
+  every stage-0 regular blob is read directly by object id (one `cat-file`
+  batch, its header parsed defensively so a malformed or truncated response
+  is a fail-closed finding, not a traceback that loses the findings already
+  collected) and compared with its worktree twin in-process — nothing for a
+  flag or a stale stat cache to mute — and the flags are *also* findings in
+  themselves, because an instruction not to compare an entry is an entry the
+  gate cannot certify. The staged-blob mojibake leg selects on the
+  *normalized* suffix (a staged `UPPER.MD` blob took the BOM leg only), and
+  the alias guard accepts exactly one normalization-equivalent, case-exact
+  on-disk entry per segment — macOS decomposes filenames while git stores
+  the precomposed spelling, so byte-exact comparison would have called every
+  non-ASCII tracked name an alias on the platform behaving correctly (case
+  variants and 8.3 names never normalization-match; ambiguity stays a
+  finding). The stamp and content gates still certify the worktree
+  spelling — stated, and covered where releases are actually cut, because on
+  a fresh checkout index and worktree coincide. The first non-portable cut was also incomplete —
+  it knew trailing dot/space and the classic device stems, and accepted
+  `bad?name.md` (Win32 forbids the character outright), `CONIN$` (a console
+  device the classic list omits), and superscript-digit `COM¹` (Windows reads
+  `¹²³` as digits in device stems); all are findings now. And an index name
+  that merely *resolves* to a differently spelled worktree file — an 8.3
+  short name (`LONGNA~1.MAR` answering for `longnamefile123.markdown`), a
+  lone case variant with no second tracked entry for the collision key to
+  pair it with — is a finding by exact-spelling comparison against the
+  on-disk names, which closes the alias *family* rather than its enumerated
+  members.
+- The checker forces its own stdout to UTF-8. Its findings quote `§ — é`; piped on
+  Windows, printing one would have raised `UnicodeEncodeError` and crashed the gate
+  **while reporting the one defect that is Windows-specific**. A gate that cannot
+  say what it found has not found it.
+- `channel-core.md` joins `ops-gotchas.md` in the mojibake gate's example-text
+  exemption — it now has to *show* the corruption it legislates about. Widening an
+  exemption is how a gate goes quietly blind, and this gate went blind **twenty-six
+  times** before it held:
+  - **Cut 1** asked whether a backtick appeared in the preceding 40 characters — which
+    is equally true of the text *after* a closed span. Real corruption on any line that
+    also held a code span went green. Both reviewers demonstrated it on the shipped file.
+  - **Cut 2** used backtick **parity**, which locates a span correctly — but "you are
+    inside a span" was never the licence. Corrupting the em dash of the *clean* example
+    `` `§ — é` `` yields mojibake **inside** a code span, and it was waved through.
+  - **Cut 3** was defeated by its own comment. It *said* "fenced blocks get no
+    exemption" and the code never looked at a fence, so corruption pasted into a
+    ` ``` ` block and wrapped in backticks still passed — a claim standing in for a
+    check, in the release whose entire thesis is that a claim is not a check.
+  - **Cut 4** was blind in the *detector*, not the exemption: it enumerated two
+    markers (`â€`, `Â§`) — the two characters the example spans happen to show. A
+    line-by-line corruption sweep of the guarded files (encode UTF-8, decode
+    cp1252 — the exact defect) missed **18** corruptible lines, every one a line
+    whose only non-ASCII is `→` or `⚠` — *including the `.ps1` bullet this very
+    release added*. (Independent sweeps agree on the **18-line gap** and have
+    never agreed on the corpus total — a round-4 reviewer caught three surfaces
+    of this release each quoting a *different* total — so the gap is the only
+    number stated, here, in the checker's comments, and in the tests. A number
+    that does not reproduce does not get written down.) An enumerated marker
+    list is the enumerated suffix list one section up, re-shipped.
+  - **Cut 5** was the fence fix reproducing the fence hole one line up: cut 3's
+    repair toggled the fence state and skipped to the next line, so the
+    **delimiter line itself** was never scanned — mojibake in a fence's info
+    string passed, in the round after the release said "a fence exempts
+    nothing".
+  - **Cut 6** was the repaired detector, still enumerating: four lead characters
+    cover the docs' *current* repertoire, and `Ā` (lead byte 0xC4) mangles to
+    `Ä€` one code point outside it. Honest scoping is not coverage.
+  - **Cut 7** was the fence tracker itself. It keyed on `startswith("```")` —
+    and CommonMark fences come in **tildes** too, and close only on a run of the
+    *same character at least as long* as the opener (which is exactly how a
+    document quotes a three-backtick fence literally: wrap it in four). A `~~~`
+    fence never registered, so its body was scanned as prose *with the span
+    exemption available*; a ```` fence was closed early by the very ` ``` ` line
+    it was quoting. Both mis-parses landed on the **exempting** side. One state
+    machine now owns fence shape for every consumer in the checker, and its
+    failure mode is biased the other way: a line that even looks like a
+    delimiter is treated as one, which can only widen scanning, never the
+    exemption. (Closing is stricter than opening: a closer carries **nothing**
+    after its run — info text belongs to openers — so a ` ``` ` line with
+    trailing text inside a fence is content, not an early exit back into
+    exemption territory.)
+  - **Cut 8** was the truncation exception, enumerating **one instance of a
+    family**: `â€` (E2 80) was special-cased because these files document it,
+    and its siblings fail the round-trip identically — `â‚` (E2 82, a beheaded
+    currency sign) and `ðŸ` (F0 9F, a beheaded emoji) were waved through. A
+    truncated mangle has, by definition, lost the bytes that would prove it
+    corruption, so this exception *cannot* be a class rule. And the first cure —
+    three hand-enumerated families — **violated its own charter within one
+    round**: "blocks that actually occur in text this project ships" was three
+    entries while the tree itself ships arrows and warning signs, whose
+    truncated mangles `â†` (E2 86) and `âš` (E2 9A) sailed through. The
+    families are now **derived**: every 3-plus-byte character the skill tree
+    carries contributes its 2-byte prefix, plus three stated seeds met in the
+    wild that survive their characters leaving the tree. A hand-kept list lags
+    its corpus; a derived one cannot.
+  - **Cut 9** was the fence tracker again, one container over: a fence can open
+    inside a CommonMark **list item** (`- ```……`) or **blockquote** (`> ````), and
+    the delimiter hid behind the marker — the fence never registered, its body
+    was scanned as prose *with the span exemption available*, and an
+    allowlisted span inside it was waved through. Container prefixes are now
+    peeled before the delimiter match.
+  - **Cut 10** was cut 9's cure, and it disproved cut 9's own safety claim.
+    The first peel was greedy — any marker, any line — on the argument that
+    over-peeling "can only make more lines read as delimiters, which widens
+    scanning." False: peeling a list marker on a line **inside** an open fence
+    manufactured a delimiter where CommonMark sees literal text, and the
+    manufactured delimiter **closed the fence** — handing every following line
+    back to the span exemption. `- ```` ` inside a ```` fence, or `> ``` `
+    inside a bare fence, was an exit door. A false delimiter *outside* a fence
+    widens scanning; the same false delimiter *inside* one widens the
+    exemption — the claim held for openers only. Peeling is now
+    **asymmetric**: outside a fence, peel everything (that direction really is
+    safe); inside, peel exactly the opener's blockquote depth — a quote-opened
+    fence repeats its `>` prefix on every line including the closer — and
+    never a list marker. A closer must match the opener's depth exactly; a
+    run at the wrong depth is content.
+  - **Cut 11** was the same door with an indentation key: CommonMark allows at
+    most THREE spaces on a closing fence — four spaces or a tab make the run
+    literal fenced content — and the closing path accepted `\s*`, so a
+    four-space-indented ` ``` ` inside a fence manufactured a closer and
+    restored the exemption (an over-indented `>` marker at quote depth 1 did
+    it too). The closing path now takes 0–3 spaces, spaces only, on both the
+    run and the quote markers; the OPENING path stays liberal, because a false
+    opener only widens scanning and that asymmetry is now the stated design,
+    not an accident.
+  - **Cut 12** was the span finder, which had never actually parsed a span.
+    Backtick PARITY (split on backticks, odd segments are code) counts every
+    backtick as a delimiter — so an **unclosed** backtick licensed everything
+    after it, and a backslash-**escaped** backtick, which CommonMark reads as
+    literal punctuation creating no span at all, opened an exemption: the
+    exact allowlisted payload sat in bare prose behind a stray backtick and
+    passed. A span now exists only where CommonMark closes one — an opening
+    run of N backticks, closed by the next run of exactly N, escapes literal
+    outside spans, unclosed runs granting nothing.
+  - **Cut 13** was the coverage gate checking the **wrong population** — and it
+    is the enumeration mistake a third time, disguised as its own cure. The
+    prose side's blind range was "held" by a gate proving every character IN
+    THE TREE has a detectable mangle. But corruption arrives as the mangle of
+    whatever text someone pastes: mangled Ö (`Ã–`) landed green in a live
+    skill file — the prose side read it as Ã-plus-en-dash, and the coverage
+    gate stayed silent because Ö was never in the tree while the mangle's
+    component characters individually pass. Two fixes, both shipped: a
+    prose-shaped candidate whose bytes decode to **Latin-1 Supplement** text
+    is corruption (Ã hard against writer typography is vanishingly rare;
+    mangled Western-European text is the most common corruption there is —
+    the French and German pins stay green because their decodes land outside
+    Latin-1), and the coverage gate now sweeps a **fixed support alphabet**
+    (all printable Latin-1 plus the living tree) so the guarantee no longer
+    depends on what the tree happens to carry. What remains blind is stated
+    and pinned: a mangle that decodes outside Latin-1 with all-typography
+    continuations — NKo ߗ reads as `ß—` — reds at arrival via the coverage
+    gate, and « (two rounds the pinned blind character) is now welcome, its
+    mangle visible.
+  - **Cut 14** was cut 11's own safety claim, disproven the way cut 10
+    disproved cut 9's. The opening path had stayed liberal "because a false
+    opener only widens scanning" — and a reviewer inverted the fence PHASE
+    through it: a 4-space-indented ` ``` ` is indented code to CommonMark,
+    not a fence, but the liberal opener registered it, consumed the REAL
+    opener on the next line as its closer, and the true fence's body was
+    scanned as outside-fence prose with the exemption available. In a
+    two-state toggle, a false delimiter in EITHER direction flips every
+    classification after it — three "this direction is safe" claims fell in
+    three consecutive rounds (greedy peeling, liberal closers, liberal
+    openers), so no direction gets to be liberal: fence runs and container
+    markers count only behind 0–3 spaces, spaces only, on BOTH paths,
+    exactly as CommonMark reads them, with the bound living in the fence
+    regex itself so every consumer inherits it. Stated residual, pinned in a
+    test: a fence nested in list content at 4+ absolute spaces reads as
+    indented code (this machine is absolute; CommonMark is
+    container-relative), and its body keeps the exemption available —
+    bounded severity, because the exemption licenses only the three exact
+    documented strings, and any other mojibake there still reds.
+  - **Cut 15** was cut 14's machine still one **block type** short. CommonMark
+    HTML BLOCKS swallow fence-looking lines: `<script>` opens an HTML block
+    and a ` ``` ` inside it is HTML content — but the fence-only machine
+    registered it as an opener, consumed the REAL opener on the next line as
+    its closer, and the true fence's body was scanned as outside prose with
+    the exemption available. The same phase inversion as cut 14, reached
+    through a block type the machine did not model. The block phase now
+    tracks all seven CommonMark HTML-block kinds: the five marker-terminated
+    ones (raw-text tags, comments, processing instructions, declarations,
+    CDATA — each may end on its own start line) and the two blank-line-ended
+    ones (block-level tag names, and any complete tag alone on its line —
+    which fires only after a blank line, because it cannot interrupt a
+    paragraph; without that rule a custom tag mid-paragraph would open a
+    phantom block whose first blank line hands the text after it back to the
+    exemption). Every line of an HTML block is scanned with **no exemption**,
+    exactly like a fence.
+  - **Cut 16** was the prose side's stated Latin-1 boundary sitting one block
+    too low. Mangled French œ (`Å“`) walked through: the left curly quote IS
+    writer typography and U+0153 sits just beyond Latin-1 Supplement, so the
+    cut-13 rule never fired — everyday French (cœur, œuvre) was the blind
+    range's most representative resident while the narrative advertised only
+    exotic NKo. cp1252's own extension letters (ŒœŠšŽžŸƒ) are exactly the
+    non-Latin-1 letters a Windows-ANSI writer produces, so the corruption
+    side now takes them too; only Œ œ Š ƒ arrive through the prose branch
+    (the other four carry a non-typography continuation byte and already
+    round-trip-flag). Stated cost, accepted: a REAL Å or Æ hard against an
+    opening curly quote or NBSP now reads as corruption — a rare adjacency,
+    and a loud false red beats silent corruption. The letters joined the
+    coverage gate's support alphabet, so CI itself defends the widening.
+  - **Cut 17** was cut 15's paragraph rule built on a PROXY. "Cannot
+    interrupt a paragraph" had been implemented as "fires only after a blank
+    line" — and a paragraph is ended by more than blank lines. After a
+    closed FENCE (the reviewer's reproduction), an ATX heading, a thematic
+    break, or a setext underline, a lone complete tag IS eligible to open an
+    HTML block with no blank line in sight; the proxy read it as prose, the
+    fence-looking line after it registered as an opener, and the phase
+    inverted exactly as in cuts 14 and 15 — the third round in a row the
+    inversion arrived through a block shape the machine approximated instead
+    of modeled. The machine now tracks the paragraph itself: a plain prose
+    line opens one; a blank line, a fence opener, any HTML-block line, an
+    ATX heading, or a thematic break closes it; a setext underline closes
+    one only while it is open (alone it is paragraph text); an indented line
+    or a `[`-led line outside a paragraph stays outside one (indented code /
+    link reference definitions — the `[` test is a stated approximation that
+    errs on the scanning side). A lazy continuation — an indented line
+    *inside* a paragraph — keeps it open, pinned in a test.
+  - **Cuts 18–21** arrived in a single round, and that is the finding. **Cut
+    18** was cut 17's own stated approximation, disproven the following
+    round — the FOURTH consecutive "this direction is safe" claim to fall:
+    `[ordinary paragraph]` is paragraph text, not a link reference
+    definition, so the `[`-led rule that "errs on the scanning side" left
+    the machine outside a paragraph, a mid-paragraph custom tag opened a
+    phantom HTML block, and the phase inverted. **Cut 19** was container
+    scope: the machine tracked block state globally while CommonMark scopes
+    it per container, so a fence or `<script>` opened *inside* a blockquote
+    leaked its open state past the quote's end — text outside the quote
+    scanned as inside-block, the real fence's body as outside prose. **Cut
+    20** was list interruption: an ordered-list item can interrupt a
+    paragraph only when its marker is `1.`, so `2.` followed by a fence
+    after a paragraph is paragraph *text* — but the container peel read the
+    fence behind it unconditionally, phantom opener, inversion. **Cut 21**
+    (the judge's find, its first inversion): a backtick fence's info string
+    may not contain a backtick, so ```` ```x`y ```` opens nothing — but the
+    fence regex accepted it, and the real fence one line down closed a
+    phantom.
+  - **Cut 21 is where the cure changed species.** Eleven of the twenty-one
+    cuts to that point (7, 9–11, 14, 15, 17–21) were the SAME defeat: some line shape
+    CommonMark and the machine's model classified differently, with the
+    difference putting a licensed span back in reach. Four in one verdict is
+    the space announcing it is not enumerable by hand — so round 11 did not
+    add four rules, it **retired the model**. The licence no longer consults
+    a document model at all: a mojibake candidate is exempt **iff its entire
+    line is byte-identical to one of five enumerated documentation lines**,
+    keyed by exact repo-relative path. A byte-identical line can carry no
+    *new* corruption by construction, and every other line — fence body,
+    HTML block, delimiter line, list item, blockquote, wherever CommonMark
+    would say it sits — is scanned unconditionally. There is no block phase
+    left to invert: the fence state machine, container peeling, the seven
+    HTML-block kinds, the paragraph tracker, and the span parser are
+    deleted, and the line shapes that defeated them live on as red tests
+    against the *new* licence. The trade is stated: a *clean* edit to a
+    documented example line now reds until the allowlist is regenerated — a
+    loud false red on the five lines whose whole job is to be exact, bought
+    against a licence that ten rounds could not stop inverting.
+  - **Cuts 22 and 23** were the retirement's own first round of review, and
+    both sat in machinery the new licence still had to trust. **Cut 22**:
+    the scanner's line unit was `str.splitlines()`, which also splits on
+    VT, FF, NEL, U+2028 and U+2029 — none of which ends a *markdown* line.
+    "junk + VT + licensed line" is ONE modified line to any renderer,
+    carrying the licensed mangled bytes — but the scanner saw two lines,
+    and the licensed suffix exempted itself. A line now ends only where
+    markdown ends one (CRLF, CR, LF), which makes the construct a single
+    byte-different — and scanned — line; the liveness gate uses the same
+    unit, so an example surviving only as such a suffix is STALE, not
+    carried. **Cut 23**: the licence was keyed through `resolve()`, so a
+    symlink at an *unlisted* path answering with an exempt target's
+    content inherited the target's licence — round 3's basename
+    inheritance rebuilt through the filesystem — and a symlink pointing
+    outside the tree **crashed the checker** on an unguarded
+    `relative_to` before it printed the findings it had already collected
+    (round 3's unguarded-read class, arriving through resolution instead
+    of absence). Keying is lexical now — where the file *sits*, never
+    where it points — and a symlink in the guarded tree is itself a
+    finding, its content scanned with no exemption.
+  - **Cut 24** was cut 23's rule enforced only on the files the walk could
+    SEE. The symlink finding ran per `*.md` file out of `rglob` — and
+    `rglob` does not look through a symlinked **directory**, so aliasing a
+    whole skills directory hid its guarded content from every gate in the
+    checker with no finding at all: a walk cannot police the thing it
+    cannot traverse. And a Windows **junction** is a reparse point for
+    which `is_symlink()` answers False — the alias shape a symlink-only
+    rule walks straight past. Both guarded trees (skills and transports —
+    each carries a path-keyed gate) are now swept for **reparse points of
+    every kind**, file or directory, symlink or junction, and any one of
+    them is a finding in itself.
+  - **Cut 25** was cut 24's sweep never statting its own starting point.
+    `os.walk` yields only *descendants* — it never inspects the root it was
+    handed — so a junction replacing an **entire guarded tree** walked
+    straight through the sweep and the gate came back green over a tree
+    supplied wholesale through an alias: the exact defeat cut 24 closed,
+    one level up. Each guarded root is now checked for reparse status
+    before the walk begins.
+  - **Cut 26** was the walk going silently blind instead of loudly. Without
+    an `onerror` callback, `os.walk` *swallows* the `OSError` from a
+    directory it cannot list and simply ends that branch — an
+    access-denied directory full of unstamped or licensed bytes came back
+    green, with nothing in the output to say a corner of the tree was
+    never looked at. A directory the gate cannot read is not clean, it is
+    **unknown**, and unknown fails closed: every unlistable directory and
+    every unstattable entry is now a finding naming the path the scan
+    could not reach.
+  - The detector also produced false **rejects**, and the first cure repeated
+    the enumeration mistake in mirror image. `ß` renders lead byte 0xDF, and
+    `groß—aber` is DF 97 in cp1252 bytes — **valid UTF-8**, so the round-trip
+    validator *confirms* legitimate German as corruption. Round 4 excluded that
+    one lead; round 5 proved the class: `É—` (C9 97) and `é—“` (E9 97 93)
+    round-trip identically, because cp1252 renders the **whole lead range as
+    accented European letters** — any of them against smart punctuation can
+    form valid UTF-8. The ambiguity is symmetric and locally undecidable (the
+    bytes of `Ã–` are both a mangled Ö and French prose), so the detector now
+    takes a stated **side**: a candidate whose continuation characters are all
+    typography a human types directly after a word (13 characters; low quotes
+    deliberately absent — they open, so they follow spaces, and their absence
+    keeps mangled `ł` visible) is read as prose — **unless its bytes decode to
+    Latin-1 Supplement text** (cut 13: mangled Ö is exactly Ã-plus-en-dash,
+    and corruption is the likelier reading of that shape by a wide margin).
+    The blind range the prose side still buys is stated — a mangle decoding
+    OUTSIDE Latin-1 with all-typography continuations, like NKo `ߗ` reading
+    as `ß—` — and it is held by a **detector-coverage gate** over a **fixed
+    support alphabet** (all printable Latin-1 plus every character the tree
+    carries): a character whose mangle the detector cannot see is a finding
+    the day it arrives, not the day it corrupts. German and French are pinned
+    green in tests; `ߗ` landing in the tree is pinned **red**; `«` — blind
+    for two rounds — is pinned **welcome**, its mangle now visible.
+  - **What holds:** the detector matches the **structure** of a mangle, not a
+    list of them — the cp1252 rendering of any UTF-8 lead byte (0xC2–0xF4)
+    followed by renderings of continuation bytes (0x80–0xBF), confirmed by
+    **round-trip**: mapped back to its bytes, real corruption *is* valid UTF-8,
+    by construction. Prose almost never survives that test — `café…` fails it
+    (é opens a three-byte sequence and no third byte follows) where a bare
+    character-class rule would have flagged it as corruption. One stated
+    exception class: the truncated prefix families (cut 8) — **derived** from
+    the tree's own characters plus three stated seeds — flagged although they
+    do not round-trip, because they are real-world corruption. One stated
+    prose side: all-writer-typography continuations that decode beyond
+    Latin-1 and cp1252's extension letters read as prose (cuts 13 and 16),
+    with the blind range it buys held by the
+    **detector-coverage gate** over its fixed support alphabet. The
+    five bytes cp1252 leaves undefined ride along as C1 controls, so a mangled
+    `❤` is not invisible for lacking a glyph. Block shape no longer exists
+    in the checker at all: since cut 21, **every** line — fence body, HTML
+    block, delimiter line, list item, blockquote — is scanned
+    unconditionally, because the machinery that decided otherwise is
+    retired along with the eleven defeats it collected, and the line shapes
+    that beat it stand as red tests against the licence that replaced it.
+    The permitted occurrences stay **ENUMERATED** and got *stricter*: five
+    exact documentation **LINES**, keyed by exact lexical repo-relative
+    path — a candidate is exempt only when its entire line (ended where
+    markdown ends one: CRLF, CR, LF) is byte-identical to one of them, and
+    a byte-identical line can carry no new corruption by construction. A
+    reparse point in either guarded tree — file or directory, symlink or
+    junction, at the root or below it — is a finding in itself, because
+    every path-keyed gate is only as honest as the tree's paths, and a
+    directory the sweep cannot list is a finding too: a gate that cannot
+    read a corner of the tree does not get to call that corner clean. (The
+    five are
+    escape-spelled in the source, generated from the guarded files
+    themselves, so what the licence permits is provably what the docs
+    carry — and the liveness gate keeps it that way.)
+  - The allowlist must also stay **live**, on three axes now that it licenses
+    lines: a licensed line the file no longer carries is a finding (**stale** —
+    an allowlist that outlives its text goes on licensing a string the docs
+    abandoned), a licensed line that licenses no detectable mangle is a finding
+    (**dead** — it exempts nothing today and quietly pre-licenses whatever
+    corruption lands on that exact line tomorrow), and an allowlist key naming
+    a path outside the exemption list is a finding (the licence and the
+    exemption list must name the same files).
+  - The licence is also conditional on a **presence**. The allowlist permits the
+    *mangled* strings — so swapping the **clean** example `` `§ — é` `` for its
+    mangled twin passed every check above: the trio is a licensed span, and no rule
+    said the clean text must still be there (the judge performed exactly that swap
+    and the gate said green). Each exempt file must still carry the clean example;
+    a file showing only the mangled bytes is a corrupted file with a permit.
+  - And the licence is keyed by **exact path** and conditional on **existence**.
+    It was keyed by *basename* — any future file named `ops-gotchas.md`, anywhere
+    in the tree, inherited the exemption unreviewed — and the exempt set was
+    derived from the files found on disk, so **deleting** a licensed file deleted
+    every check that ran on it: a reviewer proved the presence gate vacuous by
+    removing the helper copy outright, and the gate said green over a file that
+    was gone. A missing licensed file is now a finding — same rule as the twin
+    pair: absence is never a smaller quorum. Writing the test for that exposed
+    one more: deleting `channel-core.md` itself **crashed the checker** on an
+    unguarded read before it printed a single finding it had already collected —
+    red for the wrong reason, report lost, the stdout-guard defect class arriving
+    through the filesystem instead of the codec. `text()` now fails closed: a
+    missing file is a finding and reads as empty, which makes every content
+    check on it fail loud — never vacuously green.
+  The guard test is now the mutation that beat cut 2. The *original* test planted the
+  marker on a line with no backticks at all — the one case that passes even with the
+  exemption hardwired open.
+- **New tests** in `tests/test_tree_declaration.py` — a mix of **mutation** tests
+  (break one thing, assert the gate names it) and **acceptance** tests (the correct
+  artifact must be *green*, or the "fix" is just a regression with better prose).
+  Between them: a BOM'd PowerShell script is green while a BOM-less non-ASCII one is
+  named; the BOM gate cannot be declared away; an exemption exempts nothing else; a
+  typo'd key grants nothing; and deleting one twin still fails **even in a declared
+  mirror**. Each broken-declaration test also deletes a twin as a **canary** — asserting
+  only "the error was printed" would pass while the bypass still worked.
+- Every gate here was made to fail before it was believed. A reviewer *deleted* three
+  of the new checks and the suite stayed green — the non-list `stamp_exempt` validator,
+  the non-string `path` validator, and the rule that relaxations are disclosed on a
+  **red** run as well as a green one (the red run is precisely when a reader needs to
+  know which gates were off). Those three now have the mutations that exposed them.
+  Round 2 then added two more of the same species:
+  - the non-list test's own **fix** was green-and-defeated: a string iterates as
+    *characters*, each character fails the per-entry check, and the refusal the test
+    asserted on still printed — from the **wrong guard**. It now asserts the list
+    validator's own message and feeds it a non-iterable (`5`) that would traceback
+    without the validator: a crash is `rc != 0` too, and a test that cannot tell a
+    refusal from a crash defends nothing.
+  - the forced-UTF-8 stdout guard **survived its own deletion on the Linux CI
+    runner** — the default pipe codec there is already UTF-8, so only Windows
+    defended it, and the runner that gates merges is Linux. A
+    `PYTHONIOENCODING=ascii` test now forces the hostile codec on every platform —
+    and the *first cut of that test* was green-and-defeated too: it planted
+    mojibake, whose finding quotes a path and line numbers (pure ASCII), so the
+    guardless print never met a byte the codec could choke on. Replay caught it.
+    It now plants the BOM-less `.ps1`, whose finding quotes `§ — é` → `Â§ â€” Ã©`.
+- Suite **206 → 332**.
 
 ## [1.2.5] — 2026-07-14
 
