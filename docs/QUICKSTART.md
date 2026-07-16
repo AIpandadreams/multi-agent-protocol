@@ -197,7 +197,8 @@ myproject-ws/
 Any time after stamping — and especially after filling `BINDINGS.md` — run
 the conformance check to confirm the deployment is structurally sound before
 waking an agent. Run it **from your protocol checkout** (where you cloned this
-repo — the checker lives there, not inside the workspace) and point
+repo — the checkout's copy is the trusted one; the stamp also drops a
+workspace-owned hygiene copy, described below) and point
 `--workspace` at the workspace:
 
 ```bash

@@ -97,6 +97,19 @@ class DefaultStampTest(unittest.TestCase):
             # no side-name WARN on an all-defaults stamp (orch is its default)
             self.assertNotIn("no ROLE_ALIASES row is", out)
 
+    def test_missing_vendored_checker_blocks(self):
+        # The wake gate fails CLOSED when the workspace's stamped checker is
+        # absent: a trusted-copy run must surface the absence itself as a
+        # BLOCKER, never run green over a workspace that cannot self-check.
+        with tempfile.TemporaryDirectory() as d:
+            dest = Path(d) / "ws"
+            self.assertEqual(_stamp(dest, []), 0)
+            (dest / "tools" / "conformance_check.py").unlink()
+            code, out = _conformance(dest)
+            self.assertNotEqual(code, 0)
+            self.assertIn(
+                "missing required file: tools/conformance_check.py", out)
+
 
 class RenamedStampTest(unittest.TestCase):
     def test_builder_side_helper_stamps_alias_row_and_passes(self):

@@ -127,9 +127,42 @@ not your work being rejected, and it is not a per-round bug.
 - **PROBE BEFORE BLAME.** A whole-lane failure and a REJECT look nothing alike
   once you check: fire a direct one-shot probe at the reviewer (a trivial
   request). A usage-limit / transport error back means lane-down; a real
-  verdict back means the lane is up and the silence was something else. A down
+  verdict back means the lane is up and the silence was something else; a
+  FAST failure WITH explanatory output and no verdict is a third shape — a
+  REFUSAL (next bullet), which is not an outage and not a REJECT. A down
   lane is NEVER interpreted as REJECT — an absent verdict authorizes nothing
   and blocks nothing; it just means no round happened.
+- **THE REFUSAL MODE — a lane that ANSWERS is neither silent nor down.** A
+  reviewer transport's vendor safety layer can decline the REQUEST — the run
+  dies in seconds with explanatory output and no artifact at all — or flag
+  the reviewer's own OUTPUT mid-run or at the final message, leaving an
+  incomplete (or even completed) verdict artifact behind. Either way the
+  lane ANSWERED: distinguish by output shape before blaming quota or the
+  lane, and read the artifact's own incomplete/final marker for what was
+  captured — the authority boundary is a COMPLETED verdict, never the
+  file's mere existence. The cure is ACCURATE DESCRIPTION, never
+  evasion: re-dispatch describing the work in plain QA terms (validation
+  testing, acceptance-bar verification, does-the-check-hold-under-bad-inputs)
+  instead of adversarial vocabulary that misreads as offensive tasking.
+  HARD BOUNDARY: never rephrase to sneak flagged intent past a classifier —
+  describe legitimate work accurately, and if accurate language still will
+  not pass, that is escalation material for the principal, not a wording
+  problem.
+  Round hardening: instruct reviewers to write verdict artifacts
+  incrementally and EARLY, carrying an explicit incomplete/final state marker
+  (e.g. "Overall: IN PROGRESS") until the fingerprint, the disposition, and
+  the completion declaration are all present — a flag at the final message
+  then costs one message, not the round.
+- **A partial stream supplies findings, never authority.** The verdict FILE
+  is transport, not authority: findings that were fully streamed with
+  concrete, host-reproducible probes may be adjudicated at seat 4 (first-hand
+  verification is the gate either way, and the ledger row records how the
+  verdict was captured). But a partial or refusal-truncated stream NEVER
+  authorizes ship and NEVER counts as reviewer-declared convergence — the
+  fingerprint rule, the formal dispositions, and the reviewer's-own-words
+  stop condition are unchanged by this mode. A refusal-killed round with NO
+  recoverable findings is a round that did not happen: it authorizes nothing
+  and blocks nothing, same as a down lane.
 - **Fallback ladder (normative order):** (1) a different-vendor **alternate
   transport** for the same reviewer class; (2) a **spawned judge on a model
   DIFFERENT from the author's** (the peer-model floor still holds); (3) a
@@ -141,6 +174,33 @@ not your work being rejected, and it is not a per-round bug.
   principal authorization, is time- and scope-bounded, is logged, and is
   re-enabled at the window's end. No agent disables its own review gate — that
   is the exact self-authorization the protocol exists to block.
+
+## Verification instruments
+
+Evidence offered to a round is only as good as the instrument that produced
+it, and instruments fail green: a probe that asserts on a heuristic scan of
+free text can print PASS over an ImportError, and a guard test can be
+satisfied by a DIFFERENT guard than the one under test — at which point it is
+not a test, it is a decoration that reads like one. The fingerprint recipe
+above already distrusts one instrument (its inspect line and pipefail exist
+because the bare pipe lied); this section states the general rule for every
+verification instrument offered as SHIP EVIDENCE:
+
+- **Bind to the most structured result surface that exists** — summary lines,
+  counts, exit metadata — and to the EXACT expected identifiers or messages
+  (the specific text the specific guard emits), never a heuristic scan of
+  free text. No tool is required to grow a machine-readable surface it does
+  not have; the rule is to bind to the most structured one it has.
+- **Prove the subject RAN.** Carry a validity check (a collected-count, a
+  pristine-baseline run) and treat launch, import, and collection failures as
+  FAIL-CLOSED RED: "the harness never validly executed the subject" must
+  never convert into absence, a skip, or a heuristic green.
+- **Prove the guard is load-bearing, not merely present.** A suite going
+  green after a guard is added says nothing about the guard; only its
+  mutation or deletion going RED does. Give every new guard a liveness
+  demonstration appropriate to it — delete or mutate it in a scratch copy and
+  demand the specific finding — and when no real input can reach the mutated
+  condition, DISCLOSE the guard as defense-in-depth instead of faking coverage.
 
 ## VERDICT CONTRACT
 

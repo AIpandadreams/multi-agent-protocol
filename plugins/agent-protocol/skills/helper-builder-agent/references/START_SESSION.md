@@ -37,6 +37,21 @@ is misconfigured — notify the principal ("HEARTBEAT ABORT: wake has no
 workspace") and STOP; never improvise a workspace. Interactive local
 sessions: the workspace is already on disk; skip.
 
+## Before binding: run the conformance gate (fail-closed)
+
+Run the workspace's own `tools/conformance_check.py --workspace .` before
+resolving any slot. Any BLOCKER is a HARD STOP: surface it to the principal
+and do not proceed (WARN-only findings — unfilled `{{FILL}}` / postponed
+`{{DEFERRED}}` slots — do not block). **The tool being ABSENT is itself a
+BLOCKER, not a pass**: a gate that "passes" by never running is a false
+green. If the workspace has no `tools/conformance_check.py`, fail CLOSED —
+run the trusted copy from the pinned protocol checkout above (that checkout
+absent too = the ABORT already stated), treat anything it reports the same
+way, and surface the missing vendored tool to the principal as a structural
+BLOCKER in its own right; a clean trusted-copy run does NOT clear it. Only
+the principal's explicit word — affirmative first-person words, in THIS
+session — waives the missing-tool BLOCKER for that wake.
+
 ## 0. Instance bindings (fill these per project)
 
 | binding | value |

@@ -23,7 +23,10 @@ that couldn't fail, and stale wording contradicting adopted decisions.
    seen, latest ledger row), the **artifact set** under review (paths — the
    artifact set, NOT merely the files you touched: name co-maintained twins even
    when unchanged, and record your omission search — *what should have changed
-   and didn't?*; then list the touched subset separately), an
+   and didn't?*; then list the touched subset separately), the artifact's
+   **execution environments** (which this round actually executes, which stay
+   UNEXECUTED with the residual risk named — review-convergence's
+   environment-coverage rule; "none — prose only" is a valid enumeration), an
    execution summary, any mandated disclosures, and **numbered questions** the
    reviewer must answer with explicit per-question verdicts.
 2. **Launch the relay** as a background subagent so you keep working during

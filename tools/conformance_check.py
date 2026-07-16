@@ -17,8 +17,11 @@ stamp (auth-logs, channel INDEX) is checked against that WORKSPACE'S pinned
 version, not a hardcoded literal. This keeps a live v2.5 workspace green under a
 v2.6 checkout of the suite, and vice-versa.
 
-Run it from a protocol checkout (this file lives here, not inside a stamped
-workspace) and point --workspace at the workspace you want to check:
+Run it from a protocol checkout for a TRUST decision and point --workspace
+at the workspace you want to check. (Stamping also drops a copy of this file
+INTO each workspace — that copy runs in SELF-CHECK MODE as a hygiene gate,
+and its absence from a workspace is itself a BLOCKER-class finding, never a
+skipped gate.)
 
   python tools/conformance_check.py --workspace path/to/ws           # check a ws
   python tools/conformance_check.py --workspace path/to/ws --strict  # unbound slots fail too
@@ -162,6 +165,7 @@ def check_structure(ws: Path, roles, f: Findings):
         "BINDINGS.md", "README.md", "MODELS.md",
         "channel/INDEX.md",
         "tools/validate_auth_log.py",
+        "tools/conformance_check.py",
         ".github/workflows/integrity.yml",
         ".claude/settings.json",
     ]

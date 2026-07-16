@@ -107,7 +107,7 @@ plugins/agent-protocol/
       memory-discipline.md   checkpoint rules, index-vs-topic-file split
       never-idle-core.md     the "at watch" autonomy level + monitor rules
       proxy-auth-core.md     the logged authorization-relay lane
-      review-core.md         round mechanics, dead-lane escalation
+      review-core.md         round mechanics, dead-lane + refusal handling
       review-convergence.md  multi-model convergence reviews
       self-improvement-protocol.md  how the protocol amends itself
     owner-engine-agent/     role skill + START_SESSION + session-card +
@@ -398,7 +398,12 @@ to confirm; disable the review gate for the window; fall back per SOP-3;
 re-enable when quota returns. For hangs: inactivity watchdog (~8 min flat →
 kill the process tree → retry once → fallback). For mid-stream host deaths:
 tighten the request (quote facts inline, "write the verdict file EARLY"),
-and make dispatch scripts retry once on exit≠0-without-verdict-file.
+and make dispatch scripts retry once on exit≠0-without-verdict-file. And a
+FAST failure WITH explanatory output and no completed verdict is a REFUSAL,
+not an outage: a vendor safety layer flagged the wording — re-dispatch
+describing the work accurately in plain QA terms (never evasion; if accurate
+wording still won't pass, escalate to the principal), and treat any partial
+stream as findings for adjudication, never ship authority.
 
 ---
 

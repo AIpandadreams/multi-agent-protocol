@@ -96,7 +96,11 @@ What makes this safe, in order:
    contract is followable without the plugin** — point the scheduled wake prompt
    at `start/START_SESSION.<role>.md` directly, and that contract draws its core
    reference docs from a checkout of the protocol repo **pinned to a fixed
-   ref/sha** (never a moving branch). That pinned protocol checkout is itself a
+   ref/sha** (never a moving branch). The start contract runs the pre-bind
+   conformance gate fail-closed: a workspace missing its stamped
+   `tools/conformance_check.py` is a BLOCKER surfaced to the principal (the
+   pinned checkout's trusted copy runs in its place), never a silently
+   skipped gate. That pinned protocol checkout is itself a
    wake precondition — provided like the workspace in item 1 (scheduler /
    host-profile), never self-cloned; **if it is absent too, that is the item-1
    ABORT case**, because a doc-less resume *is* the forbidden protocol-less

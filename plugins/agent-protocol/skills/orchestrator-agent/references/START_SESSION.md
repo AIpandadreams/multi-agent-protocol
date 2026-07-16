@@ -26,10 +26,26 @@ opportunistic convenience on top.
 
 An unattended wake (a scheduled session) must find the workspace already
 provisioned — it never creates one. First action: check for `BINDINGS.md`
-in the workspace path. Present → `cd` in, proceed to §1. MISSING → the
+in the workspace path. Present → `cd` in, run the conformance gate below,
+then proceed to §1. MISSING → the
 wake mechanism is misconfigured: notify the principal ("HEARTBEAT ABORT:
 wake has no workspace") and STOP. A wake without the workspace reports
 that fact; it never improvises one.
+
+## Before binding: run the conformance gate (fail-closed)
+
+Run the workspace's own `tools/conformance_check.py --workspace .` before
+resolving any slot. Any BLOCKER is a HARD STOP: surface it to the principal
+and do not proceed (WARN-only findings — unfilled `{{FILL}}` / postponed
+`{{DEFERRED}}` slots — do not block). **The tool being ABSENT is itself a
+BLOCKER, not a pass**: a gate that "passes" by never running is a false
+green. If the workspace has no `tools/conformance_check.py`, fail CLOSED —
+run the trusted copy from the pinned protocol checkout above (that checkout
+absent too = the ABORT already stated), treat anything it reports the same
+way, and surface the missing vendored tool to the principal as a structural
+BLOCKER in its own right; a clean trusted-copy run does NOT clear it. Only
+the principal's explicit word — affirmative first-person words, in THIS
+session — waives the missing-tool BLOCKER for that wake.
 
 ## 1. Bind
 
