@@ -78,6 +78,28 @@ file is not a clean bill, it is a blind spot you built. When one voice finds
 something the other structurally could not have seen, that is not a split to
 adjudicate; it is a scope defect to fix and re-dispatch.
 
+## Execution-environment coverage
+
+Bundles scope WHAT is reviewed; environments scope WHERE it runs. A loop
+whose every voice ran the artifact on one platform, when the artifact ships
+to another, has the mis-scoped-bundle failure shape one axis over: every seat
+performs perfectly, unanimity is a chorus, and the escape ships on the
+platform nobody ran.
+
+- **The round request enumerates the artifact's execution environments** (CI
+  matrix platforms, runtime targets) alongside the artifact set.
+- **Every shipping environment gets an ACTUAL EXECUTION wherever runnable
+  coverage exists** — a real run of the suite/artifact on that platform (a CI
+  leg, a container, a second host). A platform contract or CI matrix handed
+  to a seat is static review, NOT execution coverage: launch-time failures (a
+  binary the platform lacks, a path form it rejects) are only observable by
+  running.
+- **An environment with no runnable coverage is recorded UNEXECUTED** in the
+  round record, and the residual risk is explicitly escalated or accepted —
+  never labeled covered. Silence about an environment no seat ran is a blind
+  spot you built, not a clean bill (the narrower-scope CONFIRM rule, one axis
+  over).
+
 ## The blocking line
 
 Mechanism-neutral statement of what gates the ship:
@@ -137,6 +159,12 @@ Each is a real way a review series produces false convergence:
   unchanged, and ask each seat outright: *what should have changed here and
   didn't?* Unanimous agreement across seats that were all handed the same blind
   spot is not convergence; it is a chorus.
+- **The single-platform chorus** — the mis-scoped bundle's twin on the
+  environment axis. N seats, one host: unanimity across seats that all ran
+  the artifact on the same platform certifies only that platform, and it
+  reads exactly like cross-platform convergence until the other platform
+  actually runs it. Enumerate the shipping environments in the request and
+  get a real execution on each (see Execution-environment coverage).
 
 ## A worked convergence arc
 
