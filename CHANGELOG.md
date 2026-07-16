@@ -22,8 +22,10 @@ changes only through the
 ## [1.2.7] — 2026-07-16
 
 **The loop's own failure modes, codified.** 1.2.6's convergence generated four
-protocol lessons that its own scope did not carry — each a real, dated defect
-in how REVIEW itself runs, not in what it reviews. 1.2.7 writes them into the
+protocol lessons that its own scope did not carry — three of them real, dated
+defects in how REVIEW itself runs, and a fourth that is the same failure shape
+in the session lifecycle: a wake gate that "passed" by never running. 1.2.7
+writes them into the
 normative docs, plus ONE disclosed checker change (a required-file line + its
 test — see the wake-gate unit below; the docs-only scope was deliberately
 widened there because an instructional gate is exactly the thing that unit
