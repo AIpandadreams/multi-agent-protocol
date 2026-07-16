@@ -36,13 +36,18 @@ A dispatch contains:
    THEN disclose, separately, what is actually staged (ideally "sole
    working-tree change"). A reviewer handed only your edits cannot report the
    file you forgot.
-2. **One paragraph of frame** — what the artifact is, its parent doc, claims.
-3. **Your own decisions/changes, listed explicitly**, with the ask to verify
+2. **The artifact's execution environments** (review-convergence,
+   Execution-environment coverage): where it ships or runs, which environment
+   this round actually executes on, and which stay UNEXECUTED with the
+   residual risk named. "None — prose only" is a valid enumeration; silence
+   is not.
+3. **One paragraph of frame** — what the artifact is, its parent doc, claims.
+4. **Your own decisions/changes, listed explicitly**, with the ask to verify
    each against primary evidence.
-4. **A numbered review-focus list**: parent-frame conformance; spot-check N
+5. **A numbered review-focus list**: parent-frame conformance; spot-check N
    citations against real sources; soundness of the core mechanism; discipline
    checks (propose-never-decide honored); data hygiene.
-5. **The verdict ask** per review-core's contract.
+6. **The verdict ask** per review-core's contract.
 
 Rounds may QUEUE: send round N+1 marked "queued behind round N". Keep the
 pipeline full — draft the next artifact while a round runs.

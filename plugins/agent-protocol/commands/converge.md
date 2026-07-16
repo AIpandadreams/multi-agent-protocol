@@ -32,6 +32,12 @@ Artifact set + options: $ARGUMENTS
    - Carry both facts into the bundle: the artifact set, and separately the
      touched/staged subset. They are not the same list, and the reviewer must be
      told which is which.
+   - Enumerate the artifact's **execution environments** alongside the set
+     (review-convergence, Execution-environment coverage): where does this
+     artifact ship or run, which environment does THIS round actually execute
+     on, and which stay UNEXECUTED (recorded, residual risk named — a platform
+     contract or CI matrix handed to a seat is static review, not execution).
+     "None — prose only, nothing to run" is a valid enumeration; silence is not.
 
    Then verify the set is COMMITTED (an uncommitted tree cannot be fingerprinted
    honestly) and record the fingerprint of the WHOLE SET with review-core's
@@ -92,6 +98,13 @@ Artifact set + options: $ARGUMENTS
    - Reviewer lane down (a probe returns a transport/usage error, not a verdict)
      → follow review-core's Reviewer-lane outage ladder; a down lane is never
      read as REJECT, and disabling the gate is principal-gated.
+   - Reviewer lane ANSWERS with a refusal (fast failure WITH explanatory output,
+     no completed verdict — a vendor safety layer flagged the request or the
+     output) → NOT an outage and NOT a REJECT: re-dispatch describing the work
+     accurately in plain QA terms — never rephrase to sneak flagged intent past
+     a classifier — and if accurate wording still will not pass, escalate to the
+     principal. A refusal-truncated stream supplies findings for adjudication,
+     never ship authority (review-core, THE REFUSAL MODE).
 
 7. **Record every round.** Each round appends its own row to `channel/INDEX.md`
    (round, side, ROUND-TYPE, request file, verdict file + how written, verdict

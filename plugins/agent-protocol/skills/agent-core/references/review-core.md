@@ -133,16 +133,21 @@ not your work being rejected, and it is not a per-round bug.
   lane is NEVER interpreted as REJECT — an absent verdict authorizes nothing
   and blocks nothing; it just means no round happened.
 - **THE REFUSAL MODE — a lane that ANSWERS is neither silent nor down.** A
-  reviewer transport's vendor safety layer can decline the REQUEST — or flag
-  the reviewer's own final message — and the run dies in seconds WITH
-  explanatory output and no verdict artifact. Distinguish by output shape
-  before blaming quota or the lane. The cure is ACCURATE DESCRIPTION, never
+  reviewer transport's vendor safety layer can decline the REQUEST — the run
+  dies in seconds with explanatory output and no artifact at all — or flag
+  the reviewer's own OUTPUT mid-run or at the final message, leaving an
+  incomplete (or even completed) verdict artifact behind. Either way the
+  lane ANSWERED: distinguish by output shape before blaming quota or the
+  lane, and read the artifact's own incomplete/final marker for what was
+  captured — the authority boundary is a COMPLETED verdict, never the
+  file's mere existence. The cure is ACCURATE DESCRIPTION, never
   evasion: re-dispatch describing the work in plain QA terms (validation
   testing, acceptance-bar verification, does-the-check-hold-under-bad-inputs)
   instead of adversarial vocabulary that misreads as offensive tasking.
   HARD BOUNDARY: never rephrase to sneak flagged intent past a classifier —
-  legitimate work survives accurate wording, so if accurate language will not
-  pass, that is escalation material for the principal, not a wording problem.
+  describe legitimate work accurately, and if accurate language still will
+  not pass, that is escalation material for the principal, not a wording
+  problem.
   Round hardening: instruct reviewers to write verdict artifacts
   incrementally and EARLY, carrying an explicit incomplete/final state marker
   (e.g. "Overall: IN PROGRESS") until the fingerprint, the disposition, and
@@ -194,8 +199,8 @@ verification instrument offered as SHIP EVIDENCE:
   green after a guard is added says nothing about the guard; only its
   mutation or deletion going RED does. Give every new guard a liveness
   demonstration appropriate to it — delete or mutate it in a scratch copy and
-  demand the specific finding — and when no real input can force a mutation
-  to fire, DISCLOSE the guard as defense-in-depth instead of faking coverage.
+  demand the specific finding — and when no real input can reach the mutated
+  condition, DISCLOSE the guard as defense-in-depth instead of faking coverage.
 
 ## VERDICT CONTRACT
 

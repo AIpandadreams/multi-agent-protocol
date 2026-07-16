@@ -55,7 +55,10 @@ Every unit of consequence gets an independent review round before it lands:
    the files you touched**: every file the change governs, including
    co-maintained counterparts left unchanged (a doc and its rendered twin, a
    schema and its generated types), plus the result of an explicit omission
-   search (*what should have changed and didn't?*). A reviewer handed only your
+   search (*what should have changed and didn't?*) and the artifact's
+   execution environments — which one this round actually executes on, which
+   remain UNEXECUTED (a platform contract or CI matrix handed to a reviewer is
+   static review, not execution). A reviewer handed only your
    edits cannot report the file you forgot to make.
 3. The reviewer (different vendor; different model at minimum) answers with
    `channel/verdict_<SIDE>_rNN.md`: **ADOPT** / **ADOPT-WITH-CHANGES** /

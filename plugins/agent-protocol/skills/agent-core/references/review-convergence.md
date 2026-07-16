@@ -185,7 +185,9 @@ which the bare pipe to sha256sum would mask as exit 0).
 (ROUND-TYPE: FREEZE) quoting the artifact set (both files), the result of an
 omission search (*what else should move when the grammar does? — searched the
 README example block and the schema; schema in-set, README example unaffected*),
-the touched subset (`parser-spec.md`), and numbered questions. The cross-vendor
+the touched subset (`parser-spec.md`), the environment enumeration (*no runnable
+execution environment — a spec and its generated schema, nothing executes; a
+parser implementing it would bring one*), and numbered questions. The cross-vendor
 reviewer sweeps the tree directly and writes `verdict_builder_r01.md`,
 fingerprint `a1b2c3…` MATCH:
 
