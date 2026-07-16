@@ -54,6 +54,16 @@ Requested role: $ARGUMENTS
    wake — note them and continue. To vet an UNFAMILIAR workspace you did not
    stamp, run the trusted copy from your protocol checkout instead of the
    workspace's own.
+   **The gate tool being ABSENT is itself a BLOCKER, not a pass.** A wake
+   that finds no `tools/conformance_check.py` in the workspace does NOT skip
+   this step — a gate that "passes" by never running is the worst false
+   green, and the absence is invisible precisely because nothing red appears.
+   Fail CLOSED: run the trusted copy from your protocol checkout against the
+   workspace instead, surface the missing tool to the principal as a
+   structural finding in its own right (the workspace was stamped incomplete
+   or has degraded since), and treat anything the trusted copy reports
+   exactly as above. Only a principal's explicit word waives the gate for
+   that wake.
    Also check the workspace is a **git repository**: if it is not, warn the
    principal that `/sleep` checkpoints will NOT persist durably (memory and
    channel state live in git — principle #2) and recommend `git init` +
