@@ -23,7 +23,7 @@ changes only through the
 
 **The loop's own failure modes, codified.** 1.2.6's convergence generated
 three protocol lessons that its own scope did not carry — real, dated defects
-in how REVIEW itself runs. A fourth arrived days later as a field finding (two
+in how REVIEW itself runs. A fourth arrived the next day as a field finding (two
 workspaces, same day) with the same failure shape in the session lifecycle: a
 wake gate that "passed" by never running. 1.2.7 writes all four into the
 normative docs, plus ONE disclosed checker change (a required-file line + its
