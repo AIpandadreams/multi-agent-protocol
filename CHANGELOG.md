@@ -8,6 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.2.7 | v2.6 | the loop's own failure modes, codified — each burned first-hand before it was written down: a reviewer lane that ANSWERS with a refusal is a third outage shape beside silent and down (cure = accurate description, never evasion; verdicts written incrementally with an explicit incomplete/final marker; a partial stream supplies findings for seat-4 adjudication but NEVER ship authority); convergence gains an execution-environment axis (every shipping platform gets an ACTUAL run wherever runnable coverage exists, else it is recorded UNEXECUTED with the residual risk escalated — the "single-platform chorus" anti-pattern, banked from this repo's own 1.2.6 CI escape, where 21 rounds of review on one host shipped 4 POSIX launch-time errors); verification instruments offered as ship evidence earn the same distrust as the gates they certify (bind to the most structured surface that exists and to exact messages, launch/import/collection failures fail CLOSED to RED, every new guard proves liveness by mutation or is disclosed as defense-in-depth); and the wake gate fails CLOSED when its tool is absent — a workspace missing `tools/conformance_check.py` no longer no-ops the hygiene gate, because a gate that "passes" by never running is the worst false green |
 | 1.2.6 | v2.6 | the fix that reproduced the bug it fixed. 1.2.5 widened the no-BOM gate to every file — and `.ps1` **INVERTS** that rule: Windows PowerShell 5.1 decodes a BOM-*less* UTF-8 script as ANSI and mangles non-ASCII (`§ — é` → `Â§ â€” Ã©`), so the gate would have *commanded the very mojibake the protocol warns about*. PowerShell **script files** (`.ps1`/`.psm1`/`.psd1`/`.psrc`/`.pssc` — the exception follows the 5.1 script/data-file *reader*, not the one suffix that bit us) now REQUIRE the BOM and are checked for it (an exception you cannot state as a rule is a hole). 1.2.5 also fused two different claims — "this artifact must exist here" and "if it exists it must agree with its twin" — making the checker unrunnable in any tree that legitimately does not carry the docs (it went 10-findings red in the private mirror, and a gate nobody can see go green is one people learn to scroll past). A tree may now DECLARE itself in `.mirror-check.json`; relaxations are bounded, printed with reasons, tracked, stale entries are findings, a defective declaration grants NOTHING, and no declaration = the old strict behaviour exactly. Reviewers defeated cut after cut — the mojibake gate alone fell twenty-six times (lookback, span licence, fence claim, marker enumeration, a fence fix that skipped the delimiter line, a lead-set that was still an enumeration, a fence tracker blind to tilde/nested fence shapes, a truncation exception that named one prefix of a family, fences hidden behind list/blockquote markers, a container peel that manufactured fence CLOSERS out of literal marker lines inside a fence — disproving its own "over-peeling only widens scanning" claim — an indented run doing the same through the 4-space/tab hole, a span finder counting stray and escaped backticks as delimiters, a coverage gate sweeping the tree's own characters when corruption arrives as mangles of text that was never there, a liberal OPENER inverting fence phase by consuming the real opener as its closer, a fence-only machine blind to the seven CommonMark HTML-block kinds that swallow fence lines, a Latin-1 boundary that read mangled French œ as prose, a cannot-interrupt-a-paragraph rule built on a blank-line proxy when fences and headings end paragraphs too, and then FOUR block-model divergences in one round — link-reference definitions, container-scoped block state, ordered lists that cannot interrupt a paragraph, and a backtick in a backtick fence's info string — at which point the block model was RETIRED rather than repaired: the exemption no longer consults a document model at all — a candidate is exempt only when its entire line is byte-identical to one of five enumerated documentation lines keyed by exact path, every other line is scanned unconditionally whatever block it sits in, and the allowlist is gated live on stale, dead, and mis-keyed entries — after which the retirement's own first review round cut it twice more: the scanner's line unit was str.splitlines(), whose extra separators (VT/FF/NEL/U+2028/U+2029) let a renderer-visible modified line self-exempt a licensed suffix (lines now end only where markdown ends them), and resolve()-keyed paths let a symlink at an unlisted path inherit an exempt licence while an out-of-tree link crashed the checker (keying is lexical now, and a symlink in the guarded tree is itself a finding — a rule then re-cut one round later because it ran only on files the walk could SEE: rglob looks through neither a symlinked directory nor past a junction, so both guarded trees are now swept for reparse points of every kind, and the resolve()-keyed stamp-exemption map fell to the same junction alias and went lexical too — then cut twice more one round later: os.walk never stats the root it is handed, so a junction replacing an ENTIRE guarded tree walked through the sweep, and without an onerror callback the walk swallowed the OSError from an unlistable directory and called the corner it never read clean, so guarded roots are now reparse-checked before the walk and every unreadable path is a fail-closed finding, while a hostile declaration path — `..` or resolving outside the repo — now refuses the whole declaration instead of coexisting with its own active relaxations); the detector validates by byte round-trip with a stated cp1252-letter-aware prose side, derived truncation families, and a detector-coverage gate over a fixed support alphabet); the next round turned on the gate's own footing outside the mojibake lane: existence became its own gate (shipped transports, all four SKILL.md entrypoints — deletion of any was green), the whole-repo BOM enumeration fails closed instead of trusting rglob's silent error-suppression, case-colliding index entries are a finding (one visible worktree file was certifying a second, unseen released blob), and the declaration loader hardened four more ways (regular-file only — a tracked symlink sourced its relaxation from untracked bytes; duplicate JSON keys refused; duplicate entries refused; canonical POSIX spelling required); the round after THAT found the tracked names themselves hostile: git's UTF-8 pathnames were being decoded with the Windows locale, so a tracked non-ASCII name became a phantom path and its BOM'd blob invisible (BLOCKER), trailing-dot index aliases and NFC/NFD variants joined case collisions as findings, the loader now also requires the tree's exact on-disk spelling, the first existence list was completed (profiles, new_project.py — whose absence silently disarmed the auth-log drift gate — and docs/CLOUD.md, declarable with the docs tree), and scratch dirs the gate never claims are pruned so an unlistable node_modules cannot false-red it; and the round after that turned on the split between the two trees git actually keeps: every byte gate read WORKTREE bytes while a commit ships the INDEX blob, so a BOM'd blob swapped into the index behind a clean worktree twin was green (BLOCKER — divergent staged blobs now go through the byte gates themselves, while a routinely dirty tree stays green because an ordinary edit's staged blob is the last committed content), a tracked-but-deleted worktree path fell out of the tail silently (now a finding, with non-regular and unmerged index entries refused too), the non-portable list learned the names its first cut did not know (Win32-forbidden characters, `CONIN$`, superscript-digit `COM¹`), and an index name that merely RESOLVES to a differently spelled worktree file — an 8.3 short name, a lone case variant — is a finding by exact-spelling comparison, closing the alias family rather than its members; and the round after that beat the cure's own enumeration twice in one verdict — git diff ignores assume-unchanged/skip-worktree entries by design and never content-compares a same-size blob behind an unchanged stat cache, both green — so the scan stopped asking git which entries diverge and reads EVERY staged blob by object id in one cat-file batch (the flags are also findings in themselves), the staged mojibake leg selects on the normalized suffix, and the alias guard learned macOS's decomposed on-disk spellings without re-admitting case or 8.3 aliases — so every gate here is guarded by the mutation that beat its predecessor, and doc/gate suffix parity is itself a gate. Suite 206 → 332 |
 | 1.2.5 | v2.6 | corrects shipped guidance that caused a real defect, and the SCOPE of two rules that were already right: PS 5.1's `-Encoding utf8` WRITES a BOM (the docs recommended it as the fix for the UTF-16 default); the byte-gate rule existed but was scoped to "data units", so nobody applied it to a release manifest; and review scope is now the ARTIFACT SET, not the touched-file set — a reviewer handed your diff cannot report the file you forgot. Twins now fail as a pair *mechanically*: the BOM gate scans every file (no suffix allowlist), the doc/HTML twin and the three copies of the amendment header get parity gates, and the file-hygiene baseline moves once into a role-neutral core so the orchestrator inherits it. Every new gate ships with a mutation test — the first drafts of three of them were green *and* defeated. Suite 171 → 206 |
 | 1.2.4 | v2.6 | the no-idle ledger at the top of the autonomy dial: never-idle made a worker prompt about work that ARRIVES but said nothing about work already stalled — every deliverable is now IN FLIGHT / SURFACED / BLOCKED-WITH-BLOCKER-NAMED ("idle" is not a fourth state), with an anti-invention clamp and gate-preserving surfacing rules; SOP catalog row 9 |
@@ -17,6 +18,66 @@ changes only through the
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.2.7] — 2026-07-16
+
+**The loop's own failure modes, codified.** 1.2.6's convergence generated four
+protocol lessons that its own scope did not carry — each a real, dated defect
+in how REVIEW itself runs, not in what it reviews. 1.2.7 writes them into the
+normative docs. No checker code changes.
+
+### A reviewer lane that ANSWERS with a refusal (review-core, Reviewer-lane outage)
+
+The outage section modeled a SILENT lane (no output; dead-lane escalation) and
+a DOWN lane (usage-limit/transport error; probe, fallback ladder). A vendor
+safety layer produces a third shape: the run dies in seconds WITH explanatory
+output and no verdict — observed first 2026-07-14 (adversarially-worded review
+request flagged as offensive-security tasking; the same substance in plain QA
+wording passed first try), then four more times during 1.2.6's own rounds
+(the flag landing on the reviewer's final message). The new rules: distinguish
+by OUTPUT SHAPE before blaming quota; cure by accurate description, never
+evasion (if accurate language will not pass, escalate — do not rephrase to
+sneak intent past a classifier); harden rounds by instructing incremental
+verdict writes carrying an explicit incomplete/final marker; and a partial or
+refusal-truncated stream supplies FINDINGS for seat-4 adjudication but never
+authorizes ship and never counts as reviewer-declared convergence.
+
+### The execution-environment axis (review-convergence)
+
+1.2.6 shipped through 21 review rounds — every voice on the same Windows
+host — and went red on Linux CI within minutes of landing: three tests invoked
+`cmd.exe`, and POSIX raises before any result exists. Nobody missed it; nobody
+could have seen it — the loop had no POSIX voice. That is the mis-scoped
+bundle one axis over: bundles scope WHAT is reviewed, environments scope WHERE
+it runs. New rules: the round request enumerates the shipping environments
+alongside the artifact set; every environment gets an ACTUAL EXECUTION
+wherever runnable coverage exists (a contract or CI matrix handed to a seat is
+static review, not coverage — launch-time failures are only observable by
+running); an environment with no runnable coverage is recorded UNEXECUTED and
+the residual risk explicitly escalated or accepted. Anti-pattern named: the
+single-platform chorus.
+
+### Verification instruments are ship evidence (review-core, new section)
+
+Two burns in one wave: a fix-verification probe printed a false green over an
+ImportError (its ok-heuristic missed a lowercase `errors=3`), and a mutation
+test stayed green because a DIFFERENT guard than the one under test satisfied
+its assertion. The instrument that certifies the gate deserves the gate's own
+distrust: bind to the most structured result surface the tool has and to the
+EXACT messages the specific guard emits; prove the subject actually RAN and
+fail launch/import/collection errors CLOSED to RED; prove every new guard
+load-bearing by mutation/deletion, and disclose the un-forcible ones as
+defense-in-depth instead of faking coverage.
+
+### The wake gate fails closed when its tool is absent (wake command)
+
+Field finding, two workspaces, same day (2026-07-16): a workspace without its
+vendored `tools/conformance_check.py` silently NO-OPS the prescribed wake
+gate — the gate "passes" by never running, and nothing red appears precisely
+because nothing ran. The wake step now fails CLOSED: a missing gate tool is
+itself a BLOCKER-class structural finding; the wake runs the trusted copy from
+the protocol checkout instead and surfaces the absence to the principal; only
+the principal's explicit word waives the gate for that wake.
 
 ## [1.2.6] — 2026-07-15
 
