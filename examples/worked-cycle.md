@@ -58,6 +58,9 @@ omission search: searched for other surfaces naming a dependency risk —
                  README dep table (no risk claims, unaffected), SECURITY.md
                  (points at the report, no restated facts). None missed.
 files touched:   docs/dep-risk-api.md
+environments:    no runnable execution environment — a prose report and its
+                 rendered twin over a lockfile; nothing executes (a consumer
+                 pipeline reading the lockfile would bring one)
 fingerprint ( set -o pipefail; git rev-parse HEAD && git ls-files -s --error-unmatch -- <the set above> | sha256sum ):
   base 4f2ab19 · set 9c1e6d2a…{64 hex}…f4
 asks: verify every claimed unmaintained dep against its actual repo
