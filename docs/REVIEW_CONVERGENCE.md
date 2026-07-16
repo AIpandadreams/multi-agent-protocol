@@ -35,13 +35,15 @@ reproduction by the adjudicating seat before folding.
 | stage | scope | outcome |
 |---|---|---|
 | r1 (per atom) | FREEZE over atom A+B+C (review-process rules: refusal mode, execution-environment coverage, verification instruments — 3 files) and atom E (fail-closed wake gate — 1 file), base `5c2d978`, digests `981c0969…` / `6404483…` | ADOPT-WITH-CHANGES both atoms: 1 BLOCKER (the fail-closed wake gate never reached the documented skill-less wake path) + 6 MAJOR across the two unions; all folded, sets widened to every touched surface |
-| r2 (per atom) | fix-confirmation, base `935989e`, digests `a1b0816a…` (11 members) / `79f350e0…` (8) | judges ADOPT; reviewer found real residuals in both atoms (the checker's own module help, a literal example request, the rendered HTML twin) — cured, sets widened again |
+| r2 (per atom) | fix-confirmation, base `935989e`, digests `a1b0816a…` (10 members) / `79f350e0…` (8) | judges ADOPT; reviewer found real residuals in both atoms (the checker's own module help, a literal example request, the rendered HTML twin) — cured, sets widened again (atom E reached 11 members at r4: base `bf0b4e5`, digest `110a07a1…`) |
 | r3 / r4 | narrow fix-confirmations, bases `d267e36` / `bf0b4e5` | atom A+B+C **CONVERGED FOR FREEZE** (r3); atom E **CONVERGED FOR FREEZE** (r4, after a tree-wide sweep proved the third instance of one stale location claim was the last) |
 | integration | FREEZE over the full 24-member release bundle + bookkeeping, base `8a02141`, digest `ca8ff367…` | judge: ADOPT, zero findings; reviewer: ADOPT-WITH-CHANGES — this very file was stale against the release it claims to evidence, plus one CHANGELOG framing line. The cure is the section you are reading; a final narrow fix-confirmation over the widened set gates the land, alongside ubuntu CI green at the landed base |
 
 Execution record (the release's own environment-coverage rule, applied to
-itself): **Windows host** — full suite executed at each reviewed base (at
-`8a02141`: 330 passed + 3 skipped + 188 subtests; mirror gate green).
+itself): **Windows host** — full suite executed at the fold bases `935989e`
+and `8a02141` (330 passed + 3 skipped + 188 subtests each; mirror gate
+green), with targeted batteries plus the mirror gate at the narrow-round
+bases in between.
 **ubuntu CI** — the full workflow (mirror check, release scrub, unit suite)
 ran green on every push of the release branch; its green at the landed base
 is a land precondition, not an assumption.
