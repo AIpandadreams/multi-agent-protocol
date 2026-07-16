@@ -99,9 +99,10 @@ Every rule traces to a defect class observed in live operation:
 Sessions are cattle, not pets. Anything a session knows that matters is in
 the workspace repo *before* it matters:
 
-1. **`/wake <role>`** — run the role's START_SESSION contract: bind to
-   BINDINGS.md, verify channel/auth-log integrity, read the ⚡ block, poll
-   the channel, report the resume point.
+1. **`/wake <role>`** — run the fail-closed conformance gate, then the
+   role's START_SESSION contract: bind to BINDINGS.md, verify
+   channel/auth-log integrity, read the ⚡ block, poll the channel, report
+   the resume point.
 2. **Work in units** — checkpoint memory after every shipped unit (pushed
    commit, converged review round, posted entry, decided question), not
    just at session end.

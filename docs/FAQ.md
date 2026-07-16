@@ -25,9 +25,9 @@ run — and your project repo stays clean.
 **What do /sleep and /wake actually do?**
 `/sleep`: checkpoint the role's memory (with an exact `## Next Step`),
 commit + push, print a change log and a one-line handover, declare the
-session safe to close. `/wake <role>`: run the role's START_SESSION
-contract in a fresh session — bind, verify integrity, read the ⚡
-working-state block, report the resume point. Together they make sessions
+session safe to close. `/wake <role>`: run the fail-closed conformance
+gate, then the role's START_SESSION contract in a fresh session — bind,
+verify integrity, read the ⚡ working-state block, report the resume point. Together they make sessions
 disposable: no context pasting, no "where were we".
 
 **What happens if a session dies without /sleep?**

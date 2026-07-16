@@ -59,11 +59,16 @@ Requested role: $ARGUMENTS
    this step — a gate that "passes" by never running is the worst false
    green, and the absence is invisible precisely because nothing red appears.
    Fail CLOSED: run the trusted copy from your protocol checkout against the
-   workspace instead, surface the missing tool to the principal as a
-   structural finding in its own right (the workspace was stamped incomplete
-   or has degraded since), and treat anything the trusted copy reports
-   exactly as above. Only a principal's explicit word waives the gate for
-   that wake.
+   workspace instead (that run is the trust-grade form, not the
+   workspace-owned SELF-CHECK), treat anything it reports exactly as above,
+   and surface the missing tool to the principal as a structural BLOCKER in
+   its own right (the workspace was stamped incomplete or has degraded
+   since) — a clean trusted-copy run does NOT clear it. No protocol checkout
+   to source the trusted copy from either? Then the gate cannot run at all:
+   HARD STOP — abort as in the no-workspace case (step 2), never self-clone
+   one. Only the principal's explicit word — affirmative first-person words,
+   in THIS session — waives the missing-tool BLOCKER for that wake; every
+   other reported BLOCKER is resolved, not waived.
    Also check the workspace is a **git repository**: if it is not, warn the
    principal that `/sleep` checkpoints will NOT persist durably (memory and
    channel state live in git — principle #2) and recommend `git init` +

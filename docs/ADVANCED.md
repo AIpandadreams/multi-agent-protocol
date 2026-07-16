@@ -134,8 +134,10 @@ secrets — it diffs git history), conformance is a **point-in-time** readiness
 check you run locally: after stamping, after filling `BINDINGS.md`, or any
 time before you `/wake` an agent in a workspace you're unsure about.
 
-Run it from a protocol checkout (the checker ships here, not inside a
-workspace) and point `--workspace` at the target:
+Run it from a protocol checkout and point `--workspace` at the target.
+(Stamping also drops a hygiene copy inside each workspace —
+`<ws>/tools/conformance_check.py`, the one `/wake` runs in SELF-CHECK
+MODE — but for vetting, the protocol checkout's copy is the trusted one.)
 
 ```bash
 python tools/conformance_check.py --workspace path/to/ws           # check a workspace
@@ -175,10 +177,13 @@ fully bound one passes `--strict` clean. (The load-bearing version signal —
 `PROTOCOL_VERSION` in BINDINGS — is a BLOCKER; the per-file stamps are the
 softer, cosmetic layer.)
 
-Run it from a protocol checkout pointed at the workspace
-(`--workspace path/to/ws`) — the checker ships here, not stamped into each
-workspace, and it deliberately runs its own trusted copy of
-`validate_auth_log.py` rather than the target workspace's. That also makes it
+For a trust decision, run it from a protocol checkout pointed at the
+workspace (`--workspace path/to/ws`) — the checkout's copy, never the
+workspace's stamped hygiene copy — and it deliberately runs its own trusted
+copy of `validate_auth_log.py` rather than the target workspace's. A
+workspace whose own stamped copy is MISSING is itself structurally broken:
+the wake gate fails CLOSED on that absence (a BLOCKER in its own right,
+never a skipped step). That also makes it
 a natural CI gate: check the workspace out next to a protocol checkout and run
 `--strict` once every slot should be resolved.
 

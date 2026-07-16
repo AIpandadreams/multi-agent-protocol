@@ -24,7 +24,10 @@ changes only through the
 **The loop's own failure modes, codified.** 1.2.6's convergence generated four
 protocol lessons that its own scope did not carry — each a real, dated defect
 in how REVIEW itself runs, not in what it reviews. 1.2.7 writes them into the
-normative docs. No checker code changes.
+normative docs, plus ONE disclosed checker change (a required-file line + its
+test — see the wake-gate unit below; the docs-only scope was deliberately
+widened there because an instructional gate is exactly the thing that unit
+exists to distrust).
 
 ### A reviewer lane that ANSWERS with a refusal (review-core, Reviewer-lane outage)
 
@@ -69,15 +72,30 @@ fail launch/import/collection errors CLOSED to RED; prove every new guard
 load-bearing by mutation/deletion, and disclose the un-forcible ones as
 defense-in-depth instead of faking coverage.
 
-### The wake gate fails closed when its tool is absent (wake command)
+### The wake gate fails closed when its tool is absent (wake command + every wake path)
 
 Field finding, two workspaces, same day (2026-07-16): a workspace without its
 vendored `tools/conformance_check.py` silently NO-OPS the prescribed wake
 gate — the gate "passes" by never running, and nothing red appears precisely
 because nothing ran. The wake step now fails CLOSED: a missing gate tool is
 itself a BLOCKER-class structural finding; the wake runs the trusted copy from
-the protocol checkout instead and surfaces the absence to the principal; only
-the principal's explicit word waives the gate for that wake.
+the protocol checkout instead and surfaces the absence to the principal (a
+clean trusted-copy run does NOT clear it); no protocol checkout to source a
+trusted copy from either = the gate cannot run at all, HARD STOP; only the
+principal's explicit word — affirmative, first-person, in THIS session —
+waives the missing-tool BLOCKER, and every other BLOCKER is resolved, not
+waived. Round 1 of this release's own review then proved the rule mis-scoped
+in exactly the way it warns about: the documented SKILL-LESS wake path (the
+accepted baseline for unattended and cloud routines — the very environment
+that produced the field finding) never reached the `/wake` gate at all. So the
+gate now lives in all three role START_SESSION contracts too, the operator
+docs stop claiming the checker is "not stamped into each workspace" (it is,
+and its absence is the finding), and — the one deliberate deviation from this
+release's docs-only scope — `tools/conformance_check.py` itself now lists the
+vendored checker as a required file, so a trusted-copy run against a degraded
+workspace reports the absence structurally instead of trusting the waking
+agent to remember to look. An instruction to check is the same class of gate
+this unit distrusts; the required-file line is the load-bearing form.
 
 ## [1.2.6] — 2026-07-15
 

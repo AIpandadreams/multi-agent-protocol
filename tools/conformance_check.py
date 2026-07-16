@@ -162,6 +162,7 @@ def check_structure(ws: Path, roles, f: Findings):
         "BINDINGS.md", "README.md", "MODELS.md",
         "channel/INDEX.md",
         "tools/validate_auth_log.py",
+        "tools/conformance_check.py",
         ".github/workflows/integrity.yml",
         ".claude/settings.json",
     ]
