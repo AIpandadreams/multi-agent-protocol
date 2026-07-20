@@ -24,6 +24,7 @@ Stdlib unittest only, importlib-loading the tools like test_git_sync_stamp.py:
 """
 import importlib.util
 import io
+import re
 import sys
 import tempfile
 import unittest
@@ -124,6 +125,12 @@ def _read_all(ws):
             for p in mw._text_files(ws)}
 
 
+def _finding_count(out):
+    """(blockers, warnings) parsed from a conformance summary line."""
+    m = re.search(r"(\d+) blocker\(s\), (\d+) warning\(s\)", out)
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
 def _split_records(ws, mapping):
     """Partition a _read_all() mapping into (non_records, records) by the
     migrator's OWN predicate — so the tests cannot drift from the tool's
@@ -176,6 +183,14 @@ class MigrateMechanicsTest(unittest.TestCase):
             _stamp(downgraded, ["--profile", "3agent.local"])
             _stamp(fresh, ["--profile", "3agent.local"])
             _downgrade(downgraded)
+            # A record carrying NO old-version token at all. The ruling requires
+            # records_kept to be exhaustive "including zero-token/empty ones",
+            # and without such a file in the fixture that clause is untested:
+            # replay proved a migrator filtering `if txt.count(STAMP_FROM)`
+            # left this test green, because every other record bears a token.
+            (downgraded / "channel" / "zero_token_record.md").write_text(
+                "a channel record with no protocol stamp at all\n",
+                encoding="utf-8")
             before = _read_all(downgraded)
             res = mw.migrate(downgraded)
             self.assertEqual(res["status"], "migrated")
@@ -199,19 +214,38 @@ class MigrateMechanicsTest(unittest.TestCase):
 
     def test_migrated_workspace_gates_strict_clean(self):
         """The closing property that makes the dropped byte-identical
-        invariant safe: a migrated workspace that KEPT its records must still
-        pass conformance --strict CLEAN. Pin-aware `_record_stamp_ok` accepting
-        a creation-stamped record under a newer pin is the other half of the
-        design — without this, keeping records would just be drift."""
+        invariant safe: keeping records must cost NOTHING in conformance
+        terms. Pin-aware `_record_stamp_ok` accepting a creation-stamped
+        record under a newer pin is the other half of the design — without
+        it, keeping records would just be drift.
+
+        Measured against a FRESH stamp rather than against literal
+        strict-clean: an unbound fixture always carries `{{FILL}}` slot
+        warnings, so "--strict exits 0" is unreachable here and asserting it
+        tests the fixture, not the design. The real property is that a
+        migrated workspace is no less conformant than a freshly stamped one,
+        and that no kept record produces a stamp finding."""
         with tempfile.TemporaryDirectory() as d:
             ws = Path(d) / "ws"
+            fresh = Path(d) / "fresh"
             _stamp(ws, ["--profile", "3agent.local"])
+            _stamp(fresh, ["--profile", "3agent.local"])
             _downgrade(ws)
             res = mw.migrate(ws)
             self.assertEqual(res["status"], "migrated")
             self.assertTrue(res["records_kept"], "no records were kept")
+
             code, out = _conformance(ws, strict=True)
+            fresh_code, fresh_out = _conformance(fresh, strict=True)
             self.assertIn("0 blocker", out)
+            # no kept record is reported as a banner-stamp finding — the
+            # wording `_record_stamp_ok` emits when it rejects one. (Replay:
+            # mutating it to demand stamp == pin must turn this red.)
+            self.assertNotIn("banner lacks", out)
+            # and migration introduced no findings a fresh stamp lacks
+            self.assertEqual(_finding_count(out), _finding_count(fresh_out),
+                             msg=f"migrated:\n{out}\nfresh:\n{fresh_out}")
+            self.assertEqual(code, fresh_code)
 
     def test_idempotent_on_already_v26(self):
         with tempfile.TemporaryDirectory() as d:
