@@ -1,32 +1,60 @@
 #!/usr/bin/env python3
-"""Migrate a stamped v2.5 workspace up to PROTOCOL v2.6 [PROTOCOL v2.6].
+"""Migrate a stamped workspace up to PROTOCOL v2.7 [PROTOCOL v2.7].
 
 The version-migrate gap in the lifecycle family: `new_project.py` stamps a
 FRESH workspace, `scale_workspace.py` grows a 2-agent workspace to 3, and
 `adopt_project.py` adopts an ad-hoc collaboration — but nothing carries a LIVE
-stamped workspace across a protocol-version bump. This tool does, for the one
-supported hop v2.5 -> v2.6.
+stamped workspace across a protocol-version bump. This tool does, for every
+supported hop, CHAINED in a single run.
+
+WHICH HOPS RUN (the decision tree, derived from `HOPS` — see `_hop_chain`):
+
+    pinned v2.7  ->  no-op, exit 0 (idempotent; safe to re-run)
+    pinned v2.6  ->  one hop:  v2.6 -> v2.7
+    pinned v2.5  ->  TWO hops: v2.5 -> v2.6 -> v2.7, in ONE run of THIS
+                     checkout — you do NOT need an older checkout for the
+                     first leg, and you do NOT run the tool twice
+    anything else -> unsupported, exit 1 (the message names the supported
+                     starting versions)
+
+Chaining is oldest-hop-first and the operator never supplies a version: the
+tool reads the workspace's own pin and derives the ladder. `--dry-run` previews
+the WHOLE chain, threading each leg's would-be output into the next.
 
 It follows `scale_workspace.py`'s contract exactly, because the same design line
 applies: a tool may mutate a workspace's STRUCTURE mechanically, but the
 principal-owned and agent-owned surfaces are NEVER rewritten by an installer.
 
 WHAT IT DOES (mechanical, idempotent, reversible):
-  - rewrites the workspace's PROTOCOL_VERSION binding row v2.5 -> v2.6
+  - rewrites the workspace's PROTOCOL_VERSION binding row one hop at a time
     STRUCTURALLY (matched by slot name, any inner spacing) so version detection
     and the rewrite can never disagree — it flips ONLY the version cell and
     preserves the row's spacing and any extra cells, dropping nothing
-  - flips a `[PROTOCOL v2.5]` stamp -> `[PROTOCOL v2.6]` ONLY on a file's BANNER
-    line — its title heading or docstring banner: the first content line, or
-    the second when the first is a shebang (BINDINGS header, auth-logs,
-    channel/INDEX, dispatch-log, TASKQUEUE, START_SESSION files, the stamped
-    validator copy). That banner is the SOLE place new_project.py emits a stamp.
+  - flips a `[PROTOCOL <from>]` stamp -> `[PROTOCOL <to>]` ONLY on a file's
+    BANNER line — its title heading or docstring banner: the first content line, or
+    the second when the first is a shebang (BINDINGS header, TASKQUEUE,
+    START_SESSION files, the stamped validator copy). That banner is the SOLE
+    place new_project.py emits a stamp.
+  - EXCEPT append-only records: `memory/<role>/auth-log.md`,
+    `memory/<role>/dispatch-log.md`, `memory/<role>/tick-log.md`, and
+    `channel/*.md` are NEVER touched — their banner keeps the stamp of the
+    version they were CREATED under. A record's banner is part of the record;
+    rewriting it would remove a line from an append-only file and either trip
+    the workspace's own integrity gates (auth-logs / channel — an early
+    v2.5->v2.6 run did exactly that and ate a red CI run) or race a live
+    appender (dispatch/tick logs are written by scheduled tasks). This holds at
+    EVERY hop of a chained run: a v2.5-era record survives a v2.5 -> v2.7
+    migration still stamped `[PROTOCOL v2.5]`, and that is GREEN, because
+    conformance_check accepts any supported creation-version stamp at or below
+    the workspace's pin. EVERY kept record is REPORTED — including those
+    carrying no old-version token — so the skip is exhaustive and auditable,
+    never silent.
   - preserves each file's existing line endings exactly (no CRLF<->LF rewrite)
 
   Because the flip is confined to the banner line, the same literal token
   appearing anywhere else — inside a PROXY_AUTH/authority row, a memory-body
   heading or prose (e.g. an emitted packet's provenance line), or a fenced
-  example of a stamp — is LEFT UNTOUCHED (a bare "v2.5" that is real content is
+  example of a stamp — is LEFT UNTOUCHED (a bare "v2.6" that is real content is
   likewise left alone). Every such left-untouched token is REPORTED, so the
   conservative skip is auditable rather than silent, and the operator confirms
   each is intended content (historical provenance, an authority note, a doc
@@ -38,25 +66,26 @@ WHAT IT DOES NOT DO (judgement — it PRINTS what to do, never does it):
     version token inside one (a PROXY_AUTH change is first-hand-only). If the
     workspace's PROXY_AUTH predates v2.6's canonical super-class wording it
     prints the reword to apply by hand.
-  - it never adds the new v2.6 binding slots (TRANSPORT / WORKSPACE_REMOTE /
-    SECRETS / AUTONOMY / WATCHER / ROLE_ALIASES) — it prints the ones not yet
-    present, flagged by whether they apply to this workspace's profile, so the
-    principal adds the rows they want.
+  - it never adds binding slots. v2.7 introduces NO new slots; the v2.6 slot
+    family (TRANSPORT / WORKSPACE_REMOTE / SECRETS / AUTONOMY / WATCHER /
+    ROLE_ALIASES) remains advisory — it prints any not yet present, flagged by
+    whether they apply to this workspace's profile, so the principal adds the
+    rows they want.
   - it never rewrites coordination state (channel rows, counters, memory) —
     carrying live state across a boundary is the agents' retrospective work.
 
 Because it only rewrites version tokens, a migration reverts cleanly with a
 single `git revert`. Pin-aware conformance means a not-yet-migrated workspace
-stays green under a v2.6 checkout, so workspaces migrate independently, each at
+stays green under a v2.7 checkout, so workspaces migrate independently, each at
 its own freeze boundary.
 
 Usage:
   python tools/migrate_workspace.py --workspace path/to/ws            # migrate
   python tools/migrate_workspace.py --workspace path/to/ws --dry-run  # preview
 
-Idempotent: a second run finds v2.6 and does nothing. Exit 0 = migrated /
-already-v2.6 / dry-run; 1 = not a v2.5 workspace (unknown version, or no
-BINDINGS); 2 = usage error. A successful migration may still leave conformance
+Idempotent: a second run finds v2.7 and does nothing. Exit 0 = migrated /
+already-v2.7 / dry-run; 1 = the pin is not a supported starting version
+(unknown version, or no BINDINGS); 2 = usage error. A successful migration may still leave conformance
 findings that need a hand-edit (the PROXY_AUTH reword, unfilled new slots) —
 those are PRINTED, and the operator runs `conformance_check.py --strict` as the
 final gate.
@@ -85,10 +114,34 @@ def _load(mod_name, filename):
 # as the final gate).
 cc = _load("conformance_check", "conformance_check.py")
 
-FROM_VER = "v2.5"
-TO_VER = "v2.6"
-STAMP_FROM = f"[PROTOCOL {FROM_VER}]"
-STAMP_TO = f"[PROTOCOL {TO_VER}]"
+# The supported version ladder, oldest hop FIRST. This tuple is the single
+# source of truth: `_hop_chain` derives the whole decision tree from it, so
+# adding a future hop is one entry and the tool's behaviour, its messages, and
+# the documented tree cannot drift apart. A workspace pinned at any hop's
+# starting version migrates to NEWEST in ONE run, chaining as many legs as it
+# needs — the operator never has to know the ordering.
+HOPS = (("v2.5", "v2.6"), ("v2.6", "v2.7"))
+SUPPORTED_FROM = tuple(frm for frm, _ in HOPS)
+NEWEST = HOPS[-1][1]
+
+
+def _stamp(ver):
+    return f"[PROTOCOL {ver}]"
+
+
+def _hop_chain(pinned):
+    """The ordered hops that carry `pinned` up to NEWEST.
+
+    []   — already NEWEST, nothing to do (idempotent no-op).
+    None — unknown or unsupported pin; the caller reports it and refuses.
+    """
+    if pinned == NEWEST:
+        return []
+    for i, (frm, _) in enumerate(HOPS):
+        if pinned == frm:
+            return list(HOPS[i:])
+    return None
+
 
 SKIP_DIRS = {".git", "__pycache__", "node_modules"}
 BINARY_EXT = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pyc", ".zip", ".pdf"}
@@ -109,10 +162,11 @@ _STAMP_LINE_PREFIXES = ("#", "<!--", '"""', "'''")
 # text-mode CRLF<->LF rewrite.
 _LINE_SPLIT = re.compile(r"(\r\n|\r|\n)")
 
-# The v2.6 binding slots a v2.5 workspace lacks — printed as "consider adding",
-# never stamped. (name, one-line note, applicability): "always" = add on any
-# workspace; "git-sync" = only when the transport is git-sync; "if-*" = a
-# conditional the operator judges.
+# The v2.6 slot family a workspace may still lack — printed as "consider
+# adding", never stamped. v2.7 introduces NO new binding slots, so this list is
+# unchanged across the v2.6 -> v2.7 hop. (name, one-line note, applicability):
+# "always" = add on any workspace; "git-sync" = only when the transport is
+# git-sync; "if-*" = a conditional the operator judges.
 NEW_V26_SLOTS = [
     ("TRANSPORT", "name the transport explicitly (local-fs / git-sync)",
      "always"),
@@ -143,6 +197,18 @@ def _text_files(ws):
         yield p
 
 
+def _is_append_only_record(ws, p):
+    """True for append-only record families: auth-logs and channel files (held
+    append-only by the workspace integrity gates) plus dispatch/tick logs
+    (self-declared append-only, written by live scheduled tasks — rewriting one
+    races a concurrent append). These keep their creation-version banner; the
+    migrator never rewrites them."""
+    rel = p.relative_to(ws).as_posix()
+    if re.fullmatch(r"memory/[^/]+/(auth|dispatch|tick)-log\.md", rel):
+        return True
+    return rel.startswith("channel/") and rel.endswith(".md")
+
+
 def _is_stamp_line(line):
     """Looks like a stamp banner: a heading or docstring/comment line (never a
     `|`-row or prose). Necessary but not sufficient — it must ALSO be the file's
@@ -165,22 +231,23 @@ def _banner_index(segments):
     return 0
 
 
-def _pver_row_migrated(line):
-    """If `line` (no terminator) is a `| PROTOCOL_VERSION | v2.5 | ... |` table
-    row (any inner spacing, any extra trailing cells), return the same row with
-    ONLY the version cell flipped v2.5 -> v2.6; else None. A structural match on
-    the slot name + value cell, so whitespace-tolerant detection and the rewrite
-    agree — and no other cell's content is ever normalized away or dropped."""
+def _pver_row_migrated(line, from_ver, to_ver):
+    """If `line` (no terminator) is a `| PROTOCOL_VERSION | <from_ver> | ... |`
+    table row (any inner spacing, any extra trailing cells), return the same row
+    with ONLY the version cell flipped from_ver -> to_ver; else None. A
+    structural match on the slot name + value cell, so whitespace-tolerant
+    detection and the rewrite agree — and no other cell's content is ever
+    normalized away or dropped."""
     parts = line.split("|")
     if len(parts) < 4 or parts[0].strip() or parts[-1].strip():
         return None
-    if parts[1].strip() != "PROTOCOL_VERSION" or parts[2].strip() != FROM_VER:
+    if parts[1].strip() != "PROTOCOL_VERSION" or parts[2].strip() != from_ver:
         return None
-    parts[2] = parts[2].replace(FROM_VER, TO_VER)  # flip the value cell in place
+    parts[2] = parts[2].replace(from_ver, to_ver)  # flip the value cell in place
     return "|".join(parts)
 
 
-def _plan_file(p):
+def _plan_file(p, from_ver, to_ver, text=None):
     """Return (new_or_None, n_stamps, pver_flipped, skipped) for a file.
     `new_or_None` is None when the file needs no write. `skipped` counts stamp
     tokens left on non-banner lines (authority rows / memory bodies / fenced
@@ -194,12 +261,19 @@ def _plan_file(p):
       - the PROTOCOL_VERSION row (BINDINGS.md only) is matched structurally and
         only its version cell is flipped (spacing + extra cells preserved);
       - line terminators are preserved exactly (read+write with newline="").
+
+    `text` overrides the on-disk read. It exists so a chained DRY RUN can thread
+    each leg's would-be output into the next leg and preview the whole ladder
+    accurately — without it, a dry-run v2.5 workspace would report only the
+    first hop, because the later legs would still be reading v2.5 bytes.
     """
-    try:
-        with p.open(encoding="utf-8", newline="") as f:
-            text = f.read()
-    except (UnicodeDecodeError, OSError):
-        return None, 0, False, 0
+    stamp_from, stamp_to = _stamp(from_ver), _stamp(to_ver)
+    if text is None:
+        try:
+            with p.open(encoding="utf-8", newline="") as f:
+                text = f.read()
+        except (UnicodeDecodeError, OSError):
+            return None, 0, False, 0
     is_bindings = (p.name == "BINDINGS.md")
     segments = _LINE_SPLIT.split(text)  # [line, sep, line, sep, ..., line]
     banner = _banner_index(segments)
@@ -208,15 +282,15 @@ def _plan_file(p):
     skipped = 0
     for i in range(0, len(segments), 2):  # content lines only (even indices)
         seg = segments[i]
-        c = seg.count(STAMP_FROM)
+        c = seg.count(stamp_from)
         if i == banner and _is_stamp_line(seg):
             if c:
-                segments[i] = seg.replace(STAMP_FROM, STAMP_TO)
+                segments[i] = seg.replace(stamp_from, stamp_to)
                 n_stamps += c
             continue
         skipped += c  # token off the banner — left untouched, surfaced
         if is_bindings:
-            migrated_row = _pver_row_migrated(seg)
+            migrated_row = _pver_row_migrated(seg, from_ver, to_ver)
             if migrated_row is not None:
                 segments[i] = migrated_row
                 pver_flipped = True
@@ -225,12 +299,21 @@ def _plan_file(p):
 
 
 def migrate(ws, dry_run=False):
-    """Flip the version tokens across a v2.5 workspace. Pure of argparse.
+    """Carry a workspace up the version ladder to NEWEST. Pure of argparse.
 
-    Returns a result dict: {status, ...}. status is one of
+    Chains every hop the workspace's pin requires, oldest first, in ONE run: a
+    v2.5 workspace runs v2.5->v2.6 then v2.6->v2.7 without the operator knowing
+    the ordering. Returns a result dict: {status, ...}. status is one of
       'migrated' | 'dry-run' | 'already' | 'unsupported' | 'error'.
-    'changed' is a list of (Path, n_stamps, pver_flipped) actually written
-    (or that WOULD be written, under dry_run).
+
+    'version_from' is the ORIGINAL pin and 'version_to' is the final one, with
+    'hops' naming each leg that ran. 'changed' is a list of
+    (Path, n_stamps, pver_flipped) actually written (or that WOULD be written,
+    under dry_run), accumulated across legs — a file touched by two hops
+    appears once per hop, which is the honest account of the work done.
+
+    Append-only records are scanned ONCE for the whole chain, never per hop:
+    they are never rewritten at ANY hop, so there is no second visit to report.
     """
     ws = Path(ws)
     slots = cc.parse_bindings(ws)
@@ -238,26 +321,50 @@ def migrate(ws, dry_run=False):
         return {"status": "error",
                 "reason": f"no readable BINDINGS.md under {ws} (not a workspace?)"}
     pinned = cc.pinned_version(slots)
-    if pinned == TO_VER:
-        return {"status": "already", "version": TO_VER, "changed": []}
-    if pinned != FROM_VER:
+    chain = _hop_chain(pinned)
+    if chain is None:
         return {"status": "unsupported", "version": pinned or "absent"}
+    if not chain:
+        return {"status": "already", "version": NEWEST, "changed": []}
+
+    # Records first, once. Their creation stamp is kept at EVERY hop, so the
+    # count is over every from-stamp in the chain — a v2.5-era record migrating
+    # v2.5 -> v2.7 is reported for the v2.5 token it keeps.
+    chain_stamps = [_stamp(frm) for frm, _ in chain]
+    records_kept = []
+    for p in _text_files(ws):
+        if _is_append_only_record(ws, p):
+            try:
+                txt = p.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                txt = ""
+            # EVERY record is reported (n may be 0) — exhaustive, not filtered.
+            records_kept.append((p, sum(txt.count(s) for s in chain_stamps)))
 
     changed = []
-    left = []
-    for p in _text_files(ws):
-        new, n_stamps, pver_flipped, skipped = _plan_file(p)
-        if skipped:
-            left.append((p, skipped))
-        if new is None:
-            continue
-        changed.append((p, n_stamps, pver_flipped))
-        if not dry_run:
-            with p.open("w", encoding="utf-8", newline="") as f:
-                f.write(new)
+    left = {}
+    pending = {}  # dry-run only: path -> the text this leg would have written
+    for frm, to in chain:
+        for p in _text_files(ws):
+            if _is_append_only_record(ws, p):
+                continue  # creation stamp kept, never rewritten, at any hop
+            new, n_stamps, pver_flipped, skipped = _plan_file(
+                p, frm, to, text=pending.get(p) if dry_run else None)
+            if skipped:
+                left[p] = left.get(p, 0) + skipped
+            if new is None:
+                continue
+            changed.append((p, n_stamps, pver_flipped))
+            if dry_run:
+                pending[p] = new
+            else:
+                with p.open("w", encoding="utf-8", newline="") as f:
+                    f.write(new)
     return {"status": "dry-run" if dry_run else "migrated",
-            "version_from": FROM_VER, "version_to": TO_VER,
-            "changed": changed, "left_untouched": left}
+            "version_from": pinned, "version_to": NEWEST,
+            "hops": list(chain), "changed": changed,
+            "left_untouched": sorted(left.items(), key=lambda t: str(t[0])),
+            "records_kept": records_kept}
 
 
 def proxy_auth_gaps(slots):
@@ -348,7 +455,7 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", required=True,
-                    help="workspace root to migrate v2.5 -> v2.6")
+                    help=f"workspace root to migrate up to {NEWEST}")
     ap.add_argument("--dry-run", action="store_true",
                     help="list what would change; write nothing")
     args = ap.parse_args()
@@ -365,28 +472,56 @@ def main():
         print(f"migrate: {result['reason']}", file=sys.stderr)
         return 1
     if status == "unsupported":
-        print(f"migrate: workspace PROTOCOL_VERSION is '{result['version']}', "
-              f"this tool only migrates {FROM_VER} -> {TO_VER}", file=sys.stderr)
+        # The message names the supported starting pins: a user whose
+        # workspace is refused must learn from the refusal itself what a
+        # migratable pin looks like, without reading the source.
+        print(f"migrate: workspace PROTOCOL_VERSION is '{result['version']}'. "
+              f"Supported starting versions are "
+              f"{', '.join(SUPPORTED_FROM)} (each migrates up to {NEWEST} in "
+              f"one run); a workspace already at {NEWEST} is a no-op.",
+              file=sys.stderr)
         return 1
     if status == "already":
-        print(f"migrate: {ws.name} is already {TO_VER} — nothing to do "
+        print(f"migrate: {ws.name} is already {NEWEST} — nothing to do "
               "(idempotent no-op)")
         return 0
 
     changed = result["changed"]
+    hops = result.get("hops", [])
     total_stamps = sum(n for _, n, _ in changed)
     verb = "would flip" if args.dry_run else "flipped"
-    print(f"migrate: {ws.name} {FROM_VER} -> {TO_VER} — {verb} "
-          f"{total_stamps} stamp(s) across {len(changed)} file(s)"
+    ladder = " -> ".join([hops[0][0]] + [to for _, to in hops]) if hops else ""
+    leg_note = (f" via {len(hops)} hops ({ladder})" if len(hops) > 1
+                else f" ({ladder})" if hops else "")
+    print(f"migrate: {ws.name} {result['version_from']} -> "
+          f"{result['version_to']}{leg_note} — {verb} "
+          f"{total_stamps} stamp(s) across {len(changed)} file-pass(es)"
           + (" [DRY RUN — nothing written]" if args.dry_run else ""))
     for p, n, pver in sorted(changed, key=lambda t: str(t[0])):
         tag = " (+PROTOCOL_VERSION)" if pver else ""
         print(f"    {p.relative_to(ws).as_posix()}: {n} stamp(s){tag}")
 
+    kept = result.get("records_kept", [])
+    if kept:
+        total_kept = sum(n for _, n in kept)
+        with_tok = [(p, n) for p, n in kept if n]
+        from_list = ", ".join(f"`{_stamp(frm)}`" for frm, _ in hops)
+        print(f"\n  append-only records kept as-is — ALL {len(kept)} record "
+              f"file(s) skipped at EVERY hop (auth/dispatch/tick logs + "
+              f"channel; creation stamp kept, conformance accepts a supported "
+              f"one); {total_kept} {from_list} token(s) in "
+              f"{len(with_tok)} of them:")
+        for p, n in sorted(with_tok, key=lambda t: str(t[0])):
+            print(f"    {p.relative_to(ws).as_posix()}: {n}")
+        no_tok = len(kept) - len(with_tok)
+        if no_tok:
+            print(f"    (+ {no_tok} record file(s) with no migrated-from "
+                  "token — skipped all the same)")
+
     left = result.get("left_untouched", [])
     if left:
         total_left = sum(n for _, n in left)
-        print(f"\n  left untouched — {total_left} `{STAMP_FROM}` token(s) on "
+        print(f"\n  left untouched — {total_left} migrated-from token(s) on "
               "non-stamp lines (authority rows / prose), deliberately NOT "
               "flipped; confirm each is intended content, not a stamp:")
         for p, n in sorted(left, key=lambda t: str(t[0])):

@@ -134,12 +134,17 @@ The *version* axis of migration (`tools/migrate_workspace.py`, carrying a
 stamped workspace across a PROTOCOL version bump) is mechanically simple —
 but two live runs earned these notes:
 
-- **Expected one-time integrity-CI red-X.** If the workspace CI enforces
-  append-only on files whose BANNER line the migrator re-stamps (auth-log
-  headers are the common case), the migration commit itself trips that check
-  **once**. This is expected and benign: disclose it in advance, quiesce
-  sessions for the window, and never "fix" it by rewriting history — the
-  next ordinary append is green again.
+- **The one-time integrity-CI red-X, and why it is gone.** Earlier runs
+  tripped the workspace's own append-only CI **once** at the migration
+  commit, because the migrator re-stamped the BANNER line of append-only
+  files (auth-log headers being the common case). That is the defect the
+  keep-records doctrine closed: a record's banner is part of the record, so
+  the migrator now leaves `memory/<role>/auth-log.md`, `dispatch-log.md`,
+  `tick-log.md` and `channel/*.md` **entirely untouched**, reports every one
+  it kept, and conformance accepts their older-but-supported creation stamp
+  as green. A migration commit that still trips append-only is therefore a
+  finding now, not an expected cost — and it was never something to "fix" by
+  rewriting history.
 - **Finding adjudication: pre-existing vs regression.** A defect surfaced by
   post-migration verification is not automatically a migration defect. Probe
   whether it **pre-exists** the migration (the git history of the relevant
@@ -168,6 +173,9 @@ but two live runs earned these notes:
 - `tools/adopt_project.py` — adopting an ad-hoc collaboration stamps the new
   workspace and then points here for the live-lane cutover.
 - `tools/migrate_workspace.py` — the *version* axis of migration (carrying a
-  stamped workspace across a PROTOCOL version bump, v2.5 → v2.6), distinct from
-  the *channel* migration this doc covers. It flips the version stamps only and
-  points back here for the counter/state carry.
+  stamped workspace across a PROTOCOL version bump), distinct from the
+  *channel* migration this doc covers. It carries the whole supported ladder —
+  v2.5 → v2.6 → v2.7 — and walks it from the workspace's pin up to the newest
+  version in a single run, so a v2.5 workspace needs one checkout, not a
+  release-by-release sequence. It flips the version stamps only and points back
+  here for the counter/state carry.

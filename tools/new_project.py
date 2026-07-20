@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stamp a dedicated per-project agent workspace (PROTOCOL v2.6).
+"""Stamp a dedicated per-project agent workspace (PROTOCOL v2.7).
 
 Creates the "dedicated, not generic" instantiation: a workspace directory
 (intended to become its own private repo) holding bindings, channel skeleton,
@@ -43,7 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CANONICAL_ROLE_ORDER = ["owner", "builder", "orchestrator"]
 DEFAULT_SIDE_NAME = {"owner": "owner", "builder": "builder", "orchestrator": "orch"}
 
-BINDINGS_TEMPLATE = """# BINDINGS — {name} agent workspace [PROTOCOL v2.6]
+BINDINGS_TEMPLATE = """# BINDINGS — {name} agent workspace [PROTOCOL v2.7]
 
 Instantiated {date} from the multi-agent-protocol repo (profile: {profile}).
 Slot glossary: plugins/agent-protocol/skills/agent-core/references/binding-slots.md
@@ -68,7 +68,7 @@ Slot glossary: plugins/agent-protocol/skills/agent-core/references/binding-slots
 | WATCHER | {{{{FILL: per-role monitor + lane list + cadence, or "none" — required if AUTONOMY = never-idle}}}} |
 | MODEL | see MODELS.md (active preset + overrides) |
 | EMBARGOES / GATES | {{{{FILL: standing list + size tripwire}}}} |
-| PROTOCOL_VERSION | v2.6 |
+| PROTOCOL_VERSION | v2.7 |
 {orch_slots}"""
 
 ORCH_SLOTS = """| FLAVOR | {{FILL: global-pa or project:<name>}} |
@@ -98,7 +98,7 @@ Roles: {roles}. Profile: {profile}.
 """
 
 AUTH_LOG_VALIDATOR = r'''#!/usr/bin/env python3
-"""Auth-log chain validator [PROTOCOL v2.6] — mechanical enforcement of the
+"""Auth-log chain validator [PROTOCOL v2.7] — mechanical enforcement of the
 exactly-one-landed-CONSUMED audit rule (proxy-auth-core.md) over every
 memory/<role>/auth-log.md in this workspace:
 
@@ -801,7 +801,7 @@ def stamp(name, dest, profile, roles, role_side, principal,
     # side appends only its own rows. Stamped on init so the channel dir is
     # tracked and START_SESSION's "read INDEX.md" step finds a well-formed file.
     (dest / "channel" / "INDEX.md").write_text(
-        f"# REVIEW-ROUND LEDGER — {name} [PROTOCOL v2.6]\n\n"
+        f"# REVIEW-ROUND LEDGER — {name} [PROTOCOL v2.7]\n\n"
         "Append-only. Each side appends ONLY its own rows. ROUND-TYPE is one of\n"
         "FREEZE / RESULTS / FIX-CONFIRMATION (see review-convergence.md).\n"
         "Rounds used vs budget: default 2-3 substantive rounds per artifact "
@@ -835,7 +835,7 @@ def stamp(name, dest, profile, roles, role_side, principal,
                 "line with the concrete next action before /sleep.\n",
                 encoding="utf-8")
         (dest / "memory" / role / "auth-log.md").write_text(
-            f"# AUTH-RECORD — {name} / {role} [PROTOCOL v2.6]\n\n"
+            f"# AUTH-RECORD — {name} / {role} [PROTOCOL v2.7]\n\n"
             "Append-only, event-sourced. Single-writer: this role's sessions\n"
             "only, only for words the principal spoke into this session (or\n"
             "a relay verified per proxy-auth-core.md when PROXY_AUTH is on).\n"
@@ -865,13 +865,13 @@ def stamp(name, dest, profile, roles, role_side, principal,
             "Overwrite this line with the concrete next action before /sleep.\n",
             encoding="utf-8")
         (dest / "memory" / "orchestrator" / "dispatch-log.md").write_text(
-            f"# DISPATCH LOG — {name} [PROTOCOL v2.6]\n\n"
+            f"# DISPATCH LOG — {name} [PROTOCOL v2.7]\n\n"
             "Append-only. One line per dispatch:\n"
             "| id | date | task ref | target role | model (rule) | status | result |\n"
             "|---|---|---|---|---|---|---|\n",
             encoding="utf-8")
         (dest / "TASKQUEUE.md").write_text(
-            f"# TASKQUEUE — {name} [PROTOCOL v2.6]\n\n"
+            f"# TASKQUEUE — {name} [PROTOCOL v2.7]\n\n"
             "T1-T3 below are EXAMPLE standing duties seeded by the stamp —\n"
             "when filling BINDINGS, prune/replace them to match the DUTIES\n"
             "binding (a duty in the queue that is not in DUTIES, or vice\n"
@@ -968,7 +968,7 @@ def stamp(name, dest, profile, roles, role_side, principal,
     # the protocol checkout's copy instead.
     conf_src = ROOT / "tools" / "conformance_check.py"
     if conf_src.is_file():
-        header = ("# STAMPED COPY — multi-agent-protocol PROTOCOL v2.6 @ "
+        header = ("# STAMPED COPY — multi-agent-protocol PROTOCOL v2.7 @ "
                   f"{today}. In-workspace HYGIENE SELF-CHECK (workspace-owned "
                   "code); for a trust decision run the protocol checkout's "
                   "copy against this workspace.\n")

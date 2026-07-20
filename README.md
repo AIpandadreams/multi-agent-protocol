@@ -130,7 +130,7 @@ tools/
   watcher.py                generic multi-lane channel watcher (reports only)
   scale_workspace.py        upgrade a 2-agent workspace to 3-agent
   adopt_project.py          adopt an ad-hoc collaboration into a workspace
-  migrate_workspace.py      migrate a stamped v2.5 workspace up to PROTOCOL v2.6
+  migrate_workspace.py      migrate a stamped v2.5/v2.6 workspace up to v2.7
 docs/                       quickstart · architecture · configurations ·
                             protocol · advanced · design · FAQ
 examples/                   a worked end-to-end cycle you can read like a story

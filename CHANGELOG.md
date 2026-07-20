@@ -8,6 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.4.0 | v2.7 | closes the version skew 1.3.0 disclosed: the bundled workspace-lifecycle tooling and its docs move to v2.7 together — `migrate_workspace.py` gains the v2.6 → v2.7 hop *beside* the v2.5 → v2.6 hop it already had, so a v2.5 workspace now reaches v2.7 in ONE run of ONE checkout rather than a two-checkout sequence (the first draft of this release REPLACED the old hop instead of adding it, which would have deleted a working capability from a public tool under a patch bump — caught in review, and the reason this is a MINOR), `conformance_check.py`'s `SUPPORTED_VERSIONS` becomes the three-tuple (v2.5 / v2.6 / v2.7) so older workspaces stay green under a newer checkout, and `new_project.py` stamps fresh workspaces v2.7 — with the banner stamps on `validate_auth_log.py`, `reviewer_poller.py` and `wave_coverage_check.py` moving in the same lockstep (the standalone validator and the copy `new_project.py` embeds are twins, or the stamp emitted disagrees with the tool that checks it). The field behaviour that prompted it was the disclosure working: an installer's agent hit the v2.6-stamp-from-a-v2.7-install mismatch and PAUSED rather than hand-stamping past it. Migration doctrine gains the rule the v2.5 → v2.6 hop learned by tripping a workspace's own integrity gate — a record's banner is part of the record, so append-only files (auth-logs, dispatch/tick logs, channel) are never re-stamped, an older supported stamp on them is green, and every kept record is reported; the check reads the banner line ONLY, counting any marker-shaped token first so a second marker of any shape breaks the exactly-one rule, because body text quotes historical tokens and must never mask a wrong banner |
 | 1.3.0 | v2.7 | `PROTOCOL v2.7`: the public tree crosses to v2.7. Three review-lane lessons banked from live runs fold into the normative skills — seat-qualification on cross-team lines and a cross-team drafting-assist lane (channel-core); carried-claim provenance and "a status claim is a measurement, re-verified not carried" (memory-discipline); sweep-completeness — a narrow probe's silence proves nothing (review-core). A new `docs/CREATOR-SEAT-CHARTER.md` names the *chartered external seat* — a solo, repo-isolated, orchestrator-fronted protocol-stewardship session — as a recognized THIRD identity form beside the role seats and the orchestrator: mandate, boundaries (outward-facing stays the principal's, first-hand; an orchestrator-lane authorization does not lift a principal-first-hand outward gate), cold-start, and an explicit grant of NO new authority; admitted into the FEDERATION identity invariant and the bootstrap's now-topology-aware Design duty. Disclosed skew (deliberate, tracked): the bundled workspace-lifecycle tooling — `new_project.py`, `migrate_workspace.py`, the conformance supported-version set — and its docs stay v2.6 and move together in a later coordinated workspace-migration release; until then a v2.7 install that scaffolds a fresh workspace stamps it v2.6, so the first wake parks protocol-sensitive actions on the stamp mismatch, by design |
 | 1.2.7 | v2.6 | the loop's own failure modes, codified — each burned first-hand before it was written down: a reviewer lane that ANSWERS with a refusal is a third outage shape beside silent and down (cure = accurate description, never evasion; verdicts written incrementally with an explicit incomplete/final marker; a partial stream supplies findings for seat-4 adjudication but NEVER ship authority); convergence gains an execution-environment axis (every shipping platform gets an ACTUAL run wherever runnable coverage exists, else it is recorded UNEXECUTED with the residual risk escalated — the "single-platform chorus" anti-pattern, banked from this repo's own 1.2.6 CI escape, where 21 rounds of review on one host shipped 4 POSIX launch-time errors); verification instruments offered as ship evidence earn the same distrust as the gates they certify (bind to the most structured surface that exists and to exact messages, launch/import/collection failures fail CLOSED to RED, every new guard proves liveness by mutation or is disclosed as defense-in-depth); and the wake gate fails CLOSED when its tool is absent — a workspace missing `tools/conformance_check.py` no longer no-ops the hygiene gate on ANY wake path, `/wake` and the skill-less START_SESSION floor alike, and the checker itself now lists its vendored copy as a required file (this release's one disclosed code change), because a gate that "passes" by never running is the worst false green |
 | 1.2.6 | v2.6 | the fix that reproduced the bug it fixed. 1.2.5 widened the no-BOM gate to every file — and `.ps1` **INVERTS** that rule: Windows PowerShell 5.1 decodes a BOM-*less* UTF-8 script as ANSI and mangles non-ASCII (`§ — é` → `Â§ â€” Ã©`), so the gate would have *commanded the very mojibake the protocol warns about*. PowerShell **script files** (`.ps1`/`.psm1`/`.psd1`/`.psrc`/`.pssc` — the exception follows the 5.1 script/data-file *reader*, not the one suffix that bit us) now REQUIRE the BOM and are checked for it (an exception you cannot state as a rule is a hole). 1.2.5 also fused two different claims — "this artifact must exist here" and "if it exists it must agree with its twin" — making the checker unrunnable in any tree that legitimately does not carry the docs (it went 10-findings red in the private mirror, and a gate nobody can see go green is one people learn to scroll past). A tree may now DECLARE itself in `.mirror-check.json`; relaxations are bounded, printed with reasons, tracked, stale entries are findings, a defective declaration grants NOTHING, and no declaration = the old strict behaviour exactly. Reviewers defeated cut after cut — the mojibake gate alone fell twenty-six times (lookback, span licence, fence claim, marker enumeration, a fence fix that skipped the delimiter line, a lead-set that was still an enumeration, a fence tracker blind to tilde/nested fence shapes, a truncation exception that named one prefix of a family, fences hidden behind list/blockquote markers, a container peel that manufactured fence CLOSERS out of literal marker lines inside a fence — disproving its own "over-peeling only widens scanning" claim — an indented run doing the same through the 4-space/tab hole, a span finder counting stray and escaped backticks as delimiters, a coverage gate sweeping the tree's own characters when corruption arrives as mangles of text that was never there, a liberal OPENER inverting fence phase by consuming the real opener as its closer, a fence-only machine blind to the seven CommonMark HTML-block kinds that swallow fence lines, a Latin-1 boundary that read mangled French œ as prose, a cannot-interrupt-a-paragraph rule built on a blank-line proxy when fences and headings end paragraphs too, and then FOUR block-model divergences in one round — link-reference definitions, container-scoped block state, ordered lists that cannot interrupt a paragraph, and a backtick in a backtick fence's info string — at which point the block model was RETIRED rather than repaired: the exemption no longer consults a document model at all — a candidate is exempt only when its entire line is byte-identical to one of five enumerated documentation lines keyed by exact path, every other line is scanned unconditionally whatever block it sits in, and the allowlist is gated live on stale, dead, and mis-keyed entries — after which the retirement's own first review round cut it twice more: the scanner's line unit was str.splitlines(), whose extra separators (VT/FF/NEL/U+2028/U+2029) let a renderer-visible modified line self-exempt a licensed suffix (lines now end only where markdown ends them), and resolve()-keyed paths let a symlink at an unlisted path inherit an exempt licence while an out-of-tree link crashed the checker (keying is lexical now, and a symlink in the guarded tree is itself a finding — a rule then re-cut one round later because it ran only on files the walk could SEE: rglob looks through neither a symlinked directory nor past a junction, so both guarded trees are now swept for reparse points of every kind, and the resolve()-keyed stamp-exemption map fell to the same junction alias and went lexical too — then cut twice more one round later: os.walk never stats the root it is handed, so a junction replacing an ENTIRE guarded tree walked through the sweep, and without an onerror callback the walk swallowed the OSError from an unlistable directory and called the corner it never read clean, so guarded roots are now reparse-checked before the walk and every unreadable path is a fail-closed finding, while a hostile declaration path — `..` or resolving outside the repo — now refuses the whole declaration instead of coexisting with its own active relaxations); the detector validates by byte round-trip with a stated cp1252-letter-aware prose side, derived truncation families, and a detector-coverage gate over a fixed support alphabet); the next round turned on the gate's own footing outside the mojibake lane: existence became its own gate (shipped transports, all four SKILL.md entrypoints — deletion of any was green), the whole-repo BOM enumeration fails closed instead of trusting rglob's silent error-suppression, case-colliding index entries are a finding (one visible worktree file was certifying a second, unseen released blob), and the declaration loader hardened four more ways (regular-file only — a tracked symlink sourced its relaxation from untracked bytes; duplicate JSON keys refused; duplicate entries refused; canonical POSIX spelling required); the round after THAT found the tracked names themselves hostile: git's UTF-8 pathnames were being decoded with the Windows locale, so a tracked non-ASCII name became a phantom path and its BOM'd blob invisible (BLOCKER), trailing-dot index aliases and NFC/NFD variants joined case collisions as findings, the loader now also requires the tree's exact on-disk spelling, the first existence list was completed (profiles, new_project.py — whose absence silently disarmed the auth-log drift gate — and docs/CLOUD.md, declarable with the docs tree), and scratch dirs the gate never claims are pruned so an unlistable node_modules cannot false-red it; and the round after that turned on the split between the two trees git actually keeps: every byte gate read WORKTREE bytes while a commit ships the INDEX blob, so a BOM'd blob swapped into the index behind a clean worktree twin was green (BLOCKER — divergent staged blobs now go through the byte gates themselves, while a routinely dirty tree stays green because an ordinary edit's staged blob is the last committed content), a tracked-but-deleted worktree path fell out of the tail silently (now a finding, with non-regular and unmerged index entries refused too), the non-portable list learned the names its first cut did not know (Win32-forbidden characters, `CONIN$`, superscript-digit `COM¹`), and an index name that merely RESOLVES to a differently spelled worktree file — an 8.3 short name, a lone case variant — is a finding by exact-spelling comparison, closing the alias family rather than its members; and the round after that beat the cure's own enumeration twice in one verdict — git diff ignores assume-unchanged/skip-worktree entries by design and never content-compares a same-size blob behind an unchanged stat cache, both green — so the scan stopped asking git which entries diverge and reads EVERY staged blob by object id in one cat-file batch (the flags are also findings in themselves), the staged mojibake leg selects on the normalized suffix, and the alias guard learned macOS's decomposed on-disk spellings without re-admitting case or 8.3 aliases — so every gate here is guarded by the mutation that beat its predecessor, and doc/gate suffix parity is itself a gate. Suite 206 → 332 |
@@ -19,6 +20,73 @@ changes only through the
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.4.0] — 2026-07-20
+
+**Closes the version skew 1.3.0 disclosed.** 1.3.0 crossed the skills to
+`PROTOCOL v2.7` but deliberately left the bundled workspace-lifecycle
+tooling — and its docs — at v2.6, to move together in a coordinated
+release. This is that release. Nothing in the protocol itself changes; the
+stamp stays v2.7.
+
+The gap was real in the field, and it behaved as designed: an installer of
+1.3.0 scaffolding a fresh workspace got one stamped v2.6 by a v2.7 install,
+with no supported migrator for the hop — and the agent reading that
+mismatch **paused rather than hand-stamping its way past it**, which is the
+outcome the disclosure was written to produce. Pausing on a known skew is
+correct behaviour; needing to pause is the defect, and it is now closed.
+
+### Workspace-lifecycle tooling moves to v2.7
+
+- `migrate_workspace.py` — gains the **v2.6 → v2.7** hop *beside* the
+  **v2.5 → v2.6** hop it already carried. Both hops ship; the migrator walks
+  the ladder from whatever the workspace is pinned at up to the newest
+  protocol version, in one run:
+
+  | workspace pin | what happens |
+  |---|---|
+  | v2.7 | already newest — clean no-op exit, nothing rewritten |
+  | v2.6 | one hop: v2.6 → v2.7 |
+  | v2.5 | **both hops in one run of one checkout**: v2.5 → v2.6 → v2.7 |
+  | anything else | refused as unsupported, with a message naming the pins that *are* supported |
+
+  The v2.5 case is the one that changed shape. It previously needed a
+  two-checkout sequence — run the old release's migrator to reach v2.6,
+  then the new one to reach v2.7 — because each release shipped exactly one
+  hop. That sequence is now obsolete: a single current checkout carries the
+  whole ladder. Append-only records are scanned once for the entire chain
+  and skipped once (see below), not re-examined per hop, and a `--dry-run`
+  preview of a chained migration reports **both legs**.
+- `conformance_check.py` — `SUPPORTED_VERSIONS` becomes the three-tuple
+  `(v2.5, v2.6, v2.7)`, so live v2.5 and v2.6 workspaces stay green under a
+  v2.7 checkout while fresh v2.7 workspaces are accepted by that same
+  checkout. An older checkout still refuses a newer pin, by design.
+- `new_project.py` — stamps fresh workspaces `v2.7` (bindings, channel
+  ledger, auth-logs, dispatch log, TASKQUEUE, and the stamped validator
+  copy), so a v2.7 install no longer scaffolds a v2.6 workspace.
+- Banner stamps move with them on `validate_auth_log.py`,
+  `reviewer_poller.py`, and `wave_coverage_check.py` — the validator's
+  standalone copy and the one `new_project.py` embeds are twins and move in
+  lockstep, or the stamp they emit disagrees with the tool that checks it.
+
+### Append-only records keep their creation-version stamp
+
+The migration doctrine gains a rule the v2.5 → v2.6 hop learned the hard
+way, by tripping a workspace's own integrity gate: **a record's banner is
+part of the record.** `memory/<role>/auth-log.md`, `dispatch-log.md`,
+`tick-log.md`, and `channel/*.md` are never re-stamped — rewriting a line
+in an append-only file either trips the append-only gates or races a live
+appender. Conformance therefore accepts an *older* supported stamp on those
+records as green, and only a newer, unsupported, malformed, or missing
+banner stamp is a finding. Every kept record is reported, so the skip stays
+auditable rather than silent.
+
+The record-stamp check reads the **banner line only** and parses it in two
+stages: any protocol-marker-shaped token is counted first — so a second
+marker of any shape breaks the exactly-one rule — and the single survivor
+must then be a well-formed `[PROTOCOL vX.Y]` stamp at or below the
+workspace's pin. Body text quotes historical protocol tokens all the time,
+and it must never mask a wrong banner.
 
 ## [1.3.0] — 2026-07-20
 
