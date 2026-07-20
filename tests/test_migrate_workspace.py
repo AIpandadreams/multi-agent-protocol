@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Regression tests for tools/migrate_workspace.py (the v2.6 -> v2.7 migrator).
+"""Regression tests for tools/migrate_workspace.py (the workspace migrator).
+
+The migrator carries a LADDER of hops — v2.5 -> v2.6 -> v2.7 — and walks it
+from whatever the workspace is pinned at up to the newest version, in one run.
+Both hops are supported public capability; the v2.5 one is not a leftover.
 
 The migrator's contract, pinned here:
   - it rewrites the PROTOCOL_VERSION row STRUCTURALLY (any inner spacing) and
-    flips a `[PROTOCOL v2.6]` stamp ONLY on a stamp-bearing line (a heading or a
+    flips a `[PROTOCOL vX.Y]` stamp ONLY on a stamp-bearing line (a heading or a
     tool docstring banner) — so the same literal token inside a PROXY_AUTH row
     or a memory body is left byte-for-byte untouched;
   - it preserves each file's line endings exactly (no CRLF<->LF rewrite);
-  - it is idempotent (already-v2.7 is a no-op) and refuses a non-v2.6 pin;
+  - it is idempotent (already-newest is a no-op) and refuses an unsupported
+    pin, naming the pins that ARE supported;
   - --dry-run writes nothing;
   - it NEVER edits the PROXY_AUTH slot (authority is first-hand only) but PRINTS
     the reword when the slot predates the canonical wording;
@@ -58,16 +63,19 @@ def _stamp(dest, extra_args):
         sys.argv = saved
 
 
-def _downgrade(ws):
-    """Turn a fresh v2.7 stamp into a v2.6 workspace — the inverse of the
-    migrator's flip, for the happy-path round-trip only. (The edge cases below
-    use hand-built fixtures instead, so they don't depend on this.)"""
+def _downgrade(ws, to="v2.6"):
+    """Turn a fresh v2.7 stamp into a `to`-version workspace — the inverse of
+    the migrator's flip, for the happy-path round-trip only. (The edge cases
+    below use hand-built fixtures instead, so they don't depend on this.)
+
+    `to="v2.5"` produces the OLDEST supported pin, which is what exercises the
+    chained two-hop path."""
     for p in mw._text_files(ws):
         text = p.read_text(encoding="utf-8")
-        new = text.replace("[PROTOCOL v2.7]", "[PROTOCOL v2.6]")
+        new = text.replace("[PROTOCOL v2.7]", f"[PROTOCOL {to}]")
         if p.name == "BINDINGS.md":
             new = new.replace("| PROTOCOL_VERSION | v2.7 |",
-                              "| PROTOCOL_VERSION | v2.6 |")
+                              f"| PROTOCOL_VERSION | {to} |")
         if new != text:
             p.write_text(new, encoding="utf-8")
 
@@ -334,13 +342,24 @@ class MigrateStructuralPverTest(unittest.TestCase):
     def test_pver_row_migrated_matching_and_preservation(self):
         # non-matching rows -> None; a matching row flips ONLY the version cell,
         # preserving inner spacing AND any extra trailing cells.
-        self.assertIsNone(mw._pver_row_migrated("| OTHER | v2.6 |"))
-        self.assertIsNone(mw._pver_row_migrated("| PROTOCOL_VERSION | v2.7 |"))
-        self.assertEqual(mw._pver_row_migrated("|  PROTOCOL_VERSION | v2.6  |"),
-                         "|  PROTOCOL_VERSION | v2.7  |")
+        hop = ("v2.6", "v2.7")
+        self.assertIsNone(mw._pver_row_migrated("| OTHER | v2.6 |", *hop))
+        self.assertIsNone(
+            mw._pver_row_migrated("| PROTOCOL_VERSION | v2.7 |", *hop))
         self.assertEqual(
-            mw._pver_row_migrated("| PROTOCOL_VERSION | v2.6 | (pinned x) |"),
+            mw._pver_row_migrated("|  PROTOCOL_VERSION | v2.6  |", *hop),
+            "|  PROTOCOL_VERSION | v2.7  |")
+        self.assertEqual(
+            mw._pver_row_migrated("| PROTOCOL_VERSION | v2.6 | (pinned x) |", *hop),
             "| PROTOCOL_VERSION | v2.7 | (pinned x) |")
+        # the helper is hop-agnostic: the SAME code drives the older leg, so
+        # the v2.5 hop cannot rot behind a v2.6-only implementation
+        older = ("v2.5", "v2.6")
+        self.assertEqual(
+            mw._pver_row_migrated("| PROTOCOL_VERSION | v2.5 |", *older),
+            "| PROTOCOL_VERSION | v2.6 |")
+        self.assertIsNone(
+            mw._pver_row_migrated("| PROTOCOL_VERSION | v2.6 |", *older))
 
 
 class MigratePreservesProtectedContentTest(unittest.TestCase):
@@ -644,6 +663,133 @@ class MigrateGitSyncProfileTest(unittest.TestCase):
             self.assertEqual(non_records, fresh_non_records)
             _, records_before = _split_records(downgraded, before)
             self.assertEqual(records, records_before)
+
+
+class MigrateChainedHopsTest(unittest.TestCase):
+    """The v2.5 -> v2.7 ladder: BOTH hops in ONE run of ONE checkout. The v2.5
+    hop is not a legacy leftover — it is a supported public capability, and
+    removing it silently was the defect this release exists to correct."""
+
+    def test_hop_chain_decision_tree(self):
+        # the tree the docs promise, asserted against the code that derives it
+        self.assertEqual(mw._hop_chain("v2.5"),
+                         [("v2.5", "v2.6"), ("v2.6", "v2.7")])
+        self.assertEqual(mw._hop_chain("v2.6"), [("v2.6", "v2.7")])
+        self.assertEqual(mw._hop_chain("v2.7"), [])       # no-op
+        self.assertIsNone(mw._hop_chain("v2.4"))          # too old
+        self.assertIsNone(mw._hop_chain("v9.9"))          # unknown
+        self.assertIsNone(mw._hop_chain(None))            # absent
+
+    def test_v25_workspace_runs_both_hops_in_one_run(self):
+        with tempfile.TemporaryDirectory() as d:
+            ws = Path(d) / "ws"
+            _stamp(ws, ["--profile", "3agent.local"])
+            _downgrade(ws, to="v2.5")
+            self.assertIn("| PROTOCOL_VERSION | v2.5 |",
+                          (ws / "BINDINGS.md").read_text(encoding="utf-8"))
+            res = mw.migrate(ws)
+            self.assertEqual(res["status"], "migrated")
+            self.assertEqual(res["version_from"], "v2.5")   # ORIGINAL pin
+            self.assertEqual(res["version_to"], "v2.7")
+            self.assertEqual(res["hops"], [("v2.5", "v2.6"), ("v2.6", "v2.7")])
+            self.assertIn("| PROTOCOL_VERSION | v2.7 |",
+                          (ws / "BINDINGS.md").read_text(encoding="utf-8"))
+            # no INTERMEDIATE version is left stranded on a non-record file
+            non_records, _ = _split_records(ws, _read_all(ws))
+            for rel, text in non_records.items():
+                self.assertNotIn("[PROTOCOL v2.5]", text, msg=rel)
+                self.assertNotIn("[PROTOCOL v2.6]", text, msg=rel)
+
+    def test_v25_records_kept_byte_identical_across_BOTH_hops(self):
+        """The keep-records doctrine is current doctrine at EVERY hop — the old
+        rewrite-records behaviour must not come back on the v2.5 leg."""
+        with tempfile.TemporaryDirectory() as d:
+            ws = Path(d) / "ws"
+            _stamp(ws, ["--profile", "3agent.local"])
+            _downgrade(ws, to="v2.5")
+            (ws / "channel" / "zero_token_record.md").write_text(
+                "a v2.5-era channel record with no protocol stamp at all\n",
+                encoding="utf-8")
+            before = _read_all(ws)
+            res = mw.migrate(ws)
+            self.assertEqual(res["status"], "migrated")
+
+            _, records_after = _split_records(ws, _read_all(ws))
+            _, records_before = _split_records(ws, before)
+            # untouched ENTIRELY across the whole chain
+            self.assertEqual(records_after, records_before)
+            # and still carrying their v2.5 creation stamp under a v2.7 pin
+            self.assertTrue(
+                any("[PROTOCOL v2.5]" in t for t in records_after.values()),
+                "fixture proves nothing: no record kept a v2.5 stamp")
+            # exhaustive reporting across the chain, zero-token file included
+            reported = {Path(p).resolve() for p, _ in res["records_kept"]}
+            expected = {(ws / rel).resolve() for rel in records_after}
+            self.assertEqual(reported, expected)
+
+    def test_v25_era_records_stay_green_under_v27_pin(self):
+        """OC-142 pin 1 — the load-bearing property of the whole design. A
+        chained v2.5 -> v2.7 migration leaves `[PROTOCOL v2.5]`-stamped records
+        in a v2.7-pinned workspace, and that must be GREEN: pin-aware
+        `_record_stamp_ok` accepts any supported stamp at-or-below the pin.
+        If this ever stopped holding, chained migration would silently
+        manufacture findings on records it never touched.
+
+        Measured as conformance PARITY against a fresh stamp — the
+        fixture-independent encoding, since an unbound workspace always carries
+        {{FILL}} warnings of its own."""
+        with tempfile.TemporaryDirectory() as d:
+            ws = Path(d) / "ws"
+            fresh = Path(d) / "fresh"
+            _stamp(ws, ["--profile", "3agent.local"])
+            _stamp(fresh, ["--profile", "3agent.local"])
+            _downgrade(ws, to="v2.5")
+            res = mw.migrate(ws)
+            self.assertEqual(res["status"], "migrated")
+
+            # the premise: v2.5 stamps really did survive into a v2.7 workspace
+            _, records = _split_records(ws, _read_all(ws))
+            self.assertTrue(
+                any("[PROTOCOL v2.5]" in t for t in records.values()),
+                "premise failed: no v2.5-stamped record survived the chain")
+            self.assertIn("| PROTOCOL_VERSION | v2.7 |",
+                          (ws / "BINDINGS.md").read_text(encoding="utf-8"))
+
+            code, out = _conformance(ws, strict=True)
+            fresh_code, fresh_out = _conformance(fresh, strict=True)
+            self.assertIn("0 blocker", out)
+            self.assertNotIn("banner lacks", out)
+            self.assertEqual(_finding_count(out), _finding_count(fresh_out),
+                             msg=f"chained:\n{out}\nfresh:\n{fresh_out}")
+            self.assertEqual(code, fresh_code)
+
+    def test_chained_dry_run_previews_the_whole_ladder(self):
+        """A dry run of a v2.5 workspace must preview BOTH legs, not just the
+        first — the later legs read the earlier leg's would-be output."""
+        with tempfile.TemporaryDirectory() as d:
+            ws = Path(d) / "ws"
+            _stamp(ws, ["--profile", "3agent.local"])
+            _downgrade(ws, to="v2.5")
+            before = _read_all(ws)
+            res = mw.migrate(ws, dry_run=True)
+            self.assertEqual(res["status"], "dry-run")
+            self.assertEqual(res["hops"], [("v2.5", "v2.6"), ("v2.6", "v2.7")])
+            # BINDINGS is planned on BOTH legs, so it appears once per hop
+            bindings_passes = [t for t in res["changed"]
+                               if t[0].name == "BINDINGS.md"]
+            self.assertEqual(len(bindings_passes), 2, msg=str(res["changed"]))
+            self.assertEqual(_read_all(ws), before)  # nothing written
+
+    def test_unsupported_message_names_the_supported_pins(self):
+        with tempfile.TemporaryDirectory() as d:
+            ws = Path(d) / "ws"
+            _stamp(ws, ["--profile", "2agent.local"])
+            _set_slot(ws, "PROTOCOL_VERSION", "v2.4")
+            code, out = _migrate_main(ws)
+            self.assertEqual(code, 1)
+            # the refusal must teach the supported starting pins
+            for ver in mw.SUPPORTED_FROM:
+                self.assertIn(ver, out)
 
 
 class MigrateConformanceTest(unittest.TestCase):
