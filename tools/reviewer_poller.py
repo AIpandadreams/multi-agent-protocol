@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Codex-on-PC reviewer poller [PROTOCOL v2.6].
+"""Codex-on-PC reviewer poller [PROTOCOL v2.7].
 
 Bridges agent workspaces to a local Codex reviewer: polls each bound
 workspace repo's channel/ for unanswered review requests
@@ -48,7 +48,7 @@ REQ_RE = re.compile(r"^review_request_(?P<side>[A-Za-z0-9-]+)_r(?P<nn>\d+)\.md$"
 DEFAULT_CODEX_CMD = "codex exec --sandbox read-only -C {workspace}"
 
 PROMPT_HEADER = """You are the independent reviewer for a multi-agent workspace \
-(PROTOCOL v2.6). Below is a review request file. Review it against the \
+(PROTOCOL v2.7). Below is a review request file. Review it against the \
 workspace's files (read-only). Verdict contract: overall ADOPT / \
 ADOPT-WITH-CHANGES / REJECT, plus numbered findings tagged \
 BLOCKER/MAJOR/MODERATE/MINOR with file:line and a concrete fix each. \
@@ -135,7 +135,7 @@ def review_one(ws: Path, req: Path, verdict: Path, codex_cmd: str,
         out = out[out.index("# Verdict"):]
     verdict.write_text(
         out + "\n\n*— verdict produced by the local Codex reviewer via "
-        "reviewer_poller.py [PROTOCOL v2.6]*\n", encoding="utf-8")
+        "reviewer_poller.py [PROTOCOL v2.7]*\n", encoding="utf-8")
     run(["git", "add", verdict.name], cwd=ws / "channel")
     run(["git", "commit", "-m", f"verdict: {verdict.name} (reviewer poller)"],
         cwd=ws)

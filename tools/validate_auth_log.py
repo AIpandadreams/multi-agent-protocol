@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Auth-log chain validator [PROTOCOL v2.6] — mechanical enforcement of the
+"""Auth-log chain validator [PROTOCOL v2.7] — mechanical enforcement of the
 exactly-one-landed-CONSUMED audit rule (proxy-auth-core.md) over every
 memory/<role>/auth-log.md in this workspace:
 

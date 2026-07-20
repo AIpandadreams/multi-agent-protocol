@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Workspace conformance suite [PROTOCOL v2.5 / v2.6].
+"""Workspace conformance suite [PROTOCOL v2.5 / v2.6 / v2.7].
 
 A self-runnable, point-in-time readiness check for a stamped workspace.
 Where the integrity CI protects the coordination *record over time*
@@ -14,8 +14,10 @@ Version handling is PIN-AWARE: the workspace's own `PROTOCOL_VERSION` must be
 one of the SUPPORTED_VERSIONS (a version outside the set is a BLOCKER — the
 required-file and stamp expectations are undefined for it), and every per-file
 stamp (auth-logs, channel INDEX) is checked against that WORKSPACE'S pinned
-version, not a hardcoded literal. This keeps a live v2.5 workspace green under a
-v2.6 checkout of the suite, and vice-versa.
+version, not a hardcoded literal. This keeps v2.5 and v2.6 workspaces green
+under a v2.7 checkout of the suite, while fresh v2.7 workspaces are accepted by
+that same checkout. (An OLDER checkout does not learn newer pins — a
+v2.7-pinned workspace under a v2.6-era checkout is a BLOCKER by design.)
 
 Run it from a protocol checkout for a TRUST decision and point --workspace
 at the workspace you want to check. (Stamping also drops a copy of this file
@@ -31,9 +33,11 @@ Exit 0 = conformant (no BLOCKER; and no WARN under --strict); 1 = findings.
 BLOCKER = structurally broken or unsafe (missing required file, wrong/unknown
 profile, unsupported PROTOCOL_VERSION, weakened PROXY_AUTH guard, broken
 auth-log chain). WARN = stamped but not yet fully bound, or cosmetic drift
-(unfilled slot, a per-file stamp/header that doesn't match the workspace's
-pinned version) — resolve before relying on the workspace, or gate with
---strict.
+(unfilled slot; a per-file record banner whose stamp is not a supported
+version at-or-below the workspace's pin — append-only records legitimately
+keep the stamp of the version they were CREATED under, so an OLDER supported
+stamp is green, only a newer/unsupported/missing banner stamp is a finding) —
+resolve before relying on the workspace, or gate with --strict.
 """
 import argparse
 import re
@@ -67,9 +71,9 @@ ABS_PATH_RE = re.compile(
 
 # Protocol versions this suite knows how to validate. A workspace pinned outside
 # the set is a BLOCKER (its file/stamp expectations are undefined here); a
-# workspace pinned inside it is checked against its OWN version, so both a live
-# v2.5 and a fresh v2.6 workspace pass under one checkout of this tool.
-SUPPORTED_VERSIONS = ("v2.5", "v2.6")
+# workspace pinned inside it is checked against its OWN version, so a live v2.5
+# or v2.6 workspace and a fresh v2.7 one all pass under one checkout of this tool.
+SUPPORTED_VERSIONS = ("v2.5", "v2.6", "v2.7")
 VERSION_RE = re.compile(r"v2\.\d+")
 
 
@@ -242,15 +246,62 @@ def check_bindings(ws: Path, slots, roles, pinned, f: Findings):
                       "guard clause is missing from the slot")
 
 
+def _ver_tuple(v):
+    """'v2.6' -> (2, 6) for ordering comparisons."""
+    return tuple(int(x) for x in v.lstrip("v").split("."))
+
+
+# Two-stage banner parse: ANY protocol-marker-shaped token is counted first
+# (so a second marker of ANY version shape — `[PROTOCOL v3.0]`, `[PROTOCOL
+# v26]` — breaks the exactly-one rule), then the single survivor must match
+# the strict well-formed stamp. A v2.x-only counting regex would let a
+# non-v2.x second marker escape the count (codex r3 probe).
+_BANNER_ANY_STAMP_RE = re.compile(r"\[PROTOCOL\b[^\]]*\]")
+_BANNER_STAMP_RE = re.compile(r"\[PROTOCOL (v2\.\d+)\]")
+
+
+def _record_stamp_ok(text, pinned):
+    """APPEND-ONLY records (auth-logs, channel INDEX) keep the stamp of the
+    protocol version they were CREATED under — a record's banner is part of
+    the record, and version migrations never rewrite append-only files (doing
+    so would trip the records' own append-only integrity gates). Judged on the
+    record's BANNER LINE ONLY (first content line, BOM-tolerant) — body text
+    naturally quotes historical protocol tokens and must never mask a wrong,
+    newer, or missing banner. Valid = the banner carries exactly one
+    protocol-marker-shaped token AND that token is a well-formed
+    [PROTOCOL vX.Y] stamp whose version is a SUPPORTED_VERSIONS member that
+    does not exceed the workspace pin. Anything else (no banner token, a
+    second marker of ANY shape, unsupported, malformed, or newer than pin)
+    is a finding."""
+    if pinned is None:
+        return True
+    banner = None
+    for line in text.splitlines():
+        if line.lstrip("﻿").strip():
+            banner = line
+            break
+    if banner is None:
+        return False
+    markers = _BANNER_ANY_STAMP_RE.findall(banner)
+    if len(markers) != 1:
+        return False
+    m = _BANNER_STAMP_RE.fullmatch(markers[0])
+    if m is None:
+        return False
+    v = m.group(1)
+    return v in SUPPORTED_VERSIONS and _ver_tuple(v) <= _ver_tuple(pinned)
+
+
 def check_auth_logs(ws: Path, roles, pinned, f: Findings):
-    stamp = f"[PROTOCOL {pinned}]" if pinned else None
     for role in sorted(roles):
         p = ws / "memory" / role / "auth-log.md"
         if not p.is_file():
             continue  # missing-file already reported by structure check
         t = p.read_text(encoding="utf-8", errors="replace")
-        if stamp and stamp not in t:
-            f.warn(f"memory/{role}/auth-log.md missing {stamp} stamp")
+        if pinned and not _record_stamp_ok(t, pinned):
+            f.warn(f"memory/{role}/auth-log.md banner lacks exactly one "
+                   f"supported creation-version PROTOCOL stamp <= pin "
+                   f"({pinned})")
         if "Append-only" not in t or "Single-writer" not in t:
             f.warn(f"memory/{role}/auth-log.md missing append-only/"
                    "single-writer header")
@@ -295,9 +346,9 @@ def check_channel(ws: Path, pinned, f: Findings):
     if not p.is_file():
         return  # reported by structure check
     t = p.read_text(encoding="utf-8", errors="replace")
-    stamp = f"[PROTOCOL {pinned}]" if pinned else None
-    if stamp and stamp not in t:
-        f.warn(f"channel/INDEX.md missing {stamp} stamp")
+    if pinned and not _record_stamp_ok(t, pinned):
+        f.warn(f"channel/INDEX.md banner lacks exactly one supported "
+               f"creation-version PROTOCOL stamp <= pin ({pinned})")
     if "REVIEW-ROUND LEDGER" not in t:
         f.warn("channel/INDEX.md missing the REVIEW-ROUND LEDGER header")
     if "| round | side |" not in t:

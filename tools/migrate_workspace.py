@@ -1,32 +1,46 @@
 #!/usr/bin/env python3
-"""Migrate a stamped v2.5 workspace up to PROTOCOL v2.6 [PROTOCOL v2.6].
+"""Migrate a stamped v2.6 workspace up to PROTOCOL v2.7 [PROTOCOL v2.7].
 
 The version-migrate gap in the lifecycle family: `new_project.py` stamps a
 FRESH workspace, `scale_workspace.py` grows a 2-agent workspace to 3, and
 `adopt_project.py` adopts an ad-hoc collaboration — but nothing carries a LIVE
 stamped workspace across a protocol-version bump. This tool does, for the one
-supported hop v2.5 -> v2.6.
+supported hop v2.6 -> v2.7. (An earlier hop — v2.5 -> v2.6 — is served by the
+checkout that carried it; a v2.5 workspace migrates in two steps, oldest hop
+first.)
 
 It follows `scale_workspace.py`'s contract exactly, because the same design line
 applies: a tool may mutate a workspace's STRUCTURE mechanically, but the
 principal-owned and agent-owned surfaces are NEVER rewritten by an installer.
 
 WHAT IT DOES (mechanical, idempotent, reversible):
-  - rewrites the workspace's PROTOCOL_VERSION binding row v2.5 -> v2.6
+  - rewrites the workspace's PROTOCOL_VERSION binding row v2.6 -> v2.7
     STRUCTURALLY (matched by slot name, any inner spacing) so version detection
     and the rewrite can never disagree — it flips ONLY the version cell and
     preserves the row's spacing and any extra cells, dropping nothing
-  - flips a `[PROTOCOL v2.5]` stamp -> `[PROTOCOL v2.6]` ONLY on a file's BANNER
+  - flips a `[PROTOCOL v2.6]` stamp -> `[PROTOCOL v2.7]` ONLY on a file's BANNER
     line — its title heading or docstring banner: the first content line, or
-    the second when the first is a shebang (BINDINGS header, auth-logs,
-    channel/INDEX, dispatch-log, TASKQUEUE, START_SESSION files, the stamped
-    validator copy). That banner is the SOLE place new_project.py emits a stamp.
+    the second when the first is a shebang (BINDINGS header, TASKQUEUE,
+    START_SESSION files, the stamped validator copy). That banner is the SOLE
+    place new_project.py emits a stamp.
+  - EXCEPT append-only records: `memory/<role>/auth-log.md`,
+    `memory/<role>/dispatch-log.md`, `memory/<role>/tick-log.md`, and
+    `channel/*.md` are NEVER touched — their banner keeps the stamp of the
+    version they were CREATED under. A record's banner is part of the record;
+    rewriting it would remove a line from an append-only file and either trip
+    the workspace's own integrity gates (auth-logs / channel — the v2.5->v2.6
+    hop did exactly that and ate a red CI run) or race a live appender
+    (dispatch/tick logs are written by scheduled tasks). conformance_check
+    accepts a supported creation-version stamp on these files, so keeping the
+    old banner is green, not a finding. EVERY kept record is REPORTED —
+    including those carrying no old-version token — so the skip is exhaustive
+    and auditable, never silent.
   - preserves each file's existing line endings exactly (no CRLF<->LF rewrite)
 
   Because the flip is confined to the banner line, the same literal token
   appearing anywhere else — inside a PROXY_AUTH/authority row, a memory-body
   heading or prose (e.g. an emitted packet's provenance line), or a fenced
-  example of a stamp — is LEFT UNTOUCHED (a bare "v2.5" that is real content is
+  example of a stamp — is LEFT UNTOUCHED (a bare "v2.6" that is real content is
   likewise left alone). Every such left-untouched token is REPORTED, so the
   conservative skip is auditable rather than silent, and the operator confirms
   each is intended content (historical provenance, an authority note, a doc
@@ -38,24 +52,25 @@ WHAT IT DOES NOT DO (judgement — it PRINTS what to do, never does it):
     version token inside one (a PROXY_AUTH change is first-hand-only). If the
     workspace's PROXY_AUTH predates v2.6's canonical super-class wording it
     prints the reword to apply by hand.
-  - it never adds the new v2.6 binding slots (TRANSPORT / WORKSPACE_REMOTE /
-    SECRETS / AUTONOMY / WATCHER / ROLE_ALIASES) — it prints the ones not yet
-    present, flagged by whether they apply to this workspace's profile, so the
-    principal adds the rows they want.
+  - it never adds binding slots. v2.7 introduces NO new slots; the v2.6 slot
+    family (TRANSPORT / WORKSPACE_REMOTE / SECRETS / AUTONOMY / WATCHER /
+    ROLE_ALIASES) remains advisory — it prints any not yet present, flagged by
+    whether they apply to this workspace's profile, so the principal adds the
+    rows they want.
   - it never rewrites coordination state (channel rows, counters, memory) —
     carrying live state across a boundary is the agents' retrospective work.
 
 Because it only rewrites version tokens, a migration reverts cleanly with a
 single `git revert`. Pin-aware conformance means a not-yet-migrated workspace
-stays green under a v2.6 checkout, so workspaces migrate independently, each at
+stays green under a v2.7 checkout, so workspaces migrate independently, each at
 its own freeze boundary.
 
 Usage:
   python tools/migrate_workspace.py --workspace path/to/ws            # migrate
   python tools/migrate_workspace.py --workspace path/to/ws --dry-run  # preview
 
-Idempotent: a second run finds v2.6 and does nothing. Exit 0 = migrated /
-already-v2.6 / dry-run; 1 = not a v2.5 workspace (unknown version, or no
+Idempotent: a second run finds v2.7 and does nothing. Exit 0 = migrated /
+already-v2.7 / dry-run; 1 = not a v2.6 workspace (unknown version, or no
 BINDINGS); 2 = usage error. A successful migration may still leave conformance
 findings that need a hand-edit (the PROXY_AUTH reword, unfilled new slots) —
 those are PRINTED, and the operator runs `conformance_check.py --strict` as the
@@ -85,8 +100,8 @@ def _load(mod_name, filename):
 # as the final gate).
 cc = _load("conformance_check", "conformance_check.py")
 
-FROM_VER = "v2.5"
-TO_VER = "v2.6"
+FROM_VER = "v2.6"
+TO_VER = "v2.7"
 STAMP_FROM = f"[PROTOCOL {FROM_VER}]"
 STAMP_TO = f"[PROTOCOL {TO_VER}]"
 
@@ -109,10 +124,11 @@ _STAMP_LINE_PREFIXES = ("#", "<!--", '"""', "'''")
 # text-mode CRLF<->LF rewrite.
 _LINE_SPLIT = re.compile(r"(\r\n|\r|\n)")
 
-# The v2.6 binding slots a v2.5 workspace lacks — printed as "consider adding",
-# never stamped. (name, one-line note, applicability): "always" = add on any
-# workspace; "git-sync" = only when the transport is git-sync; "if-*" = a
-# conditional the operator judges.
+# The v2.6 slot family a workspace may still lack — printed as "consider
+# adding", never stamped. v2.7 introduces NO new binding slots, so this list is
+# unchanged across the v2.6 -> v2.7 hop. (name, one-line note, applicability):
+# "always" = add on any workspace; "git-sync" = only when the transport is
+# git-sync; "if-*" = a conditional the operator judges.
 NEW_V26_SLOTS = [
     ("TRANSPORT", "name the transport explicitly (local-fs / git-sync)",
      "always"),
@@ -143,6 +159,18 @@ def _text_files(ws):
         yield p
 
 
+def _is_append_only_record(ws, p):
+    """True for append-only record families: auth-logs and channel files (held
+    append-only by the workspace integrity gates) plus dispatch/tick logs
+    (self-declared append-only, written by live scheduled tasks — rewriting one
+    races a concurrent append). These keep their creation-version banner; the
+    migrator never rewrites them."""
+    rel = p.relative_to(ws).as_posix()
+    if re.fullmatch(r"memory/[^/]+/(auth|dispatch|tick)-log\.md", rel):
+        return True
+    return rel.startswith("channel/") and rel.endswith(".md")
+
+
 def _is_stamp_line(line):
     """Looks like a stamp banner: a heading or docstring/comment line (never a
     `|`-row or prose). Necessary but not sufficient — it must ALSO be the file's
@@ -166,9 +194,9 @@ def _banner_index(segments):
 
 
 def _pver_row_migrated(line):
-    """If `line` (no terminator) is a `| PROTOCOL_VERSION | v2.5 | ... |` table
+    """If `line` (no terminator) is a `| PROTOCOL_VERSION | v2.6 | ... |` table
     row (any inner spacing, any extra trailing cells), return the same row with
-    ONLY the version cell flipped v2.5 -> v2.6; else None. A structural match on
+    ONLY the version cell flipped v2.6 -> v2.7; else None. A structural match on
     the slot name + value cell, so whitespace-tolerant detection and the rewrite
     agree — and no other cell's content is ever normalized away or dropped."""
     parts = line.split("|")
@@ -225,7 +253,7 @@ def _plan_file(p):
 
 
 def migrate(ws, dry_run=False):
-    """Flip the version tokens across a v2.5 workspace. Pure of argparse.
+    """Flip the version tokens across a v2.6 workspace. Pure of argparse.
 
     Returns a result dict: {status, ...}. status is one of
       'migrated' | 'dry-run' | 'already' | 'unsupported' | 'error'.
@@ -245,7 +273,16 @@ def migrate(ws, dry_run=False):
 
     changed = []
     left = []
+    records_kept = []
     for p in _text_files(ws):
+        if _is_append_only_record(ws, p):
+            try:
+                txt = p.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                txt = ""
+            # EVERY record is reported (n may be 0) — exhaustive, not filtered.
+            records_kept.append((p, txt.count(STAMP_FROM)))
+            continue  # append-only record — creation stamp kept, never rewritten
         new, n_stamps, pver_flipped, skipped = _plan_file(p)
         if skipped:
             left.append((p, skipped))
@@ -257,7 +294,8 @@ def migrate(ws, dry_run=False):
                 f.write(new)
     return {"status": "dry-run" if dry_run else "migrated",
             "version_from": FROM_VER, "version_to": TO_VER,
-            "changed": changed, "left_untouched": left}
+            "changed": changed, "left_untouched": left,
+            "records_kept": records_kept}
 
 
 def proxy_auth_gaps(slots):
@@ -348,7 +386,7 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", required=True,
-                    help="workspace root to migrate v2.5 -> v2.6")
+                    help="workspace root to migrate v2.6 -> v2.7")
     ap.add_argument("--dry-run", action="store_true",
                     help="list what would change; write nothing")
     args = ap.parse_args()
@@ -382,6 +420,21 @@ def main():
     for p, n, pver in sorted(changed, key=lambda t: str(t[0])):
         tag = " (+PROTOCOL_VERSION)" if pver else ""
         print(f"    {p.relative_to(ws).as_posix()}: {n} stamp(s){tag}")
+
+    kept = result.get("records_kept", [])
+    if kept:
+        total_kept = sum(n for _, n in kept)
+        with_tok = [(p, n) for p, n in kept if n]
+        print(f"\n  append-only records kept as-is — ALL {len(kept)} record "
+              f"file(s) skipped (auth/dispatch/tick logs + channel; creation "
+              f"stamp kept, conformance accepts a supported one); "
+              f"{total_kept} `{STAMP_FROM}` token(s) in {len(with_tok)} of them:")
+        for p, n in sorted(with_tok, key=lambda t: str(t[0])):
+            print(f"    {p.relative_to(ws).as_posix()}: {n}")
+        no_tok = len(kept) - len(with_tok)
+        if no_tok:
+            print(f"    (+ {no_tok} record file(s) with no `{STAMP_FROM}` "
+                  "token — skipped all the same)")
 
     left = result.get("left_untouched", [])
     if left:

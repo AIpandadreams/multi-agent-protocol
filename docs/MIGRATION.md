@@ -168,6 +168,6 @@ but two live runs earned these notes:
 - `tools/adopt_project.py` — adopting an ad-hoc collaboration stamps the new
   workspace and then points here for the live-lane cutover.
 - `tools/migrate_workspace.py` — the *version* axis of migration (carrying a
-  stamped workspace across a PROTOCOL version bump, v2.5 → v2.6), distinct from
+  stamped workspace across a PROTOCOL version bump, v2.6 → v2.7), distinct from
   the *channel* migration this doc covers. It flips the version stamps only and
   points back here for the counter/state carry.
