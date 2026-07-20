@@ -1,4 +1,4 @@
-# Personal-assistant duties [PROTOCOL v2.6]
+# Personal-assistant duties [PROTOCOL v2.7]
 
 Read once per workspace. The DUTIES binding selects which of these an instance
 runs; the global PA default is all of them. Every duty obeys the

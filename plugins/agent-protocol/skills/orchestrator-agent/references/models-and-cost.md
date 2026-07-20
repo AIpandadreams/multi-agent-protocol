@@ -1,4 +1,4 @@
-# Model selection + cost governor [PROTOCOL v2.6]
+# Model selection + cost governor [PROTOCOL v2.7]
 
 Read once per workspace. The live matrix itself is the workspace's `MODELS.md`
 (stamped from `profiles/MODELS.md`): per-role default + allowed alternates +

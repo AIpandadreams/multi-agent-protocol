@@ -6,7 +6,7 @@ work — without losing control of authorization, history, or quality.**
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml/badge.svg)](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml)
 [![Release](https://img.shields.io/github/v/release/AIpandadreams/multi-agent-protocol?sort=semver)](https://github.com/AIpandadreams/multi-agent-protocol/releases)
-[![Protocol](https://img.shields.io/badge/protocol-v2.6-informational)](docs/PROTOCOL.md)
+[![Protocol](https://img.shields.io/badge/protocol-v2.7-informational)](docs/PROTOCOL.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A2BE2)](docs/QUICKSTART.md#1-install-the-plugin)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen)](#trust-properties)
@@ -157,6 +157,7 @@ for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 - [DESIGN](docs/DESIGN.md) — what's proven, what's deliberately simplified, what's roadmap
 - [REVIEW_CONVERGENCE](docs/REVIEW_CONVERGENCE.md) — the independent-review evidence trail behind this release
 - [CREATOR-SEAT-BOOTSTRAP](docs/CREATOR-SEAT-BOOTSTRAP.md) — a single-file handoff that turns a fresh Claude session into a protocol creator: design interview, SOP catalog, runbook library, incident case studies
+- [CREATOR-SEAT-CHARTER](docs/CREATOR-SEAT-CHARTER.md) — the durable charter for a "chartered external seat": what a standing, repo-isolated, orchestrator-fronted stewardship session is, its mandate and boundaries
 - [SOP-REGISTRY](docs/SOP-REGISTRY.md) — principal-ruled standing orders over the protocol, and the cross-team registry pattern
 - [FAQ](docs/FAQ.md)
 

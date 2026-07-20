@@ -1,4 +1,4 @@
-# Review NORMATIVE CORE [PROTOCOL v2.6] — single source of truth
+# Review NORMATIVE CORE [PROTOCOL v2.7] — single source of truth
 
 > Referenced by every role skill's review-protocol file. Identical for all
 > sides by construction: it exists once, here.
@@ -201,6 +201,12 @@ verification instrument offered as SHIP EVIDENCE:
   demonstration appropriate to it — delete or mutate it in a scratch copy and
   demand the specific finding — and when no real input can reach the mutated
   condition, DISCLOSE the guard as defense-in-depth instead of faking coverage.
+- **A negative result is only as good as the sweep that produced it.** A check
+  that returns "clean" proves nothing if its pattern is narrow — widen the
+  alternation past what feels necessary and read every hit before trusting the
+  absence. A narrow pattern's silence is not evidence of absence; this applies
+  to your own instruments too — a monitor watching too narrow a header pattern
+  goes silently deaf while looking exactly like a quiet lane.
 
 ## VERDICT CONTRACT
 

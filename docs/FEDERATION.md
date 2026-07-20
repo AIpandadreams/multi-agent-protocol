@@ -63,6 +63,18 @@ A relay lane is a mail slot between two buildings, not a shared hallway.
   transcript/registry evidence channel-core already requires, not a name in a
   global table.
 
+- **A chartered external seat is a third identity form.** Alongside a bound
+  `<project>/<side>` role and a full federated team, the protocol recognizes
+  a **chartered external seat**: a single session that lives *outside* every
+  workspace, owns no canonical team repo, and reaches the principal *through*
+  the orchestrator rather than acting as a workspace role. It sits where the
+  two axes cross: repo-isolated like a federated team, orchestrator-fronted
+  like a global-PA worker (see the global-PA vs. federation section below,
+  and [CREATOR-SEAT-CHARTER.md](CREATOR-SEAT-CHARTER.md)). It is still not a
+  typeable global handle. Its identity is the `<project>/<side>` pair (its
+  own product repo plus a `creator`-class seat name), carried by the same
+  transcript/registry evidence, never a name in a global table.
+
 ## Relay hygiene
 
 The most common relay failure is a **stale re-ask**: `team-b`'s relay agent asks

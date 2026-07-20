@@ -1,4 +1,4 @@
-# SOPs and the cross-team registry [PROTOCOL v2.6]
+# SOPs and the cross-team registry [PROTOCOL v2.7]
 
 Standing Operating Procedures are **principal-ruled standing orders layered on
 top of the protocol**. The protocol defines the invariant machinery (roles,

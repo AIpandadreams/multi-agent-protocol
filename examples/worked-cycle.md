@@ -50,7 +50,7 @@ Post review_request_builder_r03 for t7-dep-report; fingerprint first.
 `channel/review_request_builder_r03.md`:
 
 ```
-# review request — builder r03 [PROTOCOL v2.6]
+# review request — builder r03 [PROTOCOL v2.7]
 artifact set:    docs/dep-risk-api.md · docs/dep-risk-api.html (rendered twin,
                  UNCHANGED — twins fail as a pair) · data/deps.lock (the input
                  the report's claims are derived from, unchanged)
@@ -112,7 +112,7 @@ A fresh session, no context, in the workspace directory:
 The wake report:
 
 ```
-☀️ AWAKE — builder @ demoproject-ws [PROTOCOL v2.6]
+☀️ AWAKE — builder @ demoproject-ws [PROTOCOL v2.7]
 State: entry 4 next · round r04 next · T7 in flight (fixes committed,
   re-review pending)
 Channel: clean (orch 3, owner 5 acked)

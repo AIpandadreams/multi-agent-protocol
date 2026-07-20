@@ -1,4 +1,4 @@
-# Memory discipline [PROTOCOL v2.6]
+# Memory discipline [PROTOCOL v2.7]
 
 > Tier: once per project. Identical for all roles.
 
@@ -25,6 +25,13 @@ so this discipline is the architecture, not a courtesy.
   relays can re-deliver an already-processed result. Before acting on one,
   check the round ledger / memory counters — if that round or unit is already
   recorded as processed, it is a stale echo: note it, act on nothing.
+- **A carried claim is unverified by construction.** The provenance pass
+  covers inherited and boilerplate lines — re-cut footers, copied status
+  lines — not just the lines you authored. Any sentence asserting a PRIOR
+  artifact's STATE (its pin, its published status, its created-at) is
+  re-measured at every re-cut, never copied forward. Re-verify a referenced
+  substrate's pin at CONSUMPTION time; a moved pin is a finding to REPORT,
+  never a silent re-pin.
 - **The ⚡ working-state block is the successor interface for ALL roles** — a
   compact block at the top of the memory index (counters, in-flight units,
   queue tips, last tick) that a cold successor reads FIRST. Prose below it is
@@ -35,6 +42,12 @@ so this discipline is the architecture, not a courtesy.
   as local FUTURE-STAMPS the canonical resume state. A successor that reads
   an implausible (future) stamp treats the block as SUSPECT and re-derives
   the picture from the underlying artifacts before trusting it.
+- **A status claim about another seat is a MEASUREMENT, not a recollection.**
+  Before any checkpoint, sleep-receipt, or status line about another seat —
+  its gate, its sign-off, its last entry — re-read that seat's
+  source-of-truth tail (its auth-log, its channel) first-hand at write time.
+  A fact true earlier in the session may have changed since; the earlier
+  read is not evidence about the current state.
 - **Soft cap, trim-on-idle:** when the index outgrows a comfortable
   single-read, finish the in-flight unit first — trimming may wait for the
   next idle tick. Split topic files EARLY (at the first sign a theme

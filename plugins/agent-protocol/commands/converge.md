@@ -3,7 +3,7 @@ description: "Run a multi-round convergence review of a committed artifact SET t
 argument-hint: "<artifact>... [--rounds N]"
 ---
 
-# /converge — drive a review series to convergence [PROTOCOL v2.6]
+# /converge — drive a review series to convergence [PROTOCOL v2.7]
 
 Run the multi-round convergence cycle over an **artifact set**: peer round →
 cross-vendor round → fix-confirmation round(s) → stop on the reviewer's own

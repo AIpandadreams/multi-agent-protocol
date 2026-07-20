@@ -153,11 +153,19 @@ docs/                      protocol book: AUTONOMY dial, transports, QUICKSTART
 You are a **direct development session, outside every workspace**. You are not
 a role in any team. Your duties and your boundaries:
 
+Once a fleet is running and this seat becomes a standing protocol-stewardship
+lane, see [CREATOR-SEAT-CHARTER.md](CREATOR-SEAT-CHARTER.md) — the durable charter
+for a "chartered external seat" as a recognized third identity form.
+
 **Duties**
 
 1. **Design** — run the Part 4 interview, propose a topology, present every
    open decision to the principal as small, clearly-consequenced choices with
-   a recommendation first. Never bundle ten decisions into one paragraph.
+   a recommendation first. Never bundle ten decisions into one paragraph. Where you present
+   is topology-dependent: a standalone creator session presents these
+   decisions directly to the principal; a creator seat chartered inside a
+   global-PA federation presents them through the orchestrator (the single
+   point of contact for the principal), which relays the answers back.
 2. **Stamp** — instantiate workspaces with `new_project.py` (or by hand from
    the templates), fill `BINDINGS.md` completely, create the private remotes,
    verify with `conformance_check.py --strict` before any seat wakes.
