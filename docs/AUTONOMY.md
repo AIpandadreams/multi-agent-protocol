@@ -14,8 +14,9 @@ in between.
 
 ### What makes it safe
 
-Autonomy is only responsible if an unattended agent cannot (a) lose state or
-(b) exceed its authority. The protocol guarantees both:
+Autonomy is only responsible if an unattended agent cannot (a) lose state,
+(b) exceed its authority, or (c) hide a failure behind a mechanism that still
+looks healthy. The protocol guarantees all three:
 
 - **State can't be lost.** Every shipped unit is checkpointed to the ⚡
   working-state block in the workspace repo before it counts. A session that
@@ -29,6 +30,17 @@ Autonomy is only responsible if an unattended agent cannot (a) lose state or
   embargoes / the protocol) are first-hand-only in every configuration. An
   unattended agent that reaches one of those gates *stops and surfaces it*
   rather than proceeding.
+- **Concealment can't be silent.** Every mechanism that makes the work easier
+  to run — a monitor, a summary, a heartbeat, a gate — also makes *some*
+  failure harder to see: a monitor watching too narrow a pattern goes deaf
+  while looking healthy, a summary drops the detail a later check needed, a
+  gate passing on a stale fingerprint hides the mismatch. So a mechanism is
+  responsible only if it **declares what it makes harder to observe and ships
+  the compensating probe** that restores that visibility — a named blind spot
+  with a probe is safe; a silent one is where failures live. This is a
+  disclosure the mechanism owes, not a new gate on top of the two above; the
+  rule a proposal states it under is in
+  [self-improvement-protocol.md](../plugins/agent-protocol/skills/agent-core/references/self-improvement-protocol.md).
 
 ### The mechanisms
 

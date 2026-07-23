@@ -19,6 +19,16 @@ agent ever being able to quietly rewrite its own rules.
    handed to the principal where the agent has no push access). Each proposal
    states: the friction/failure that motivates it, the exact text change, and
    what it would have changed in past operation.
+   A proposal that introduces or changes a **mechanism** — a monitor, a gate, a
+   summary step, a heartbeat, a tool, an SOP — states one item more: its
+   **observability cost**, meaning what the mechanism makes harder to see and
+   the compensating probe that restores that visibility (a monitor names the
+   pattern it could go deaf to and ships a self-test that re-emits a known
+   entry; a summary names the detail it drops and where the unabridged form
+   still lives). This is a fourth thing the proposal states, alongside the
+   three above, read by the reviewer like any other claim — a disclosure the
+   proposal owes, not a new gate or admissibility rule. The narrative home is
+   [AUTONOMY.md](../../../../../docs/AUTONOMY.md), "What makes it safe".
 4. **Review:** every amendment gets an independent reviewer round (same
    verdict contract). Reviewer focus: does the change weaken any gate,
    boundary, or disclosure rule? Does it contradict other protocol text
