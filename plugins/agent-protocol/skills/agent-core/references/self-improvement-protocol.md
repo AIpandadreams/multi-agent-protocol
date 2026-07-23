@@ -101,6 +101,70 @@ agent ever being able to quietly rewrite its own rules.
   branch protection / a ruleset has "Require review from Code Owners" enabled
   (CODEOWNERS alone merely requests reviewers); back it with a standing reviewer
   checklist item ("does this PR touch a principal-locked section?").
+- **Provenance admissibility (a bar applied to artifacts and to citations of authority
+  offered as gate evidence):** an artifact offered at a gate — a table, a count, a hash,
+  a diff, a measurement — is **inadmissible** unless it carries **valid provenance**: the
+  command or procedure that produced it, stated **verbatim**, in the form another party
+  could run or follow; the inputs it was applied to, identified precisely enough to do it
+  again; and,
+  where the artifact asserts a count, a shape, or a coverage, the assertion that was
+  checked when it was written. Provenance is **recorded, not
+  remembered** — it travels with the artifact, so that a reader who was not present can
+  re-derive the result rather than take it on trust. A **wrongly recorded** provenance is
+  worse than none, because it reads as a verified record while directing any re-run at
+  the wrong thing; so provenance that does not resolve to what actually produced the
+  artifact is **absent provenance, not weak provenance**, and is refused on the same
+  terms. (Worked: a hash offered without the command that computed it is a number, not a
+  record — a reader cannot tell which bytes were hashed, or by what.) Where the source is
+  **mutable** — a live surface, a transient reading, a state that moves — the record says
+  so and states when it was taken: an honestly time-stamped observation of a moving
+  source **is admissible**, because a reader can see exactly what was done and against
+  what. What is refused is presenting a transient reading **as though** it were
+  reproducible, which is a wrongly recorded provenance like any other.
+
+  **Citations of authority are governed identically.** Every commission, relay, or gated
+  instruction **an agent issues** cites a **resolvable identifier** for the authority it
+  claims — an entry that exists and can be read by the party receiving the instruction.
+  Authority asserted in prose — "first-hand, this sitting", "as approved earlier", "the
+  principal agreed" — is **not a citation**: it names no referent anyone can resolve, and
+  is inadmissible on its face, however true it may be. **This binds the record an agent
+  writes; it does not bind the principal's own speech.** When the principal speaks
+  authority directly into the session that needs it, that word **is** the authority, not a
+  citation of authority: it is never refused for naming no entry, never deferred, and
+  never made to wait on a record being written first. The obligation this rule creates
+  falls on the agent who acts on that word — to **write the entry** — and it is that
+  written record the ordering rule governs. A **relay** of the principal's word to a party
+  who did not hear it is an agent-issued instruction like any other, and cites an entry.
+  **Ordering:** the authority entry lands **before, or in the same commit as**, any
+  agent-issued instruction citing it. Ordering costs nothing, and it closes the window in
+  which a citation to a not-yet-written entry cannot be told apart from a citation to a
+  ruling that was never made.
+
+  **This bar only refuses.** A non-conforming artifact or citation is **not admitted** —
+  the gate proceeds as if it had not been offered. It is never treated as disproven,
+  never held against the party that offered it, and admitting a conforming one approves
+  nothing: valid provenance earns an artifact a **reading**, never a pass. It says the
+  record can be re-derived; it says nothing about whether the content is right. The
+  fail-safe direction at every branch is therefore to **refuse and ask for the record**,
+  because the cost of refusing a sound artifact is one restatement, while the cost of
+  admitting an unre-derivable one is a conclusion nobody can check later.
+
+  **This rule is satisfiable today, by hand, and requires no tooling.** A resolvable
+  identifier is resolved by reading the entry it names; a verbatim command is checked by
+  reading it and, where it matters, running it. Where an emitter or checker is later
+  built, it enforces this rule mechanically but **is not part of it**, and nothing here
+  depends on such tooling existing or on any schedule for building it.
+
+  **Declared limit.** Well-formed provenance can still be wrong, and on either half: a
+  record naming a procedure other than the one actually run reads exactly like a correct
+  one, and a resolvable identifier can name an entry that exists but records a ruling
+  never made. No check at the point of offering distinguishes either from the genuine
+  article — this bar raises the cost of a false record without eliminating it, on both
+  halves alike. What survives is a **class**, not a nameable instance
+  (an undetected wrong record cannot be named in advance), and it terminates with **the
+  principal**, owned knowingly as a disclosed residual risk, with any review of that
+  class at the principal's discretion. That is a statement of ownership, not a promised
+  process or cadence.
 - **Gate-touch tripwire (draft-time companion to the merge-time review requirement
   in this section):** a scheduled or automated drafter — e.g. a retro that clusters
   recorded friction into amendment PRs — checks its own draft, before filing,
