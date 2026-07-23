@@ -33,6 +33,60 @@ agent ever being able to quietly rewrite its own rules.
    verdict contract). Reviewer focus: does the change weaken any gate,
    boundary, or disclosure rule? Does it contradict other protocol text
    (mirror-consistency)?
+   - **Negative-evidence admissibility (a bar the reviewer applies to absence-claims used
+     as gate evidence):** a claim that something is **clean, absent, zero, or not-there** —
+     evidence a gate leans on to conclude *nothing is wrong* — is **inadmissible** unless it
+     names **the instrument that looked** and **that instrument's known blind spots**. An
+     **absence-claim is defined by its role, not its surface polarity**: any claim whose
+     function is to assert that a class of problem is *not present* — including a
+     positively-phrased **completeness or all-present claim** ("all N verified present",
+     "every case handled", "fully covered") — is an absence-claim about what would otherwise
+     be *missing*, and is governed identically; rephrasing a negative as a positive is not
+     an escape. (Worked: "all 14 files re-checked and consistent" asserts *that no
+     inconsistent file exists* — an absence-claim — and must name its instrument and blind
+     spots exactly as "no inconsistent file found" would.) `No occurrences found` is not
+     evidence; "no occurrences found by `<instrument>`, which cannot see `<blind spot>` and
+     does cover `<coverage>`" is.
+
+     The bar is **admissibility, not truth**: a non-conforming absence-claim is treated as
+     **unsupported** — the gate proceeds as if the claim had not been made, never as if the
+     absence were proven — so the fail-safe direction at this branch is to **withhold
+     reliance**, never to accept an unnamed all-clear (the cost of a withheld good claim is
+     one restatement; the cost of a trusted blind one is a silently missed defect). **This
+     fail-safe holds only where the gate requires affirmative support to pass:** this
+     protocol's verdict contract honors a **fast-path or convergence declaration only in the
+     reviewer's explicit verbatim words, never inferred from the absence of blockers**, so a
+     withdrawn unsupported claim cannot be silently read as a clearance. The bar **relies on**
+     that
+     property; it does not create it — where a gate would default to pass on no objection,
+     withholding the claim must be paired with an explicit rejection, not left to silence.
+
+     The reviewer applies the bar to **every absence-claim used as gate evidence** in a
+     proposal or a review — wherever a gate *relies* on the absence — read like any other
+     stated claim; a passing remark that decides nothing is not gate evidence. Where it is
+     ambiguous whether a gate relies on an absence-claim, the classification's own fail-safe
+     is to treat it as **relied-on** — ambiguity resolves toward the bar, never away from it.
+     Because the bar is met by *naming* an instrument, it can be satisfied ritually — a hollow "not
+     found by `<instrument>`, which has no known blind spots" reads as a verified all-clear
+     while asserting the very thing at issue; that is this rule's own blind spot, declared.
+     Its check is that a named instrument's **blind-spot profile is itself a claim** — the
+     reviewer weighs it against a **checkable referent**, the instrument's own documentation
+     or specification and the fleet's **recorded** failure modes, at the review step, so a
+     wrong or empty blind-spot declaration is a reviewable defect, not a free pass.
+
+     An **instrument**, for this rule, is any check, reviewer, or tool **operated by an
+     agent** under this protocol — the parties whose absence-claims the rule governs. A
+     hollow declaration that survives review is caught only by a check that terminates
+     **outside those agent-operated instruments**: **the principal**, or a reviewer the
+     principal names who is **not** an agent-operated instrument under this protocol — never
+     a second agent-operated instrument, because two such instruments clearing each other over a
+     shared blind spot is the **mutual-acquittal** failure this rule exists to name. The
+     irreducible residual — the **class** of hollow all-clears that both the reviewer and
+     any outside review may miss — is the **principal's to own knowingly, as a disclosed
+     residual-risk class**, not as a specific undetected instance (which, being undetected,
+     cannot be named in advance); the principal **may** commission external review of that
+     class at their discretion. It is owned by disclosure, never discharged by another
+     agent's say-so, and never converted into a promised fleet mechanism.
 5. **Principal merge:** the principal merges (or rejects) — merging IS the
    authorization. The PROTOCOL version bumps (patch: clarifications; minor:
    new rules/slots; major: authority changes), and running sessions detect the
