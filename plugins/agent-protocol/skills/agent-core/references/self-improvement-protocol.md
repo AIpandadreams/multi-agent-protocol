@@ -92,6 +92,84 @@ agent ever being able to quietly rewrite its own rules.
    new rules/slots; major: authority changes), and running sessions detect the
    bump via the version stamp and re-read changed tiers.
 
+## Recommendations and counter-cases
+
+- **Recommendations and counter-cases (a rule about how a recommendation reaches whoever
+  decides):** when a seat recommends a course at a **decision of record** — a gate, a
+  ratification, a merge, an authorization, or any decision whose outcome is written down and
+  afterwards relied on — the recommendation travels **with the strongest case against
+  itself**, written by the seat making it, in the same artifact, at the same moment. Not a
+  caveat, not a risk note, not a hedge: the **best argument available that the
+  recommendation is wrong**. The working test is whether a reader who already disagreed
+  would **recognise their own position in it**. A counter-case no opponent would claim as
+  theirs has not been written yet.
+
+  **De minimis — the rule has a floor, and its two halves stop at that floor differently.**
+  A passing suggestion offered in the course of work is not a recommendation at a decision
+  of record. Where it is genuinely unclear which of the two is in front of you, the halves
+  resolve in **opposite directions, deliberately**. The **obligation** resolves toward
+  supplying a counter-case, because writing one costs a paragraph, while a nudge that
+  travels unopposed is a decision made with one side of the argument missing and no sign
+  that a side was missing. The **withholding** resolves toward **not** applying, because a
+  seat free to deny standing whenever it labels something a decision of record has been
+  handed an instrument for dismissing whatever it finds inconvenient — and that instrument
+  would be aimed at exactly the informal remark this rule was never written to police. An
+  unaccompanied suggestion below the floor is read on its merits like any other remark;
+  nothing in this rule supplies anyone a reason to discount it.
+
+  **The burden sits with the recommender, deliberately.** A recommendation placed beside a
+  gate does not merely inform — it arrives carrying the standing of the seat that made it,
+  and the party deciding frequently has neither the context nor the minutes to build the
+  opposing view from scratch. The seat that assembled the case is the one that already
+  knows where it is thinnest. Requiring the counter-case from anyone else would ask the
+  least-equipped party to do the most work, at the moment they have least time.
+
+  **A recommendation lacking one is not a recommendation.** It **does not count as** one:
+  the underlying facts remain readable and usable, but nothing follows from the
+  circumstance that a seat recommended it, and the deciding party owes it no deference on
+  that account. Nor does this run the other way — supplying a counter-case wins nothing.
+  A recommendation so accompanied is not thereby better founded, and this rule certifies no
+  recommendation as sound. It withholds standing; it never confers it.
+
+  **A counter-case is not itself a recommendation** for the purposes of this rule — even
+  where it argues for a different course, which a good one usually will. It is the companion
+  to a recommendation, not a fresh one, and it generates **no nested obligation**: the
+  **pair is the unit**, and the rule is discharged when the pair is complete. Nothing here
+  recurses. Should a seat afterwards recommend that alternative course in its own right, at
+  a decision of record, that is a new recommendation and travels with its own counter-case.
+
+  **This governs presentation, not choice.** It binds what a seat must supply and says
+  nothing about what any decider may accept. It creates no gate, adds no approval step, and
+  delays no decision anyone is ready to take. **Read that as a non-grant, not a licence:**
+  this rule erects no bar to acting on a bare recommendation, and it confers no freedom to
+  do so either. Whatever standing a party already holds, it keeps; what the rails decline
+  to give, this clause does not hand over. It reaches no further than the seat that offered
+  the recommendation.
+
+  **It reaches recommendations issued after ratification.** One already made when this rule
+  takes effect keeps whatever standing it had; nothing here reaches back to strip it, and
+  matters settled under the old reading stay settled. The rule bites at **issuance**, never
+  behind it.
+
+  **No tooling, no format.** Writing the case against costs a paragraph inside whatever
+  artifact already carries the recommendation. Should menus, cards or staging docks be
+  built later, they may carry this rule but do not constitute it; none is promised here,
+  scheduled here, or assumed by anything above.
+
+  **Declared limit — both halves.** *On strength:* nothing written here can compel a
+  counter-case to be **good**. A seat wanting its recommendation adopted may compose a weak
+  one that honours every word of this rule while hollowing out its purpose — and at the
+  moment of reading, a deliberately feeble counter-case is hard to separate from an honest
+  one mounted against a genuinely strong recommendation. This rule raises the cost of that
+  manoeuvre and leaves it standing in the record where it can be examined later; it does
+  not prevent it. *On framing:* a counter-case argues against the recommendation **as
+  posed**, and can say nothing whatever about the option that was never tabled. A
+  well-argued pair still forecloses everything outside itself, and what was never offered
+  leaves no mark for a reader to catch. Both are **kinds** of failure rather than instances
+  anyone could name beforehand; both are owned by **the principal** as declared risk, and
+  any revisiting of either is the principal's to call and to time. That is ownership
+  language, and it promises no review.
+
 ## Hard rails (principal-locked)
 
 - **No agent-authored change may touch:** authorization/gate rules, the
