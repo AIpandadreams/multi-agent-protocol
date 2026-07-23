@@ -114,6 +114,11 @@ principal-locked. An agent cannot amend the gates that constrain it, no
 matter how good the argument. That single rule is what lets self-improvement
 be a feature instead of a risk.
 
+*When an automated drafter's own change would touch one of these locked subjects,
+the draft-time tripwire (self-improvement-protocol.md, Hard rails) downgrades it to
+a notice-only memo — surfacing that a change is wanted without proposing one; the
+principal still authors any locked change independently.*
+
 ### Keeping the protocol coherent as it grows
 
 Self-improvement adds rules over time; two guards keep the set from drifting
