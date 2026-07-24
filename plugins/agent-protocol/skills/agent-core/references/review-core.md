@@ -207,6 +207,48 @@ verification instrument offered as SHIP EVIDENCE:
   absence. A narrow pattern's silence is not evidence of absence; this applies
   to your own instruments too — a monitor watching too narrow a header pattern
   goes silently deaf while looking exactly like a quiet lane.
+- **Prove the reader exists and runs, not just the writer.** A control, record,
+  or gate that is written but never read enforces nothing while projecting
+  enforcement; a reader present but never invoked is the same defect one level
+  up. Locate the consumer, read the path that consumes the artifact to confirm
+  it enforces when invoked, and show that consumer actually RUNS — a live probe
+  or a runtime record (a log line, a run-history entry, an observed effect). A
+  static call-site proves reachability, not execution. A gate missing either
+  proof — no read consumer, or an invocation only reachable and not shown —
+  ships only DISCLOSED in the record, with the missing leg named, and is never
+  counted as coverage.
+- **A "decoration" verdict is a diagnosis, not a deletion.** Calling a control or
+  leg a decoration — it cannot fail or guards nothing real — reflects one of
+  three mechanisms with distinct cures: a defect in the subject, a defect in the
+  instrument, or genuine redundancy. Name the mechanism in the record before the
+  control or leg is removed or the verdict accepted; and a redundancy verdict
+  traces it — name the other control that makes this one redundant and follow the
+  dependency both rest on, because a leg redundant only by a shared import puts
+  that import under examination.
+- **A probe matches the file's formatting, or it measures the wrong thing.** A
+  phrase probe ("does the text say X?") runs against a copy normalized only by
+  collapsing whitespace and removing emphasis markers — never by stripping
+  meaning-bearing markup (strikethrough, code fences or spans, blockquote or
+  comment markers), because text inside those carries a different status —
+  retracted, quoted, code, annotation — and a probe that lands in it has found
+  an assertion only once a context read says so. A formatting-sensitive probe
+  (CR counts, terminators, byte pins) asserts on the raw bytes and states the
+  convention it used. A red from either kind is checked against the file's
+  actual formatting and wording before it is raised as a finding.
+- **A green states its denominator.** A PASS states beside it — in the same
+  sentence or line, not a later section — the count and domain of what was
+  checked, and recomputes that breakdown and reconciles it against the headline
+  number at write time; a mismatch blocks the report until reconciled. "All
+  pass" silently truncates to "all that ran passed"; an unstated denominator
+  makes the green unfalsifiable, and an unreconciled one makes it decorative.
+  Counts from different instruments stay separate with their domains named,
+  never summed or reconciled against each other.
+- **A self-labeling header is a claim about its document.** Every delivery
+  verification reads line one twice: once that the version self-label is the
+  version the delivery should carry, once that the header's claim still
+  matches the operative rule the document actually sets. A byte pin proves
+  identity, not correctness — it certifies the bytes are unchanged, never that a
+  stale or wrong header is right — so it stands in for neither reading.
 
 ## Evidence form
 
@@ -271,6 +313,12 @@ allowed in multi-question rounds, plus an overall disposition.
   claims, ship once. Required changes are LISTED by the reviewer for you to
   apply — the reviewer never edits files.
 - **REJECT** → back to draft; rework gets a fresh round.
+- **Every verdict enumerates its uncheckable premises.** Immediately before its
+  terminal verdict line, a reviewer lists the premises it could not check from
+  its own seat — what it had to take on faith even after inspecting the artifact.
+  A premise named as unchecked is not a finding against the work; it is the
+  boundary of the verdict, and it is what lets a later adjudicator sort a
+  disagreement into "inside one reviewer's blind spot" versus a genuine conflict.
 - Disagreeing with a required change is allowed — silently skipping it is not.
   Argue back with evidence in the round; document any deliberately-unapplied
   change in the record.
