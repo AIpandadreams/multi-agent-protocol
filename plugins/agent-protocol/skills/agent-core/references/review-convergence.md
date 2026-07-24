@@ -78,6 +78,20 @@ file is not a clean bill, it is a blind spot you built. When one voice finds
 something the other structurally could not have seen, that is not a split to
 adjudicate; it is a scope defect to fix and re-dispatch.
 
+**Then sort the split against each verdict's DECLARED PREMISES.** Every verdict
+enumerates the premises it could not check from its own seat (review-core,
+VERDICT CONTRACT), so each blocker can be placed inside or outside the opposing
+verdict's list. A blocker inside the confirming voice's declared blind spot is
+not a disagreement — that voice never judged the claim, so its CONFIRM is no
+evidence against the finding, which stands or falls on its own. This is distinct
+from the scope defect above: a scope defect means the bytes never reached the
+seat, and the cure is to widen and re-dispatch; a declared premise means the
+seat held the bytes and still could not check the claim from where it sat. A
+blocker the other voice reviewed and MISSED is a genuine split the premise
+boundary cannot resolve — that one goes to the primary source. The sort settles
+some splits per-finding; it never turns a real conflict into a bookkeeping
+answer.
+
 ## Execution-environment coverage
 
 Bundles scope WHAT is reviewed; environments scope WHERE it runs. A loop
@@ -126,9 +140,47 @@ Later seats review the ARTIFACT at its fingerprint — never a prior verdict.
   findings.** A FIX-CONFIRMATION round legitimately carries "here are findings
   F1–F3 from r0N and the fixes" — that is its whole job. A fresh full-review
   seat gets no such priming.
+- **A fix-confirmation round sweeps the CURE TEXT.** Scoping a round to the
+  named findings bounds what is re-reviewed; it does not exempt the prose
+  written to answer them. That prose is the highest-risk surface in the
+  delivery — composed under the finding's frame, by the seat that missed the
+  class the first time, landing where attention has already moved on. So the
+  charge asks two things of each cure: does it contain a FRESH INSTANCE of the
+  class it was written to cure, and are the NEW claims it makes true — history,
+  attribution, and enumeration claims included, whatever their class. Both are
+  verification OF THE FIX and sit inside the round's scope; neither is the "new
+  material" the scoping rule keeps out.
 - **Re-reviews target the tree at the NEW fingerprint.** After fixes, the tree
   moved; the old verdict authorizes nothing (review-core, fingerprint rule).
   Every round quotes the fingerprint of the exact tree it judged.
+
+## Coverage across rounds
+
+A surface that survived unchanged across rounds is not thereby verified. Byte
+stability is evidence of identity, never of correctness: a defect present from
+birth sits in no diff, and inherits false confidence from every round that
+passes over it. Review attention concentrates on what moved, so the longer a
+wrong paragraph sits still, the safer it looks.
+
+- **Keep a coverage ledger of the artifact's stable units.** A unit is a
+  heading-delimited section of the document — for non-document subjects, a
+  named file or config block. Admission and eviction are mechanical: a unit
+  byte-unchanged for K consecutive rounds enters (the lane sets K, default 2),
+  and a unit that changes leaves, re-entering after K unchanged rounds again.
+  The title/status line is excluded — review-core's self-labeling-header
+  instrument already reads line one every delivery.
+- **Each fresh round's charge names at least the LEAST-RECENTLY-READ ledger
+  unit** for substantive re-reading, ties broken by document order. A unit joins
+  the BACK of the queue whenever it is admitted or re-admitted — a unit that
+  churned outside the ledger was having its diffs read all the while, which is
+  what back-of-queue encodes — so a newly stable section can never pre-empt one
+  that has waited longer, and every unit is re-read within N rounds of its
+  admission, re-admission, or last read, whichever is most recent, with N the
+  ledger's length at that point.
+- **Declared residual: the ledger bounds stable UNITS, not every stable
+  paragraph.** A wrong sentence sitting still inside a section whose other bytes
+  keep changing never enters the ledger at all. That surface belongs to the
+  artifact sweep, which reads text regardless of whether it moved.
 
 ## Anti-patterns
 

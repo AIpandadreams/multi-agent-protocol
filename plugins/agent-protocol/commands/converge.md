@@ -85,8 +85,11 @@ Artifact set + options: $ARGUMENTS
 
 5. **Fix-confirmation round(s).** For each round confirming fixes, the request
    file carries a `ROUND-TYPE: FIX-CONFIRMATION` line and names ONLY the findings
-   under confirmation plus their fixes (scoped — no new material). Re-fingerprint
-   each round; the old verdict authorizes nothing once the tree moves.
+   under confirmation plus their fixes (scoped — no new material). The cure text
+   itself is inside that scope: the charge sweeps it for a fresh instance of the
+   cured class and for defects in the new claims it makes (review-convergence).
+   Re-fingerprint each round; the old verdict authorizes nothing once the tree
+   moves.
 
 6. **Stop conditions.**
    - The reviewer's own VERBATIM convergence declaration ("CONVERGED" / the
