@@ -208,6 +208,58 @@ verification instrument offered as SHIP EVIDENCE:
   to your own instruments too — a monitor watching too narrow a header pattern
   goes silently deaf while looking exactly like a quiet lane.
 
+## Evidence form
+
+An instrument can be reliable and its output still be the wrong KIND of thing to
+offer. This section states what may be offered as grounds at all.
+
+A claim offered as evidence in a review round — the grounds a request states, an
+instrument's output, an anchor a verdict rests on — is admissible only as an
+**extraction**: content a **named instrument takes from a stated substrate**. The
+substrate is whatever material the claim is offered about — the bytes under review, a
+recorded execution transcript, an honestly time-stamped reading of a moving source,
+or any other material a checker can be handed — and naming it is part of offering the
+evidence, not a courtesy. Verbatim quotes, hashes, counts, diff hunks, matches, and
+line ranges are the ordinary forms. The instrument is named beside its output, and the
+extraction locates itself in its substrate closely enough that a checker can read what
+surrounds it.
+
+**The test is a re-run, and the re-run is a check — not a proof of determinism.** A
+checker holding the stated substrate re-runs the named instrument: content that does
+not come back is disqualified, and content that does is established as reproduced over
+that substrate — and as nothing more. Where any other rule requires an
+apparatus to be **established** as single-valued, this bar neither performs nor
+discharges that establishment, and passing here says nothing about it.
+
+**A transformed extraction** — collapsed whitespace, a truncation, a normalization —
+remains an extraction only while the transform is stated with it; an unstated
+transform is generative. A **stated** transform that drops a qualifier, a negation, or
+a scope-limit the extracted claim depends on is **not** an extraction however
+truthfully the transform is described: a transform may shorten what a source says,
+never invert or unbind it.
+
+What no named instrument takes from a stated substrate — a paraphrase offered as
+evidence, a summary standing in for a quote, an invented example, a drafted finding
+presented as an observation — is **generative help, and it is not evidence**: it
+approves nothing, refutes nothing, and carries no weight at a gate.
+
+**This bar is a bar, not a grant.** Extraction needed no permission before it and
+gains none from it. **It narrows no class of evidence already admitted:** a run's own
+recorded output offered to prove the subject ran, and an honestly time-stamped reading
+of a moving source, are extractions from their own stated substrates and remain as
+admissible as they were.
+
+**Reasoning, severity judgment, and recommendations remain free prose** — but a
+factual assertion a verdict relies on is a **ground**, wherever it sits and however it
+is labeled, and grounds are subject to this bar. A reviewer who sees what they cannot
+yet extract states the observation as **non-blocking, labeled unextracted** — visible,
+and weightless as grounds until the bytes that show it are found.
+
+The bar reaches evidence and verdict grounds inside review rounds **opened after this
+rule's adoption**; closed rounds and banked verdicts are untouched. Evidence form
+composes with provenance: an extraction still carries its source citation, and neither
+discharge substitutes for the other.
+
 ## VERDICT CONTRACT
 
 Verdicts are **ADOPT / ADOPT-WITH-CHANGES / REJECT** — per-question verdicts
