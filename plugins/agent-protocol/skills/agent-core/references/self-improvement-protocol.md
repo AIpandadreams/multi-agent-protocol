@@ -315,6 +315,142 @@ agent ever being able to quietly rewrite its own rules.
   not pass and no draft is filed under the precondition above. That probe is the
   compensating visibility this mechanism owes for the blind spot it introduces, per
   the disclosure rule in the loop's Propose step.
+- **KPI authorship and pairing (a bar on the metrics that decide whether an amendment
+  merges):** a metric **gates** when a decision to merge or not merge an amendment turns
+  on its value. Which metrics gate is **the principal's to set** — either **authored by
+  the principal**, or **drafted by a named seat and ratified by the principal**. The
+  record shows **which of those two happened, and who drafted it**: a ratified slate is
+  not an authored one, and on the single lever that decides which amendments merge, the
+  difference is worth stating rather than blurring. A gating set traceable to neither is
+  **not in force**, and a gate that rests on it proceeds as though no metric gated it.
+
+  **Velocity never travels alone.** A **velocity metric** — one whose improvement asserts
+  that work was **produced, delivered, or completed at a greater rate or in less time** —
+  does not enter the gating set by itself. It enters **paired** with a
+  metric that counts **defects that escaped** — work that reached a stage it should not
+  have reached in the state it was in. **The two must correspond, or they are not a pair:**
+  the defect-escape metric counts escapes **from the whole of the body of work** the velocity
+  metric measures, over a period that **covers** the one the velocity claim is made about. A
+  second metric satisfying every other requirement while counting escapes from a population
+  that **leaves out any of the velocity metric's work** — wholly different work, or only
+  **part** of it, with the rest unobserved — or over a window that leaves part of the velocity
+  claim's period unobserved — leaves the velocity figure
+  **unpaired**, with the consequence stated below. Both halves are settled by reading the two
+  definitions beside each other:
+  **a population that includes the whole of the velocity metric's work and a window that
+  covers the whole of the velocity claim's period**. The two are **selected together,
+  carried on the same
+  authority — authored or ratified — and reported together in the same artifact**. A
+  velocity figure offered at a gate **without its pair** is **absent evidence, not weak
+  evidence**: it is not read down, not discounted, not given reduced weight. It is simply
+  not there. The reason is that a speed number
+  alone cannot distinguish work that got faster from work that got faster **by skipping
+  something**, and the entire purpose of the pairing is that a reader never has to guess
+  which of the two they are being shown. **What the improvement claims decides, not what
+  the metric is called:** renaming a throughput metric, inverting it into a duration to be
+  minimised, or expressing it as a ratio does not exempt it — if the improved direction
+  says *the work went out faster, or in greater volume per unit of time*, it is a velocity
+  metric. A cumulative count is not a rate merely because it rises: where the period it
+  covers can itself lengthen, the increase asserts nothing about how fast the work went
+  out, and this sentence does not reach it.
+  **Equally, a metric is not a velocity metric merely because its improvement direction is
+  "more" or "cheaper".** Coverage, availability, reliability and cost assert something
+  about **how complete, how robust, or how expensive** the work is, not about how fast it
+  went out; they carry no pairing obligation, and pairing one of them to a defect-escape
+  count would assert a relationship that does not exist. Where a single metric makes both
+  claims at once, treat it as a velocity metric: the pairing costs one number, and the
+  failure it guards against does not.
+
+  **A metric is selected as defined.** What the principal authored or ratified is the
+  metric **as it stood at that moment** — its formula, its denominator, its population, its
+  window and its threshold. Change any of those and the result is a **different metric**,
+  whatever it is still called; a different metric is a **new selection**, and it comes under
+  this bar like
+  any other. A record showing a ratified slate that contains the name is not a record of
+  authority over the altered measure. **The name is not the metric.**
+
+  **Measuring is not selecting.** This bar governs **only** the set the principal has
+  authored or ratified. Measuring a figure, recording it, baselining it or charting it are
+  untouched by this rule, and none of those acts makes a metric gating. Read this as a
+  **non-grant, not a licence**: it is a statement that observation falls outside the bar,
+  never a permission to observe. Whatever a seat may already do, it may still do; whatever
+  the rails withhold, nothing here supplies. This bar subtracts from no permission and
+  confers none.
+
+  **It bites at selection, and does not reach backwards.** This bar **does not reach** a
+  set already gating when the rule takes effect, until that set is **next selected**. That
+  is a limit on the bar's **reach**, and **not a preservation of the set**: nothing here
+  confers force on a set that lacks it, ratifies an agent-chosen one, or supplies an
+  authority it never had. Whatever standing such a set has, it has from elsewhere; this
+  rule neither adds to it nor shields it, and a set that was never anyone's to choose is
+  not made anyone's by this paragraph. No decision already taken reopens on account of this
+  rule, and no figure already relied on becomes absent retrospectively.
+
+  **"Next selected" has a trigger, so no set can *change* without coming under the bar.** A
+  set is selected again whenever it is authored or ratified, **and whenever its membership
+  changes or any member's definition changes** — a metric added, a metric dropped, or a
+  formula, denominator, population, window or threshold altered. At that moment the whole set
+  comes under this bar like any other. **What the trigger does not close is stillness, and
+  that is
+  deliberate.** A set nobody ever touches is not renewed by the passage of time and does not
+  come under this bar at all: it simply keeps whatever standing it already had, which is not
+  something this rule supplies. Closing that gap would make the bar reach backwards into
+  sets chosen under the earlier reading, and this rule's prospectivity is the reason it can
+  be adopted without reopening anything already settled. So the gap is a **declared limit**
+  rather than a closure claimed and not delivered: an untouched legacy set is governed by
+  whatever else governs it, and by nothing here.
+
+  **Exclusion is the entire remedy.** A gating set answering to neither authorship test,
+  and a velocity figure arriving without its pair, are **left out of the decision**, and
+  the gate is settled on what remains. Nothing is inferred from the exclusion: the figure
+  is not counted as evidence
+  *against* the amendment, and the seat that offered it is not marked down for having
+  offered it. Conformance earns nothing either — a properly authorised, properly paired
+  set tells a reader *these are the measures the principal chose, and both are present*,
+  and stops there. Whether the amendment deserves to merge is a separate question this
+  bar never reaches. Wherever a branch is unclear, **leave the figure out and ask whose
+  set it came from**: excluding a sound metric costs one ruling to restore, while
+  admitting an agent-chosen one installs a merge criterion nobody authorised — and leaves
+  nothing behind to show that nobody did.
+
+  **Nothing here waits on tooling.** The whole rule is exercisable with a pen: the gating
+  set is a short written list, its authorship is visible in the record that carries it,
+  and a pair is confirmed by reading the two definitions beside each other —
+  **a population that includes the whole of the velocity metric's work and a window that
+  covers the whole of the velocity claim's period** — and finding both numbers in one
+  artifact. Should
+  a benchmark harness or metrics pipeline arrive later, it **computes** these figures — it
+  does not constitute them. This rule does not assume that harness, does not schedule it,
+  and does not weaken if it is never built.
+
+  **Declared limit — both halves of the rule.** *On the metric half:* a well-chosen pair
+  still misleads, in two distinct ways, and **neither is bounded** — they differ by
+  mechanism, not by whether they run out. The first is **lag in time**: a defect-escape
+  count usually **trails** the velocity figure it is paired with — a speed gain can be
+  booked before the escapes it caused have surfaced. Nothing here sets a maturation horizon
+  or a discovery deadline, so an escape not yet found is absent from the count however well
+  the population is drawn, and the wait for it to surface can run arbitrarily long. The
+  pairing does not shorten that wait or close it; it puts the escapes found **so far**
+  beside the velocity figure, so the number is read in the open rather than alone. The
+  second is **population growth**. The correspondence requirement is a **floor, not a
+  ceiling**: it forbids a defect population that **fails to contain the velocity metric's
+  work**, or a window that fails to cover **the velocity claim's period** — one that leaves
+  work out, or a window offset so as to leave part of the period uncovered — but it does not
+  forbid one that **contains the whole and more**. A superset that includes the whole of the
+  velocity metric's work and then some leaves out nothing, so it is not the "leaves out"
+  failure above and clears the floor. That superset is what the floor leaves open: a raw
+  escape *count* cannot be flattered by it — more population or a wider window can only
+  **raise or hold** a count, never lower it — but where the defect figure is a **rate or
+  density**, a superset **can dilute** it, and an arbitrarily large clean superset can drive
+  it arbitrarily toward zero. This residual is left open, not closed here.
+  *On the authority half:* a drafted-and-ratified slate carries its drafter's framing —
+  which metrics were offered, and which were never proposed at all, shape a ruling without
+  ever appearing in it, and an unproposed metric leaves no trace to review. Naming the
+  drafter makes that influence **attributable**; it does not remove it. None of these
+  residuals can be pointed at in advance — each is a **shape of failure**, not an instance —
+  and all come to rest with **the principal**, accepted with eyes open as declared risk. If
+  any of them is ever revisited, that is the principal's to initiate and to time. This
+  paragraph assigns ownership; it commits no one to a schedule and promises no review.
 - **Version-stamp discipline:** no session runs "local amendments" ahead of a
   merged version bump (channel-core, Untrusted-input rule #2).
 - **Bundle hygiene:** proposals may also target a deployment's curated supporting-skill bundle, if it keeps one
