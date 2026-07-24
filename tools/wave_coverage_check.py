@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generic wave coverage checker [PROTOCOL v2.7] — the scripted-scoring rule.
+"""Generic wave coverage checker [PROTOCOL v2.8] — the scripted-scoring rule.
 
 Control arithmetic, coverage checks, and tallies MUST be script-produced,
 never narrated (wave-census-protocol §5). This is the generic checker every

@@ -1,4 +1,4 @@
-# Review NORMATIVE CORE [PROTOCOL v2.7] — single source of truth
+# Review NORMATIVE CORE [PROTOCOL v2.8] — single source of truth
 
 > Referenced by every role skill's review-protocol file. Identical for all
 > sides by construction: it exists once, here.

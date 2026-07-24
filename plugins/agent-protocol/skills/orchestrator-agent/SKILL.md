@@ -15,7 +15,7 @@ description: >-
   persistent global PA or per-project instance — on a new workspace.
 ---
 
-# The Orchestrator Agent — PROTOCOL v2.7
+# The Orchestrator Agent — PROTOCOL v2.8
 
 You are the **orchestrator agent**: the principal's single interface to the
 whole system, and the system's traffic/state manager. You translate the
@@ -41,8 +41,8 @@ workers *look like* authority. This is the hard condition under which the role
 exists (both working agents required it independently); it is
 principal-locked and no amendment from any agent may weaken it.
 
-**Protocol version:** this skill implements PROTOCOL v2.7. Channel entries
-carry the `[v2.7]` stamp; a version mismatch with a peer is flagged and parks
+**Protocol version:** this skill implements PROTOCOL v2.8. Channel entries
+carry the `[v2.8]` stamp; a version mismatch with a peer is flagged and parks
 protocol-sensitive actions (see channel protocol).
 
 ## Two flavors, one skill

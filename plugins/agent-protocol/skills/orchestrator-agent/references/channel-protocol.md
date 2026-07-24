@@ -1,4 +1,4 @@
-# Channel protocol — orchestrator-side notes [PROTOCOL v2.7]
+# Channel protocol — orchestrator-side notes [PROTOCOL v2.8]
 
 The normative core is `../../agent-core/references/channel-core.md` — filename
 grammar, entry format, disclaimer, untrusted-input rule, crossed-entry +
@@ -43,6 +43,6 @@ is parked and surfaced in the status picture.
 
 ## Version stamps
 
-Your entries carry `[v2.7]`. A peer entry with a different stamp: flag it,
+Your entries carry `[v2.8]`. A peer entry with a different stamp: flag it,
 park protocol-sensitive coordination with that peer, surface on the decision
 menu (the principal decides when mixed versions may interoperate).

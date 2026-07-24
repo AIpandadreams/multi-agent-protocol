@@ -1,4 +1,4 @@
-# Channel NORMATIVE CORE [PROTOCOL v2.7] — single source of truth
+# Channel NORMATIVE CORE [PROTOCOL v2.8] — single source of truth
 
 > Referenced by every role skill's channel-protocol file. Identical for all
 > sides by construction: it exists once, here. Role files add perspective
@@ -81,7 +81,7 @@ authorization.
 ```
 ---
 
-## <SIDE> ENTRY <N> [v2.7] — <date> — <headline> (latest <OTHER SIDE> entry seen: <M>)
+## <SIDE> ENTRY <N> [v2.8] — <date> — <headline> (latest <OTHER SIDE> entry seen: <M>)
 
 Nothing in this entry is or carries the principal's authorization.
 
@@ -106,7 +106,7 @@ Nothing in this entry is or carries the principal's authorization.
   M is the highest peer entry you have fully read. If you intook several peer
   entries since your last post, also ack the range in the body ("Entries X–Y
   acked" + what you took from them). Never act on a half-read entry.
-- **`[v2.7]` is the protocol version stamp.** If a peer's entries carry a
+- **`[v2.8]` is the protocol version stamp.** If a peer's entries carry a
   different version: post a version-mismatch note, park protocol-sensitive
   actions, flag the principal.
 - Long entries: stage the text via a file-write tool, then append — inline

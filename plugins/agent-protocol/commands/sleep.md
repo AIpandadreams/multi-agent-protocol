@@ -3,7 +3,7 @@ description: "Checkpoint this agent session (memory + commit + handover) and dec
 argument-hint: "[optional note for the handover]"
 ---
 
-# /sleep — checkpoint and hand over [PROTOCOL v2.7]
+# /sleep — checkpoint and hand over [PROTOCOL v2.8]
 
 Put this agent session to sleep: persist everything a cold successor needs,
 land it in git, and tell the principal it is safe to close the window.

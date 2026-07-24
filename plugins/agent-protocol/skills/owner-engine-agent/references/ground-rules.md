@@ -1,4 +1,4 @@
-# Ground rules — yes / no / NEVER, with the why and the enforcement [PROTOCOL v2.7]
+# Ground rules — yes / no / NEVER, with the why and the enforcement [PROTOCOL v2.8]
 
 > **Tier: once per project** (and after any protocol version bump). The
 > session-card carries the every-resume distillation.

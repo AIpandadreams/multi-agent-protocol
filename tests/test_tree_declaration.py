@@ -460,7 +460,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
         with repo_copy() as repo:
             custody = repo / "transports" / "custody"
             custody.mkdir(parents=True, exist_ok=True)
-            (custody / "copy.md").write_text("PROTOCOL v2.7 stamped\n",
+            (custody / "copy.md").write_text("PROTOCOL v2.8 stamped\n",
                                              encoding="utf-8")
             try:
                 j = subprocess.run(
@@ -615,7 +615,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
                        repo / "transports" / "alias-copy.md")
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
-            self.assertIn("missing PROTOCOL v2.7 stamp", out)
+            self.assertIn("missing PROTOCOL v2.8 stamp", out)
             self.assertIn("alias-copy.md", out)
 
     def test_a_stamp_exemption_with_dotdot_grants_nothing(self):
@@ -634,7 +634,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
             self.assertNotEqual(rc, 0, out)
             self.assertIn("contains '..'", out)
             self.assertIn("REFUSED", out)
-            self.assertIn("missing PROTOCOL v2.7 stamp", out)
+            self.assertIn("missing PROTOCOL v2.8 stamp", out)
 
     def test_an_out_of_tree_symlink_is_a_finding_not_a_crash(self):
         """Round 12's second half: resolve()-based rel computation raised
@@ -834,7 +834,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
         coverage gate now welcomes it — this plant is the acceptance proof.)"""
         with repo_copy() as repo:
             other = repo / "plugins/agent-protocol/skills/agent-core/references/x.md"
-            other.write_text("# x [PROTOCOL v2.7]\n\nvoilà — café… — d'accord.\n",
+            other.write_text("# x [PROTOCOL v2.8]\n\nvoilà — café… — d'accord.\n",
                              encoding="utf-8")
             rc, out = run(repo)
             self.assertEqual(rc, 0, out)
@@ -850,7 +850,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
         with repo_copy() as repo:
             other = repo / "plugins/agent-protocol/skills/agent-core/references/x.md"
             other.write_text(
-                "# x [PROTOCOL v2.7]\n\nDas ist groß—aber korrekt.\n",
+                "# x [PROTOCOL v2.8]\n\nDas ist groß—aber korrekt.\n",
                 encoding="utf-8")
             rc, out = run(repo)
             self.assertEqual(rc, 0, out)
@@ -865,7 +865,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
         with repo_copy() as repo:
             other = repo / "plugins/agent-protocol/skills/agent-core/references/x.md"
             other.write_text(
-                "# x [PROTOCOL v2.7]\n\nCAFÉ—OUVERT, et café—“ouvert” aussi.\n",
+                "# x [PROTOCOL v2.8]\n\nCAFÉ—OUVERT, et café—“ouvert” aussi.\n",
                 encoding="utf-8")
             rc, out = run(repo)
             self.assertEqual(rc, 0, out)
@@ -882,7 +882,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
         with repo_copy() as repo:
             other = repo / "plugins/agent-protocol/skills/agent-core/references/x.md"
             other.write_text(
-                "# x [PROTOCOL v2.7]\n\nNKo letter ߗ arrives here.\n",
+                "# x [PROTOCOL v2.8]\n\nNKo letter ߗ arrives here.\n",
                 encoding="utf-8")
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
@@ -942,7 +942,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
         with repo_copy() as repo:
             other = repo / "plugins/agent-protocol/skills/agent-core/references/x.md"
             other.write_text(
-                "# x [PROTOCOL v2.7]\n\nGuillemets « arrive » here.\n",
+                "# x [PROTOCOL v2.8]\n\nGuillemets « arrive » here.\n",
                 encoding="utf-8")
             rc, out = run(repo)
             self.assertEqual(rc, 0, out)
@@ -962,7 +962,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
                 other = (repo / "plugins/agent-protocol/skills/agent-core"
                          "/references/x.md")
                 other.write_text(
-                    f"# x [PROTOCOL v2.7]\n\nPasted corruption: {mangled}\n",
+                    f"# x [PROTOCOL v2.8]\n\nPasted corruption: {mangled}\n",
                     encoding="utf-8")
                 rc, out = run(repo)
                 self.assertNotEqual(rc, 0, out)
@@ -986,7 +986,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
                 other = (repo / "plugins/agent-protocol/skills/agent-core"
                          "/references/x.md")
                 other.write_text(
-                    f"# x [PROTOCOL v2.7]\n\nPasted corruption: {mangled}\n",
+                    f"# x [PROTOCOL v2.8]\n\nPasted corruption: {mangled}\n",
                     encoding="utf-8")
                 rc, out = run(repo)
                 self.assertNotEqual(rc, 0, out)
@@ -1090,7 +1090,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
     def test_the_exemption_does_not_extend_to_other_skill_files(self):
         with repo_copy() as repo:
             other = repo / "plugins/agent-protocol/skills/agent-core/references/x.md"
-            other.write_text("# x [PROTOCOL v2.7]\n\nA backticked `Â§` example.\n",
+            other.write_text("# x [PROTOCOL v2.8]\n\nA backticked `Â§` example.\n",
                              encoding="utf-8")
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
@@ -1168,7 +1168,7 @@ class ExemptPathKeyingTest(unittest.TestCase):
             imposter = (repo / "plugins/agent-protocol/skills/orchestrator-agent"
                         "/references/ops-gotchas.md")
             imposter.write_text(
-                "# notes [PROTOCOL v2.7]\n\nA backticked `Â§` example.\n",
+                "# notes [PROTOCOL v2.8]\n\nA backticked `Â§` example.\n",
                 encoding="utf-8")
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
@@ -1477,7 +1477,7 @@ class MirrorTreeTest(unittest.TestCase):
         """The one gate no declaration may ever relax."""
         with repo_copy() as repo:
             self._mirror(repo)
-            write(repo, "transports/x.md", BOM + b"# x [PROTOCOL v2.7]\n")
+            write(repo, "transports/x.md", BOM + b"# x [PROTOCOL v2.8]\n")
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
             self.assertIn("BOM (UTF-8", out)
@@ -1487,10 +1487,10 @@ class MirrorTreeTest(unittest.TestCase):
         with repo_copy() as repo:
             self._mirror(repo)
             p = repo / "plugins/agent-protocol/skills/agent-core/references/channel-core.md"
-            p.write_bytes(p.read_bytes().replace(b"v2.7", b"v2.5"))
+            p.write_bytes(p.read_bytes().replace(b"v2.8", b"v2.5"))
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
-            self.assertIn("missing PROTOCOL v2.7 stamp", out)
+            self.assertIn("missing PROTOCOL v2.8 stamp", out)
 
 
 class StampExemptionTest(unittest.TestCase):
@@ -1507,7 +1507,7 @@ class StampExemptionTest(unittest.TestCase):
             self._unstamped(repo)
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
-            self.assertIn("missing PROTOCOL v2.7 stamp", out)
+            self.assertIn("missing PROTOCOL v2.8 stamp", out)
 
     def test_a_reasoned_exemption_makes_it_green_and_says_why(self):
         with repo_copy() as repo:
@@ -1527,7 +1527,7 @@ class StampExemptionTest(unittest.TestCase):
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
             self.assertIn("no non-empty string reason", out)
-            self.assertIn("missing PROTOCOL v2.7 stamp", out)  # and nothing relaxed
+            self.assertIn("missing PROTOCOL v2.8 stamp", out)  # and nothing relaxed
 
     def test_a_stale_exemption_is_a_finding(self):
         """A list that outlives its files silently becomes a bypass."""
@@ -1721,7 +1721,7 @@ class RelaxationsAreDisclosedOnREDTooTest(unittest.TestCase):
                         ".github/PULL_REQUEST_TEMPLATE.md",
                         ".github/ISSUE_TEMPLATE/protocol_amendment.md"):
                 (repo / rel).unlink()
-            write(repo, "transports/x.md", BOM + b"# x [PROTOCOL v2.7]\n")  # force red
+            write(repo, "transports/x.md", BOM + b"# x [PROTOCOL v2.8]\n")  # force red
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
             self.assertIn("BOM (UTF-8", out)
@@ -1751,7 +1751,7 @@ class ReasonMustBeARealReasonTest(unittest.TestCase):
                 self.assertNotEqual(rc, 0, out)
                 self.assertIn("REFUSED", out)
                 # and the exemption did NOT take effect
-                self.assertIn("missing PROTOCOL v2.7 stamp", out)
+                self.assertIn("missing PROTOCOL v2.8 stamp", out)
 
     def test_a_real_reason_is_honoured(self):
         with repo_copy() as repo:
@@ -1776,7 +1776,7 @@ class ExemptionPathIsConfinedTest(unittest.TestCase):
             self.assertIn("REFUSED", out)
         with self.subTest(escape="absolute"), repo_copy() as repo:
             outside = (repo.parent / "outside-target.md")
-            outside.write_text("PROTOCOL v2.7\n", encoding="utf-8")
+            outside.write_text("PROTOCOL v2.8\n", encoding="utf-8")
             try:
                 declare(repo, {"stamp_exempt": [
                     {"path": str(outside), "reason": "nope"}]})
@@ -1811,7 +1811,7 @@ class ExemptionPathIsConfinedTest(unittest.TestCase):
                 self.assertNotEqual(rc, 0, out)
                 self.assertIn("REFUSED", out)
                 self.assertIn("canonical", out)
-                self.assertIn("missing PROTOCOL v2.7 stamp", out)  # nothing granted
+                self.assertIn("missing PROTOCOL v2.8 stamp", out)  # nothing granted
 
     def test_a_case_variant_spelling_is_refused_where_it_finds_a_file(self):
         """Round 16: canonical FORM is not enough — is_file() answers
@@ -1930,7 +1930,7 @@ class TrackedCaseCollisionTest(unittest.TestCase):
         for a BOM'd unstamped blob the gate never read."""
         with repo_copy() as repo:
             vis = repo / "transports" / "WinAlias.md"
-            vis.write_bytes(b"# alias probe [PROTOCOL v2.7]\n")
+            vis.write_bytes(b"# alias probe [PROTOCOL v2.8]\n")
             subprocess.run(["git", "add", "-f", "transports/WinAlias.md"],
                            cwd=str(repo), capture_output=True)
             h = subprocess.run(["git", "hash-object", "-w", "--stdin"],
@@ -1954,7 +1954,7 @@ class TrackedCaseCollisionTest(unittest.TestCase):
         filesystem — the collision key now folds NFC first."""
         with repo_copy() as repo:
             h = subprocess.run(["git", "hash-object", "-w", "--stdin"],
-                               cwd=str(repo), input=b"# x [PROTOCOL v2.7]\n",
+                               cwd=str(repo), input=b"# x [PROTOCOL v2.8]\n",
                                capture_output=True)
             sha = h.stdout.decode("ascii").strip()
             nfc = "transports/caféprobe.md"
@@ -2236,14 +2236,14 @@ class TrackedCaseCollisionTest(unittest.TestCase):
         with repo_copy() as repo:
             rel = ("plugins/agent-protocol/skills/agent-core/references/"
                    "UPPER.MD")
-            (repo / rel).write_bytes(b"# clean upper [PROTOCOL v2.7]\n")
+            (repo / rel).write_bytes(b"# clean upper [PROTOCOL v2.8]\n")
             subprocess.run(["git", "add", "-f", rel],
                            cwd=str(repo), capture_output=True)
             mangled = chr(0x2014).encode("utf-8").decode("cp1252") \
                 .encode("utf-8")
             h = subprocess.run(["git", "hash-object", "-w", "--stdin"],
                                cwd=str(repo),
-                               input=b"# stamped [PROTOCOL v2.7]\nmangled " +
+                               input=b"# stamped [PROTOCOL v2.8]\nmangled " +
                                      mangled + b" dash\n",
                                capture_output=True)
             sha = h.stdout.decode("ascii").strip()
@@ -2302,7 +2302,7 @@ class TrackedCaseCollisionTest(unittest.TestCase):
         names (Path objects collapse the variants)."""
         with repo_copy() as repo:
             vis = repo / "transports" / "CaseProbe.md"
-            vis.write_bytes(b"# case probe [PROTOCOL v2.7]\n")
+            vis.write_bytes(b"# case probe [PROTOCOL v2.8]\n")
             subprocess.run(["git", "add", "-f", "transports/CaseProbe.md"],
                            cwd=str(repo), capture_output=True)
             h = subprocess.run(["git", "hash-object", "-w", "--stdin"],

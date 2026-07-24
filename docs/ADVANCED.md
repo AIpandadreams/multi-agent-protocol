@@ -149,7 +149,7 @@ It verifies, profile-aware:
 
 - every required file for the profile exists (orchestrator-only files are
   required only for `3agent.local`);
-- `PROTOCOL_VERSION` is one of the supported versions (v2.5, v2.6 or v2.7) and the
+- `PROTOCOL_VERSION` is one of the supported versions (v2.5, v2.6, v2.7 or v2.8) and the
   profile's role set matches the `memory/` tree;
 - the **PROXY_AUTH guard is intact** — the six never-listable super-classes
   are all still named in the slot (a deployer who edits the slot and drops
@@ -164,7 +164,7 @@ Findings are tagged by severity, and the split is deliberate:
 
 - **BLOCKER** (nonzero exit) — structurally broken or unsafe: a missing
   required file, a wrong/unknown profile, a role set that disagrees with the
-  profile, a `PROTOCOL_VERSION` outside the supported set (v2.5 / v2.6 / v2.7), a
+  profile, a `PROTOCOL_VERSION` outside the supported set (v2.5 / v2.6 / v2.7 / v2.8), a
   weakened PROXY_AUTH guard, or a broken auth-log chain.
 - **WARN** (exit 0 unless `--strict`) — stamped but not yet fully bound, or
   cosmetic drift: an unfilled `{{FILL}}` slot, or a per-file stamp / header on
