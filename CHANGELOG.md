@@ -8,7 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
-| (unreleased) | v2.8 | docs: release runbook 6.8 — the five-surface release enumeration (main commit, signed tag, plugin manifest, marketplace manifest, Release object), written from this repo's own 1.5.0 miss, where the first four verified correct while "Latest" still pointed at the previous version; docs: CONTRIBUTING — a gate's green must name its denominator in its own output (the CI scrub runs the example pattern list, so it fires only on a few narrow generic shapes and cannot see a contributor's organizational identifiers; the "CI secret-scans" bullet corrected) |
+| (unreleased) | v2.8 | docs: release runbook 6.8 — the five-surface release enumeration (main commit, signed tag, plugin manifest, marketplace manifest, Release object), written from this repo's own 1.5.0 miss, where the first four verified correct while "Latest" still pointed at the previous version; docs: CONTRIBUTING — a gate's green must name its denominator in its own output (the CI scrub runs the example pattern list, so it fires only on a few narrow generic shapes and cannot see a contributor's organizational identifiers; the "CI secret-scans" bullet corrected); docs: AUTONOMY — **full speed**, a standing pre-authorization to proceed without re-asking inside already-authorized work that lies within the scope the grant states, or the narrow default when it states none, documented as a setting independent of the autonomy dial rather than a fifth dial position (the dial answers what can put work in front of a seat without a fresh word; three of its positions touch whether having that work is enough to proceed but answer the question only for work named in advance or as a side effect of a tick being headless, and none states a rule for work in general), carrying never-idle's cadence-not-authority invariant applied to that second question as tempo-not-boundary, the rule that full speed never supplies a missing go, the cost it trades away (the pre-start ask is a point at which a mistaken idea of scope may surface before work begins, and only when the seat states what it is about to do and under what authority), explicit statements that full speed is neither a binding slot, nor a grant a seat may establish from anything but your word in the session that acts on it — which bounds it to that session — nor a grant whose scope the seat may infer, and the duty it adds: surfacing work parked at a gate with its blocker named, at any dial position |
 | 1.5.0 | v2.8 | `PROTOCOL v2.8`: the self-improvement loop turned on itself — eight clauses adopted through the amendment loop this repo documents, spanning proposal observability, review-evidence admissibility, the amendment hard rails, decision-record recommendations, and queued-work autonomy (negative-evidence admissibility, an observability guarantee, provenance- and evidence-form admissibility, KPI authorship-and-pairing, dry-dock, a draft-time gate-touch tripwire, and counter-case), plus the R1-R10 standing-instrument package folded into the review/verification surfaces. No new binding slots; the workspace tooling crosses to v2.8 (migrator gains the v2.7 → v2.8 hop, conformance accepts v2.8, fresh workspaces stamp v2.8) |
 | 1.4.0 | v2.7 | closes the version skew 1.3.0 disclosed: the bundled workspace-lifecycle tooling and its docs move to v2.7 together — `migrate_workspace.py` gains the v2.6 → v2.7 hop *beside* the v2.5 → v2.6 hop it already had, so a v2.5 workspace now reaches v2.7 in ONE run of ONE checkout rather than a two-checkout sequence (the first draft of this release REPLACED the old hop instead of adding it, which would have deleted a working capability from a public tool under a patch bump — caught in review, and the reason this is a MINOR), `conformance_check.py`'s `SUPPORTED_VERSIONS` becomes the three-tuple (v2.5 / v2.6 / v2.7) so older workspaces stay green under a newer checkout, and `new_project.py` stamps fresh workspaces v2.7 — with the banner stamps on `validate_auth_log.py`, `reviewer_poller.py` and `wave_coverage_check.py` moving in the same lockstep (the standalone validator and the copy `new_project.py` embeds are twins, or the stamp emitted disagrees with the tool that checks it). The field behaviour that prompted it was the disclosure working: an installer's agent hit the v2.6-stamp-from-a-v2.7-install mismatch and PAUSED rather than hand-stamping past it. Migration doctrine gains the rule the v2.5 → v2.6 hop learned by tripping a workspace's own integrity gate — a record's banner is part of the record, so append-only files (auth-logs, dispatch/tick logs, channel) are never re-stamped, an older supported stamp on them is green, and every kept record is reported; the check reads the banner line ONLY, counting any marker-shaped token first so a second marker of any shape breaks the exactly-one rule, because body text quotes historical tokens and must never mask a wrong banner |
 | 1.3.0 | v2.7 | `PROTOCOL v2.7`: the public tree crosses to v2.7. Three review-lane lessons banked from live runs fold into the normative skills — seat-qualification on cross-team lines and a cross-team drafting-assist lane (channel-core); carried-claim provenance and "a status claim is a measurement, re-verified not carried" (memory-discipline); sweep-completeness — a narrow probe's silence proves nothing (review-core). A new `docs/CREATOR-SEAT-CHARTER.md` names the *chartered external seat* — a solo, repo-isolated, orchestrator-fronted protocol-stewardship session — as a recognized THIRD identity form beside the role seats and the orchestrator: mandate, boundaries (outward-facing stays the principal's, first-hand; an orchestrator-lane authorization does not lift a principal-first-hand outward gate), cold-start, and an explicit grant of NO new authority; admitted into the FEDERATION identity invariant and the bootstrap's now-topology-aware Design duty. Disclosed skew (deliberate, tracked): the bundled workspace-lifecycle tooling — `new_project.py`, `migrate_workspace.py`, the conformance supported-version set — and its docs stay v2.6 and move together in a later coordinated workspace-migration release; until then a v2.7 install that scaffolds a fresh workspace stamps it v2.6, so the first wake parks protocol-sensitive actions on the stamp mismatch, by design |
@@ -58,6 +58,65 @@ changes only through the
   `release_scrub: clean` at exit 0, while 5 of its 10 patterns matched under a
   deployment-specific list. The PR template's co-maintained checkbox moves with
   it.
+
+- **`docs/AUTONOMY.md` — full speed: the standing go-ahead.** The autonomy dial
+  answers what can put work in front of a seat without a fresh word from you.
+  Three of its positions also touch a second question — never-idle's closed
+  list, standing-duties' bound duties, and a headless tick draining the queue
+  with nobody present to ask — but each answers it only for work named in
+  advance, or as a consequence of being headless, and none states a rule for
+  work in general. Whether a seat holding work it is **already authorized** to
+  do may proceed on having it, or must stop and ask, had no setting of its own,
+  and a seat answering it conservatively turns the principal into the bottleneck
+  on their own decision. The new subsection names the mode in four clauses and
+  states it as an **independent setting** rather than a fifth dial position: the
+  two answer different questions and are set by different means — the dial by
+  its binding, full speed by your word in the session that acts on it — though
+  they meet where a unit is picked up. The SOP catalog in
+  `docs/CREATOR-SEAT-BOOTSTRAP.md` (Part 5, the *No-idle / continuous forward
+  progress* row) already carried it in practice — continuous progress and the
+  never-idle level held together, with the same limit stated in one line: acting
+  within existing authority without waiting to be prompted grants none of it.
+  The subsection cites and briefly restates that row before naming full speed as
+  the setting that waives the pre-start ask.
+
+  The framing also has a consequence, disclosed because it is an incentive
+  rather than the argument: a fifth dial position would not be only a docs
+  change. Past `docs/AUTONOMY.md` and `docs/CREATOR-SEAT-BOOTSTRAP.md` with its
+  hand-maintained `.html` twin, it reaches `binding-slots.md` and
+  `never-idle-core.md`, which make it protocol-class, and the dial strings in
+  `tools/new_project.py` and `tools/migrate_workspace.py`, which make it a
+  tooling change as well.
+
+  The limits that keep the mode from reading as a licence live in the section —
+  among them tempo not boundary, no supplying of a missing go, no relaxation of
+  verification, and no licensing of invented work. Two statements took several
+  passes to get right, and the section does not record those passes. The two
+  conditions a unit faces were first posed as one question with two failure
+  modes, then as two conditions that must both hold before a unit begins; the
+  first was right only while the mode was described as supplying the go, and the
+  second was wrong in exactly the case it went on to describe — a unit that is
+  perfectly authorized but outside the waiver is worked the ordinary way, not
+  refused. And the flat rule that an idle seat is defective ships split in two
+  and conditioned.
+
+  The section says two things about the full-speed grant itself, both because
+  leaving them unsaid puts the extent of an authorization in the seat's hands.
+  Full speed is **not** a binding slot — there is no such entry in
+  `binding-slots.md`, so there is no bound value a seat can point at — and it
+  cannot be established by a memory note or a peer's say-so; in every
+  configuration it takes the principal's own word in the session that acts on
+  it, which bounds it to that session. That holds because an auth-log approval
+  is a record of a gated action, naming the gate class cleared, and consumed by
+  an event naming what was done; and full speed clears no gate and is not an
+  action such an event could name, so the auth-log lane has no such record to
+  carry. Whether the mode should become a bound slot is left open as a
+  protocol-class question. And the grant's **scope** is the principal's to state
+  rather than the seat's to infer: granted without one it reaches at most the
+  single unit in front of the seat when the grant was given, and nothing at all
+  if none was, or if more than one was and the grant does not say which — and a
+  seat reasoning about whether the grant *probably* reaches a new lane, or the
+  next unit of the same work, has already left the scope.
 
 ## [1.5.0] — 2026-07-24
 
