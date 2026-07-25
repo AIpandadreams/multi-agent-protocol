@@ -14,7 +14,10 @@ Two guards run, cheapest first:
   1. Named-path guard (--private-path, repeatable): a fail-FAST check that a
      path known to be private (e.g. a profiles/private/ directory) has not been
      dragged into the release tree. If any listed path exists under <root> the
-     scan is aborted with "RELEASE BLOCKED" before a single file is read.
+     scan is aborted with "RELEASE BLOCKED" before any release content is read.
+     (The patterns file itself is loaded first, so it is not covered by that
+     "before" — the guard runs ahead of the content scan, not ahead of every
+     read.)
   2. Pattern scan: every text file under <root> is matched line-by-line against
      the case-insensitive regexes in the patterns file.
 
@@ -136,7 +139,10 @@ def main() -> int:
         print(f"release_scrub: {exc}", file=sys.stderr)
         return 2
 
-    # Guard 1: named-path fail-fast, before any file is read.
+    # Guard 1: named-path fail-fast, before any release content is read.
+    # (load_patterns above has already read the patterns file — under CI's own
+    # invocation that file lives inside the scanned tree, so "before any file is
+    # read" would be false.)
     present = check_private_paths(root, args.private_paths)
     if present:
         print("RELEASE BLOCKED")
