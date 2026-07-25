@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mirror-consistency CI for the agent-protocol skills (PROTOCOL v2.7).
+"""Mirror-consistency CI for the agent-protocol skills (PROTOCOL v2.8).
 
 Guards against the drift class that produced the original v2 defects:
 role skills contradicting each other or the agent-core normative files.
@@ -344,7 +344,7 @@ def stamped(p: Path) -> bool:
     """Version-stamp gate, honouring enumerated exemptions — compared by the
     file's LEXICAL repo-relative path (round 13: a resolve()-based lookup let
     a junction alias inherit a declared exemption)."""
-    return "v2.7" in text(p) or p.relative_to(ROOT).as_posix() in STAMP_EXEMPT
+    return "v2.8" in text(p) or p.relative_to(ROOT).as_posix() in STAMP_EXEMPT
 
 
 # 1. Core files exist
@@ -1323,11 +1323,11 @@ for _role in ROLES + ["agent-core"]:
           "SKILL.md is gone cannot load, and no content gate below can red "
           "a file that is not there")
 
-# 5. Version stamp coverage: every reference/skill file carries v2.7 — unless the
+# 5. Version stamp coverage: every reference/skill file carries v2.8 — unless the
 # tree has DECLARED it exempt with a reason (see 0; a byte-custody copy cannot be
 # stamped without destroying the custody it exists to provide).
 for p in SKILLS.rglob("*.md"):
-    check(stamped(p), f"missing PROTOCOL v2.7 stamp: {p.relative_to(ROOT)}")
+    check(stamped(p), f"missing PROTOCOL v2.8 stamp: {p.relative_to(ROOT)}")
 
 # 6. Role files that override the core must defer to it explicitly
 for role in ROLES:
@@ -1369,7 +1369,7 @@ else:
     check(STANDALONE.is_file(), "tools/validate_auth_log.py missing")
 
 # 9. Transport profiles (repo-root transports/) get the same discipline the
-# skill tree does: a v2.7 stamp, no duplicated core rule blocks, and the same
+# skill tree does: a v2.8 stamp, no duplicated core rule blocks, and the same
 # banned-vocab sweep. They live outside SKILLS, so sections 3/4/5 miss them.
 # EXISTENCE first (round 15): everything below is conditional on presence, so
 # deleting transports/ outright — or either shipped profile — was green: an
@@ -1400,7 +1400,7 @@ if TRANSPORTS.is_dir():
     for p in TRANSPORTS.rglob("*.md"):
         t = text(p)
         check(stamped(p),
-              f"missing PROTOCOL v2.7 stamp: {p.relative_to(ROOT)}")
+              f"missing PROTOCOL v2.8 stamp: {p.relative_to(ROOT)}")
         for h in CORE_HEADINGS:
             check(h not in t,
                   f"core block '{h}' duplicated in {p.relative_to(ROOT)}")

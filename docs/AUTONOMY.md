@@ -101,7 +101,8 @@ living protocol rather than a frozen ruleset.
    amendment header stating the problem, blast radius, and version impact
    (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 3. **Review.** It goes through an independent review round — a different
-   vendor's model, byte-exact fingerprint — exactly like any unit of work.
+   vendor's model, byte-exact fingerprint, extraction-bound evidence —
+   exactly like any unit of work.
 4. **Adopt.** **You merge it**, and the protocol version bumps. No session
    runs "local amendments" ahead of a merged bump.
 

@@ -1,4 +1,4 @@
-# Memory discipline [PROTOCOL v2.7]
+# Memory discipline [PROTOCOL v2.8]
 
 > Tier: once per project. Identical for all roles.
 

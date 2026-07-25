@@ -1,4 +1,4 @@
-# START_SESSION — orchestrator [PROTOCOL v2.7]
+# START_SESSION — orchestrator [PROTOCOL v2.8]
 
 Follow at EVERY session boundary: fresh, resumed, or cold successor. On an
 unattended wake assume cold: nothing exists but the repo. A wake that cannot
@@ -54,7 +54,7 @@ session — waives the missing-tool BLOCKER for that wake.
   COST_LEDGER, ESCALATION, DUTIES, TICKS). Confirm ROLE_LOCK says
   orchestrator — if it names another role or is unbound, STOP and ask the
   principal.
-- PROTOCOL_VERSION check: skill v2.7 vs workspace stamp; mismatch → flag,
+- PROTOCOL_VERSION check: skill v2.8 vs workspace stamp; mismatch → flag,
   park protocol-sensitive actions.
 - Git-synced workspaces: fetch all bound repos first; diverged or
   un-pushable state is the FIRST problem to solve — a wake that cannot push

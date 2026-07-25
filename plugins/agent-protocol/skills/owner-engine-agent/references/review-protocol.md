@@ -1,4 +1,4 @@
-# Review protocol — owner side [PROTOCOL v2.7]
+# Review protocol — owner side [PROTOCOL v2.8]
 
 > **Tier: every-session.** The REVIEWER ARCHITECTURE and VERDICT CONTRACT live
 > in ONE place: `../../agent-core/references/review-core.md` — read it before

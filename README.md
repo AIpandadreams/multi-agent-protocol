@@ -6,7 +6,7 @@ work — without losing control of authorization, history, or quality.**
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml/badge.svg)](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml)
 [![Release](https://img.shields.io/github/v/release/AIpandadreams/multi-agent-protocol?sort=semver)](https://github.com/AIpandadreams/multi-agent-protocol/releases)
-[![Protocol](https://img.shields.io/badge/protocol-v2.7-informational)](docs/PROTOCOL.md)
+[![Protocol](https://img.shields.io/badge/protocol-v2.8-informational)](docs/PROTOCOL.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A2BE2)](docs/QUICKSTART.md#1-install-the-plugin)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen)](#trust-properties)
@@ -130,7 +130,7 @@ tools/
   watcher.py                generic multi-lane channel watcher (reports only)
   scale_workspace.py        upgrade a 2-agent workspace to 3-agent
   adopt_project.py          adopt an ad-hoc collaboration into a workspace
-  migrate_workspace.py      migrate a stamped v2.5/v2.6 workspace up to v2.7
+  migrate_workspace.py      migrate a stamped v2.5/v2.6/v2.7 workspace up to v2.8
 docs/                       quickstart · architecture · configurations ·
                             protocol · advanced · design · FAQ
 examples/                   a worked end-to-end cycle you can read like a story

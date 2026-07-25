@@ -1,4 +1,4 @@
-# Binding-slot glossary [PROTOCOL v2.7]
+# Binding-slot glossary [PROTOCOL v2.8]
 
 > The skills define ROLES and PROTOCOLS; each project supplies BINDINGS. Slots
 > are shared vocabulary across all role skills; each role's START_SESSION
@@ -33,6 +33,6 @@
 **Bare cells for tooling-parsed slots.** Slots that tooling parses by exact
 match — `PROFILE` (in the stamped BINDINGS), `TRANSPORT`,
 `PROTOCOL_VERSION` — hold the BARE canonical value only (`3agent.git-sync`,
-`git-sync`, `v2.7`). Provenance, dates, and rationale ride the commit message
+`git-sync`, `v2.8`). Provenance, dates, and rationale ride the commit message
 or a `## MIGRATION` section, never inline in the cell: an annotated cell
 reads fine to a human and fails conformance's exact match.

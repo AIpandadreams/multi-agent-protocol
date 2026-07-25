@@ -175,7 +175,7 @@ but two live runs earned these notes:
 - `tools/migrate_workspace.py` — the *version* axis of migration (carrying a
   stamped workspace across a PROTOCOL version bump), distinct from the
   *channel* migration this doc covers. It carries the whole supported ladder —
-  v2.5 → v2.6 → v2.7 — and walks it from the workspace's pin up to the newest
+  v2.5 → v2.6 → v2.7 → v2.8 — and walks it from the workspace's pin up to the newest
   version in a single run, so a v2.5 workspace needs one checkout, not a
   release-by-release sequence. It flips the version stamps only and points back
   here for the counter/state carry.

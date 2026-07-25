@@ -8,6 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| (unreleased) | v2.8 | `PROTOCOL v2.8`: the self-improvement loop turned on itself — eight clauses adopted through the amendment loop this repo documents, spanning proposal observability, review-evidence admissibility, the amendment hard rails, decision-record recommendations, and queued-work autonomy (negative-evidence admissibility, an observability guarantee, provenance- and evidence-form admissibility, KPI authorship-and-pairing, dry-dock, a draft-time gate-touch tripwire, and counter-case), plus the R1-R10 standing-instrument package folded into the review/verification surfaces. No new binding slots; the workspace tooling crosses to v2.8 (migrator gains the v2.7 → v2.8 hop, conformance accepts v2.8, fresh workspaces stamp v2.8) |
 | 1.4.0 | v2.7 | closes the version skew 1.3.0 disclosed: the bundled workspace-lifecycle tooling and its docs move to v2.7 together — `migrate_workspace.py` gains the v2.6 → v2.7 hop *beside* the v2.5 → v2.6 hop it already had, so a v2.5 workspace now reaches v2.7 in ONE run of ONE checkout rather than a two-checkout sequence (the first draft of this release REPLACED the old hop instead of adding it, which would have deleted a working capability from a public tool under a patch bump — caught in review, and the reason this is a MINOR), `conformance_check.py`'s `SUPPORTED_VERSIONS` becomes the three-tuple (v2.5 / v2.6 / v2.7) so older workspaces stay green under a newer checkout, and `new_project.py` stamps fresh workspaces v2.7 — with the banner stamps on `validate_auth_log.py`, `reviewer_poller.py` and `wave_coverage_check.py` moving in the same lockstep (the standalone validator and the copy `new_project.py` embeds are twins, or the stamp emitted disagrees with the tool that checks it). The field behaviour that prompted it was the disclosure working: an installer's agent hit the v2.6-stamp-from-a-v2.7-install mismatch and PAUSED rather than hand-stamping past it. Migration doctrine gains the rule the v2.5 → v2.6 hop learned by tripping a workspace's own integrity gate — a record's banner is part of the record, so append-only files (auth-logs, dispatch/tick logs, channel) are never re-stamped, an older supported stamp on them is green, and every kept record is reported; the check reads the banner line ONLY, counting any marker-shaped token first so a second marker of any shape breaks the exactly-one rule, because body text quotes historical tokens and must never mask a wrong banner |
 | 1.3.0 | v2.7 | `PROTOCOL v2.7`: the public tree crosses to v2.7. Three review-lane lessons banked from live runs fold into the normative skills — seat-qualification on cross-team lines and a cross-team drafting-assist lane (channel-core); carried-claim provenance and "a status claim is a measurement, re-verified not carried" (memory-discipline); sweep-completeness — a narrow probe's silence proves nothing (review-core). A new `docs/CREATOR-SEAT-CHARTER.md` names the *chartered external seat* — a solo, repo-isolated, orchestrator-fronted protocol-stewardship session — as a recognized THIRD identity form beside the role seats and the orchestrator: mandate, boundaries (outward-facing stays the principal's, first-hand; an orchestrator-lane authorization does not lift a principal-first-hand outward gate), cold-start, and an explicit grant of NO new authority; admitted into the FEDERATION identity invariant and the bootstrap's now-topology-aware Design duty. Disclosed skew (deliberate, tracked): the bundled workspace-lifecycle tooling — `new_project.py`, `migrate_workspace.py`, the conformance supported-version set — and its docs stay v2.6 and move together in a later coordinated workspace-migration release; until then a v2.7 install that scaffolds a fresh workspace stamps it v2.6, so the first wake parks protocol-sensitive actions on the stamp mismatch, by design |
 | 1.2.7 | v2.6 | the loop's own failure modes, codified — each burned first-hand before it was written down: a reviewer lane that ANSWERS with a refusal is a third outage shape beside silent and down (cure = accurate description, never evasion; verdicts written incrementally with an explicit incomplete/final marker; a partial stream supplies findings for seat-4 adjudication but NEVER ship authority); convergence gains an execution-environment axis (every shipping platform gets an ACTUAL run wherever runnable coverage exists, else it is recorded UNEXECUTED with the residual risk escalated — the "single-platform chorus" anti-pattern, banked from this repo's own 1.2.6 CI escape, where 21 rounds of review on one host shipped 4 POSIX launch-time errors); verification instruments offered as ship evidence earn the same distrust as the gates they certify (bind to the most structured surface that exists and to exact messages, launch/import/collection failures fail CLOSED to RED, every new guard proves liveness by mutation or is disclosed as defense-in-depth); and the wake gate fails CLOSED when its tool is absent — a workspace missing `tools/conformance_check.py` no longer no-ops the hygiene gate on ANY wake path, `/wake` and the skill-less START_SESSION floor alike, and the checker itself now lists its vendored copy as a required file (this release's one disclosed code change), because a gate that "passes" by never running is the worst false green |
@@ -20,6 +21,70 @@ changes only through the
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [Unreleased — v2.8]
+
+**`PROTOCOL v2.8` — the self-improvement protocol, dogfooded.** Every change
+in this release was proposed, reviewed under the independent cross-vendor +
+isolated-judge convergence the protocol prescribes, and adopted by the
+principal through the same Observe → Propose → Review → Adopt loop
+[AUTONOMY.md](docs/AUTONOMY.md) describes — the protocol amending itself by
+its own rules. Eight clauses tighten the loop across its span — proposal-time
+observability, what a review round accepts as evidence, the amendment hard
+rails, how a recommendation travels at a decision of record, and when a worker
+may stay idle; a standing package (R1-R10) hardens the instruments that do the
+checking. There are **no new binding slots**, and the bundled
+workspace-lifecycle tooling crosses in step: `migrate_workspace.py` gains the
+**v2.7 → v2.8** hop beside the ones it already carries, `conformance_check.py`
+accepts v2.8, and `new_project.py` stamps fresh workspaces v2.8 — all in the
+single atomic version commit, so a checkout is never internally skewed.
+
+The eight clauses:
+
+- **Negative-evidence admissibility** (review step) — an absence-claim used as
+  gate evidence (that something is clean, zero, or not there) is admissible
+  only when it names the instrument that looked and that instrument's known
+  blind spots; a positively-phrased *all-present* claim is an absence-claim
+  too. Silence is not proof.
+- **Observability guarantee** — every mechanism that makes the work easier to
+  run (a monitor, a summary, a gate) also makes some failure harder to see; it
+  is responsible only if it declares what it makes harder to observe and ships
+  the compensating probe.
+- **Provenance-admissibility** (hard rails) — an artifact offered as gate
+  evidence (a table, count, hash, diff, or measurement) is inadmissible unless
+  it carries the verbatim command or procedure that produced it, the inputs
+  it was applied to, and — where it asserts a count, shape, or coverage — the
+  assertion checked when it was written, all recorded so a reader can
+  re-derive it rather than trust it; citations of authority are governed
+  identically — authority asserted in prose, resolving to no readable entry,
+  is not a citation.
+- **KPI authorship and pairing** — the metrics that *gate* whether an amendment
+  merges are the principal's, authored or ratified; and within that gating set
+  a velocity metric is admitted only paired with its corresponding
+  defect-escape metric.
+- **Dry-dock** — a worker may bound its attention to the queued units of work
+  and stay idle when the queue is empty; this sits directly on the standing
+  idle-is-correct doctrine rather than beside it as a tool.
+- **Draft-time gate-touch tripwire** (hard rails) — a scheduled or automated
+  drafter checks its own diff, before filing, against a principal-authored
+  manifest of protected regions; a draft that touches one is not filed as a PR
+  but downgrades to a notice-only memo, leaving the locked-region change to the
+  principal.
+- **Counter-case** — a recommendation offered at a decision of record travels
+  with the strongest case against itself.
+- **Evidence form** — a claim offered as evidence in a review is admissible
+  only as a mechanical *extraction* (content a named instrument takes from a
+  stated substrate), never composed about it; reasoning, severity, and
+  recommendation stay free prose, and the bar reaches only what is offered as
+  grounds.
+
+**R1-R10 — instrument discipline.** A standing package folded into the review
+and verification surfaces, each rule earned by a real miss: print the
+denominator beside a verdict; a count names the domain it counts over; a
+header self-labels what it governs; a pin proves identity, not just presence;
+a cure is swept for the very defect it cures; the premises a text-only judge
+cannot check are enumerated in its verdict; and the rest — carried now where
+the work happens rather than in a lessons file no gate reads.
 
 ## [1.4.0] — 2026-07-20
 
