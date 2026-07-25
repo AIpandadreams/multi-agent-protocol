@@ -101,11 +101,12 @@ because anything of yours was checked.
 Read those descriptions as approximations. Each is a regex, and prose cannot
 pin a regex's edge: a `/home/` path is caught only when the next component
 starts with a letter, so one starting with a digit or an underscore is not,
-and the two mail patterns are unanchored, so a look-alike domain that merely
-contains one of the tokens is caught too. The list is in the tree at the path
-above — open it when the answer matters. Measured, for the cases likeliest to
-mislead: a macOS `/Users/` path, a users folder on any drive but `C:`, and an
-address containing neither token all pass clean.
+and the two mail patterns have no end anchor, so an address whose domain begins
+with a named provider and continues past it is caught, while one where the
+provider appears only after a prefix label is not. The list is in the tree at
+the path above — open it when the answer matters. Measured, for the cases
+likeliest to mislead: a macOS `/Users/` path, a users folder on any drive but
+`C:`, and an address containing neither token all pass clean.
 
 (This section cannot quote the list's contents without matching them. Drafting
 it tripped the gate twice — once on the stand-in tokens, once on a Windows home
