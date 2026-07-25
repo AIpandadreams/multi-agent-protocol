@@ -18,4 +18,7 @@ fingerprint:   <!-- base + SET digest (a diff digest cannot pin unchanged twins;
 
 - [ ] `python tools/mirror_check.py` green
 - [ ] `python -m unittest discover -s tests` green
-- [ ] no personal data / machine paths / secrets introduced
+- [ ] no personal data / machine paths / secrets introduced — CI's example
+      pattern list catches only a few generic shapes, so if you keep a private
+      scrub list, run that too (see CONTRIBUTING, "What a green scrub does not
+      prove")
