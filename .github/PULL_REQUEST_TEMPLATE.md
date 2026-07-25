@@ -18,4 +18,6 @@ fingerprint:   <!-- base + SET digest (a diff digest cannot pin unchanged twins;
 
 - [ ] `python tools/mirror_check.py` green
 - [ ] `python -m unittest discover -s tests` green
-- [ ] no personal data / machine paths / secrets introduced
+- [ ] no personal data / machine paths / secrets introduced — checked against my
+      OWN private scrub list, not CI's placeholder one (see CONTRIBUTING,
+      "What a green scrub does not prove")
