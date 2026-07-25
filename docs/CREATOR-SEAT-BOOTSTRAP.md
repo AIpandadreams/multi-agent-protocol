@@ -419,9 +419,12 @@ A release is not one object. Ours publishes FIVE public surfaces, and a
 verify leg that measures only four can pass clean while the fifth still
 advertises the previous version:
 
-1. **The main commit.** Land the stamp. If it fast-forwards, the sha you
-   handed the executing seat is the sha on main; a squash mints a NEW one,
-   so re-derive it from the remote instead of quoting your own.
+1. **The main commit.** Land the stamp — which is wider than the two
+   manifests below: CHANGELOG.md carries the number TWICE, in the section
+   heading and in the release table's leading cell, and both move here.
+   Re-derive the landed sha from the remote rather than quoting the one you
+   handed the executing seat: a fast-forward preserves it, a squash mints a
+   new one, and only the remote tells you which happened.
 2. **The signed tag.** Verify the SIGNATURE, not merely that the tag
    resolves — the tag object and the commit it peels to are two lookups.
 3. **The plugin manifest.** Bump the release semver. The protocol stamp
@@ -431,7 +434,9 @@ advertises the previous version:
    Stamping one and not the other ships a stale advertisement.
 5. **The host's Release object.** A distinct API record from the tag, and
    the one that renders as "Latest". **Pushing a correct signed tag does
-   not create or update it.**
+   not create or update it.** Create it against the pushed tag with this
+   release's CHANGELOG section as its notes, then read the record back to
+   confirm it is the one marked latest.
 
 **The miss this enumeration exists to prevent.** We shipped a release whose
 commit, tag and both manifests all verified correct while the releases page
