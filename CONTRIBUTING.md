@@ -16,6 +16,34 @@ the protocol prescribes.**
 4. Protocol changes get an independent review round before merge; docs and
    tooling changes get a normal review.
 
+## What a green scrub does not prove
+
+`release_scrub.py` takes its pattern list as an argument because what counts as
+private is a property of your deployment, not of this protocol. The list CI
+points at, `examples/scrub_patterns.example.txt`, is a **placeholder file**: its
+entries are stand-ins — a generic personal name, a generic company, a generic
+home-directory path — and they match nothing belonging to any real
+organization. Against this repo it is clean by construction. (Quoting those
+stand-in tokens verbatim in a file is itself enough to trip the gate, which is
+a fair reminder that the list is exactly as good as its entries.)
+
+So a green scrub in CI does not tell you a file is free of *your* identifiers.
+It reports on the patterns it was handed, and the denominator of that green is a
+list of placeholders. Keep your real list outside the repo and run the gate
+against it yourself before publishing anything:
+`python tools/release_scrub.py <tree> --patterns <your-private-list>`.
+
+This is written down because the failure was measured, not imagined. A document
+carrying six internal authorization ids, internal absolute paths, internal role
+names, and one person's name eight times returned `release_scrub: clean` at exit
+0 under the CI invocation above — and 5 hits out of 10 patterns when the same
+bytes were scanned with a deployment-specific list. Correct invocation, real
+green, no assurance.
+
+The general form outlives the instance: **a gate's green must name its
+denominator.** A check that reports "clean" without saying what it compared
+against cannot be told apart from a check that looked at nothing.
+
 ## What kind of change is it?
 
 | change | path | bar |
@@ -68,8 +96,10 @@ the `artifact set` field exists to add.
 - Every protocol file carries a `[PROTOCOL vX.Y]` stamp; new files too.
 - Write like the docs write: complete sentences, evidence over adjectives,
   and when a rule exists because something broke, say what broke.
-- No personal data, no real paths from your machine, no secrets — CI
-  secret-scans, and reviews look for the rest.
+- No personal data, no real paths from your machine, no secrets. Do not lean on
+  CI for this: the scrub gate it runs uses the placeholder pattern list, so it
+  cannot see your organization's identifiers (above). Your own private list and
+  the review are what actually catch them.
 
 ## Reporting problems
 
