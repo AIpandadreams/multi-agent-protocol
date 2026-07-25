@@ -27,9 +27,9 @@ changes only through the
 
 - **`CREATOR-SEAT-BOOTSTRAP.md` runbook 6.8 — cutting a public release**
   enumerates the FIVE public surfaces a release publishes — the main commit
-  (which carries this file's own two version sites), the signed tag, the
-  plugin and marketplace manifests, and the host's Release object — and the
-  two rules the omission taught. Written because this
+  (which carries this CHANGELOG's two version sites), the signed tag, the
+  plugin manifest, the marketplace manifest, and the host's Release object —
+  and the two rules the omission taught. Written because this
   repository's own 1.5.0 release shipped with the first four verified
   correct and the fifth still advertising the previous version: the Release
   object is a distinct API record from the tag, and pushing a correct signed
