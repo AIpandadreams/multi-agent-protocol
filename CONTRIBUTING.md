@@ -76,9 +76,9 @@ the `artifact set` field exists to add.
   generic shapes and nothing more — roughly, a path under the `C:` drive's users
   folder, a `/home/` path, a gmail or yahoo address — because the scrub gate runs
   the example pattern list. A macOS home path, a users folder on any other drive,
-  an address at a domain containing neither of those names, and anything specific
-  to your organization are all invisible to it: your own private list and the
-  review are what catch those (below).
+  most other mail domains, and anything specific to your organization are all
+  invisible to it: your own private list and the review are what catch those
+  (below).
 
 ## What a green scrub does not prove
 
@@ -93,10 +93,10 @@ The list CI points at, `examples/scrub_patterns.example.txt`, holds twelve
 patterns of two kinds. Eight stand in for organization-specific strings — a
 generic personal name, a generic company, a generic repo handle — and match no
 real organization's identifiers. The other four are deployment-independent leak
-*shapes* that do fire on real content, but narrowly: roughly, a path under the
-`C:` drive's users folder, a `/home/` path, a gmail or a yahoo address. Against
-this repo it passes because nothing here matches any of the twelve — not because
-anything of yours was checked.
+*shapes* that do fire on real content, but narrowly — roughly: a path under the
+`C:` drive's users folder; a `/home/` path; a gmail address; a yahoo address.
+Against this repo it passes because nothing here matches any of the twelve — not
+because anything of yours was checked.
 
 Read those descriptions as approximations. Each is a regex, and prose cannot
 pin a regex's edge: a `/home/` path is caught only when the next component
@@ -105,7 +105,7 @@ and the two mail patterns are unanchored, so a look-alike domain that merely
 contains one of the tokens is caught too. The list is in the tree at the path
 above — open it when the answer matters. Measured, for the cases likeliest to
 mislead: a macOS `/Users/` path, a users folder on any drive but `C:`, and an
-address at a domain containing neither token all pass clean.
+address containing neither token all pass clean.
 
 (This section cannot quote the list's contents without matching them. Drafting
 it tripped the gate twice — once on the stand-in tokens, once on a Windows home
