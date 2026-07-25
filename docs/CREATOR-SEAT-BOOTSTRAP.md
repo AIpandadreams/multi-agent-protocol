@@ -413,6 +413,48 @@ describing the work accurately in plain QA terms (never evasion; if accurate
 wording still won't pass, escalate to the principal), and treat any partial
 stream as findings for adjudication, never ship authority.
 
+### 6.8 Cutting a public release (the five-surface enumeration)
+
+A release is not one object. Ours publishes FIVE public surfaces, and a
+verify leg that measures only four can pass clean while the fifth still
+advertises the previous version:
+
+1. **The main commit.** Land the stamp — which is wider than the two
+   manifests below: CHANGELOG.md carries the number TWICE, in the section
+   heading and in the release table's leading cell, and both move here.
+   Re-derive the landed sha from the remote rather than quoting the one you
+   handed the executing seat: a fast-forward preserves it, a squash mints a
+   new one, and only the remote tells you which happened.
+2. **The signed tag.** Verify the SIGNATURE, not merely that the tag
+   resolves — the tag object and the commit it peels to are two lookups.
+3. **The plugin manifest.** Bump the release semver. The protocol stamp
+   lives in this same file — inside the description string — and moves on
+   its own schedule: do not carry it along with the number.
+4. **The marketplace manifest.** The same number lives in a second file.
+   Stamping one and not the other ships a stale advertisement.
+5. **The host's Release object.** A distinct API record from the tag, and
+   the one that renders as "Latest". **Pushing a correct signed tag does
+   not create or update it.** Create it against the pushed tag with this
+   release's CHANGELOG section as its notes, then read the record back to
+   confirm it is the one marked latest.
+
+**The miss this enumeration exists to prevent.** We shipped a release whose
+commit, tag and both manifests all verified correct while the releases page
+still read "Latest: the previous version". It survived three separate
+checks — the land recipe, an independent verify leg, and the executing
+seat's own run — because all three were working from the same four-item
+list. No gate caught it; a person did, after the fact.
+
+- **A hand-written surface list cannot fail on the surface it omits.**
+  Start from the previous release's actual published state, then reconcile
+  it against this release's intended surfaces — adding, renaming and
+  retiring each explicitly. Never derive the list from memory, and never
+  from the commission that assigned the work.
+- **"The tag is signed and pushed" is a git fact, not a release fact.**
+  If your verify leg never reads the host's release record, it cannot see
+  this class of miss: it will report green, correctly, on everything it did
+  inspect.
+
 ---
 
 ## Part 7 — Incident case studies (each one became protocol)
