@@ -47,17 +47,17 @@ changes only through the
   are stand-ins; a clean run against it therefore says nothing about a
   contributor's own internal identifiers. One Conventions bullet claimed
   outright that CI secret-scans, inviting contributors to lean on a check that
-  fires only on a few narrow shapes — a Windows home path on the `C:` drive, a
-  `/home/<user>` path, a gmail or yahoo address — and can see nothing specific
-  to them. The new
-  section states what the green actually covers, scan scope included, down to
-  the tool never reading the patterns file itself — and the rule the
-  miss taught: **a gate's green must name its denominator, in its own output,
-  where the person reading it is looking.** Measured, not argued: a document
-  carrying six internal authorization ids, internal paths, internal role names
-  and one person's name eight times returned `release_scrub: clean` at exit 0,
-  while 5 of its 10 patterns matched under a deployment-specific list. The PR
-  template's co-maintained checkbox moves with it.
+  fires only on a few narrow shapes — roughly, a path under the `C:` drive's
+  users folder, a `/home/` path, a gmail or yahoo address — and can see nothing
+  specific to them. The new section states what the green actually covers, scan
+  scope included, down to the tool excluding the patterns file itself from the
+  scan — and the rule the miss taught: **a gate's green must name its
+  denominator, in its own output, where the person reading it is looking.**
+  Measured, not argued: a document carrying six internal authorization ids,
+  internal paths, internal role names and one person's name eight times returned
+  `release_scrub: clean` at exit 0, while 5 of its 10 patterns matched under a
+  deployment-specific list. The PR template's co-maintained checkbox moves with
+  it.
 
 ## [1.5.0] — 2026-07-24
 
