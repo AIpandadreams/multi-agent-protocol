@@ -243,6 +243,17 @@ verification instrument offered as SHIP EVIDENCE:
   makes the green unfalsifiable, and an unreconciled one makes it decorative.
   Counts from different instruments stay separate with their domains named,
   never summed or reconciled against each other.
+- **A zero denominator is VACUOUS, never PASS.** A check whose extracted set is
+  empty has measured nothing: its green is a statement about zero objects, and
+  a gate that converts an empty set to PASS fails open on the day its pattern
+  goes blind — it keeps reporting green precisely when it has lost sight of its
+  subject. Report the empty set as its own outcome, VACUOUS, and gate on it as
+  a failure until a control establishes that the emptiness is real. Keep the
+  states distinct in the record: FAIL claims the subject broke; VACUOUS claims
+  the instrument lost its subject — the repairs are opposite, and collapsing
+  them buries an instrument defect under a false finding. This is the
+  denominator rule's boundary case: a green states its denominator, and a
+  denominator of zero un-states the green.
 - **A self-labeling header is a claim about its document.** Every delivery
   verification reads line one twice: once that the version self-label is the
   version the delivery should carry, once that the header's claim still
@@ -330,7 +341,9 @@ allowed in multi-question rounds, plus an overall disposition.
   or the absence of blockers.
 - **Parallel rounds** on one side are allowed ONLY when the artifacts under
   review are path-disjoint AND separately staged; otherwise the lane is
-  serialized (one round in flight).
+  serialized (one round in flight). A multi-seat PANEL at one fingerprint is
+  ONE round for this rule, not a breach of it (review-convergence,
+  anti-anchoring): seats multiply inside a round, never rounds.
 - **Across rounds:** a series of rounds converging an artifact — the four
   seats, the round budget, adjudicating reviewer disagreement, the blocking
   line, and anti-anchoring — is governed by `review-convergence.md`, layered
