@@ -9,8 +9,10 @@
 > See also: `docs/REVIEW_CONVERGENCE.md` — this repository's own applied
 > evidence trail of the cycle these rules define.
 
-A round is one adversarial pass. Convergence is the *sequence* of passes that
-ends only when the reviewer says it ends. This file exists because the failure
+A round is one adversarial pass — or one PANEL: N isolated seats passing over
+the same fingerprint concurrently, judged as a single round (anti-anchoring,
+panel rule). Convergence is the *sequence* of rounds that ends only when the
+reviewer says it ends. This file exists because the failure
 modes of a SERIES — anchoring on a stale verdict, averaging disagreeing
 reviewers into a vote, the author quietly declaring victory — are different
 from the failure modes of a single round, and each was a real defect.
@@ -136,10 +138,41 @@ Later seats review the ARTIFACT at its fingerprint — never a prior verdict.
   fingerprint with no attached prior verdict, no "the last reviewer said", no
   ADOPT/REJECT history. Priming a fresh seat with an earlier disposition
   manufactures agreement.
+- **The author's own measurements enter the charge as CLAIMS, not facts.** A
+  gate result, a passing suite, a clean scrub — reported by the author, these
+  are the author's claims about the artifact, and a seat primed with "the
+  tests pass" is anchored as surely as one shown a prior verdict. State them
+  in the request explicitly as reported-not-asserted, invite the seat to
+  reject any of them, and expect the load-bearing ones to be re-derived. A
+  seat that takes the author's green on faith has reviewed the author's
+  report, not the artifact.
+- **A PANEL is ONE round: N seats, one fingerprint, one round record.** When
+  independent seats review the same fingerprint concurrently, they are not
+  parallel rounds — they are a single round whose record carries every seat's
+  verdict at that one fingerprint. This is the shape review-core's
+  parallel-rounds rule serializes AROUND, not a breach of it: seats multiply
+  inside a round; they never multiply rounds (review-core, parallel rounds).
+- **Concurrent seats are isolated physically, and the isolation is MEASURED.**
+  Within a panel, blindness is a property of the setup, not a promise: one
+  working directory per seat, with
+  disjoint parents (separate volumes where available), created fresh for the
+  round; the charge placed inside each seat's own directory; each verdict
+  path asserted ABSENT before dispatch — an existence check at entry, so a
+  stale verdict cannot green a round that never ran; and the tree under
+  review clean at the pin when the seats launch. Then close the exposure
+  question by measurement, not intention: probe the actual built charges for
+  prior-verdict language, budget language, and each seat's paths in the
+  other's text, and state the probe set's size beside the zero — a clean
+  sweep with an unstated denominator is a hope, not a control.
 - **Prior-verdict content enters only fix-confirmation rounds, scoped to named
   findings.** A FIX-CONFIRMATION round legitimately carries "here are findings
   F1–F3 from r0N and the fixes" — that is its whole job. A fresh full-review
   seat gets no such priming.
+- **Fold bundles are PER-SEAT.** When a fix-confirmation round runs more than
+  one seat, each seat receives its OWN prior verdict verbatim and never
+  another seat's: the named findings travel, the other seat's reasoning does
+  not. Cross-seat verdict content in a bundle collapses the seats'
+  independence inside the one round shape that legitimately carries history.
 - **A fix-confirmation round sweeps the CURE TEXT.** Scoping a round to the
   named findings bounds what is re-reviewed; it does not exempt the prose
   written to answer them. That prose is the highest-risk surface in the
@@ -153,6 +186,15 @@ Later seats review the ARTIFACT at its fingerprint — never a prior verdict.
 - **Re-reviews target the tree at the NEW fingerprint.** After fixes, the tree
   moved; the old verdict authorizes nothing (review-core, fingerprint rule).
   Every round quotes the fingerprint of the exact tree it judged.
+- **"Both seats confirmed" is a claim about WHICH BYTES.** A verdict attaches
+  to one seat and one fingerprint. Any fold — any change to the artifact,
+  however small — resets every seat's record: a CONFIRM on the pre-fold bytes
+  is not carried forward, and a series where the peer seat confirmed
+  fingerprint A while the cross-vendor seat confirmed fingerprint B has
+  converged on nothing. Before declaring multi-seat agreement, verify that
+  the verdicts quote the SAME fingerprint; where they differ, the earlier
+  seat re-reviews at the new pin — its prior CONFIRM is history, not
+  standing.
 
 ## Coverage across rounds
 
