@@ -65,6 +65,17 @@ presupposes the channel-first rule — directives land on the channel, which is
 what makes polling able to find them (`channel-core.md`, what flows through the
 channel).
 
+**Nothing gates on a date.** A date an agent or a plan attaches to a unit is a
+LATEST-BY bar — the moment by which the work must be done or escalated — never
+a start time and never a gating condition. Work becomes actionable when its
+authority and its inputs exist; a seat holding ready work because a future
+date is written beside it has manufactured a gate nobody set. The legitimate
+calendar wait is an external event — a peer's stated window, an outside
+system's schedule — and that is a BLOCKED item with the event named as its
+blocker (three-state ledger below), not a date gate. And when a latest-by bar
+arrives with the work still undone, the bar fires: deliver or escalate — it
+never silently slides.
+
 ## What a worker MAY self-assign
 
 A CLOSED list. Between assignments, at watch, a worker may on its own initiative:
