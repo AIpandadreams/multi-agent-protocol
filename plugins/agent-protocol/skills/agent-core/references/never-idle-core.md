@@ -54,6 +54,17 @@ normally lands before the peer can answer. **While a reply is owed**, poll at
 a bound cadence, and always before switching work or ending a turn, until the
 reply arrives or the ask is explicitly parked.
 
+**Never idle on a decision you have not polled for.** Before declaring a
+decision to be someone else's and stopping, poll every lane that could carry
+the answer: the ruling is usually already posted, and a seat that stops on an
+answered question has manufactured its own starvation. If the decision genuinely
+is open, post the ask AND begin the next unit already inside your authority in
+the same work unit — an owed answer parks one UNIT, never the seat. Running low
+on context is a reason to CHECKPOINT, never a reason to stop. This rule
+presupposes the channel-first rule — directives land on the channel, which is
+what makes polling able to find them (`channel-core.md`, what flows through the
+channel).
+
 ## What a worker MAY self-assign
 
 A CLOSED list. Between assignments, at watch, a worker may on its own initiative:

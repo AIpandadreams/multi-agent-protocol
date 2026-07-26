@@ -181,6 +181,20 @@ did, what the crossed entry changes, and either (a) your action stands, with
 reason, or (b) a dated corrective amendment. Anything already surfaced to the
 principal's queue gets a correction rider the same cycle.
 
+**A re-ask is crossed copy until you check (the receiver's half of the rollback
+rule).** When a peer asks for work you have already delivered, the default
+reading is NOT that the work is missing — it is that the peer holds a stale
+picture, or that the ask crossed your delivery in flight. Discriminate against
+the record, never against the peer's confidence: resolve the claim to the
+committed artifact (the sha, the file present in the pushed tree). If it is
+there, confirm done and point at the sha; do not re-run. Re-executing a
+delivered unit re-commits an unchanged tree and duplicates the record, and
+declining that re-run is the correct resolution, not a refusal. **A peer's probe
+of your LIVENESS is not a reading of your WORK STATE** — from outside, a live
+seat that has finished and a stalled seat look identical, so a wake carrying an
+accusation is evidence about the sender's picture and not about your queue. This
+binds whichever seat is asking, including one senior to yours.
+
 **Respect the other side's routing.** If a peer record says "handback after
 adjudication", arm your intake, state it is armed-not-executed, and wait.
 
@@ -207,6 +221,12 @@ adjudication", arm your intake, state it is armed-not-executed, and wait.
   (the reader verifies a claimed sha exists in any repo it can read before
   pinning against it).
 - Gated items LISTED for visibility — never requested through the channel.
+- **Directive content lands on the CHANNEL first; an out-of-band wake or ping
+  carries only a POINTER to it.** A directive delivered inside a wake body
+  bypasses every monitor this discipline requires, so it can sit unseen while
+  both sides believe it was delivered — and the sender, seeing no action, reads
+  a finished seat as a stalled one. The wake's whole payload is "poll the
+  channel": the channel entry is the artifact of record, the wake is a doorbell.
 
 ## What NEVER flows through the channel
 
