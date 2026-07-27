@@ -1,4 +1,4 @@
-# Transport profile: local-fs [PROTOCOL v2.8]
+# Transport profile: local-fs [PROTOCOL v2.9]
 
 For agents running as local Claude Code sessions (IDE/CLI) on one machine.
 Binds the abstract channel verbs to filesystem operations.

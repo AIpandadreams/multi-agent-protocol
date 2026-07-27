@@ -1,4 +1,4 @@
-# Channel protocol — builder side [PROTOCOL v2.8]
+# Channel protocol — builder side [PROTOCOL v2.9]
 
 > **Tier: every-session.** The rules live in ONE place:
 > `../../agent-core/references/channel-core.md` — read it before your first

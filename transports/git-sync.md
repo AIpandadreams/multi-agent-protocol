@@ -1,4 +1,4 @@
-# Transport profile: git-sync [PROTOCOL v2.8]
+# Transport profile: git-sync [PROTOCOL v2.9]
 
 For agents running as separate Claude Code sessions on **different machines**
 (distributed peers, or a live session plus a scheduled cloud twin) that share a

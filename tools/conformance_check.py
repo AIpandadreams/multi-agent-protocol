@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Workspace conformance suite [PROTOCOL v2.5 / v2.6 / v2.7 / v2.8].
+"""Workspace conformance suite [PROTOCOL v2.5 / v2.6 / v2.7 / v2.8 / v2.9].
 
 A self-runnable, point-in-time readiness check for a stamped workspace.
 Where the integrity CI protects the coordination *record over time*
@@ -14,10 +14,10 @@ Version handling is PIN-AWARE: the workspace's own `PROTOCOL_VERSION` must be
 one of the SUPPORTED_VERSIONS (a version outside the set is a BLOCKER — the
 required-file and stamp expectations are undefined for it), and every per-file
 stamp (auth-logs, channel INDEX) is checked against that WORKSPACE'S pinned
-version, not a hardcoded literal. This keeps v2.5, v2.6 and v2.7 workspaces green
-under a v2.8 checkout of the suite, while fresh v2.8 workspaces are accepted by
+version, not a hardcoded literal. This keeps v2.5, v2.6, v2.7 and v2.8 workspaces green
+under a v2.9 checkout of the suite, while fresh v2.9 workspaces are accepted by
 that same checkout. (An OLDER checkout does not learn newer pins — a
-v2.8-pinned workspace under a v2.7-era checkout is a BLOCKER by design.)
+v2.9-pinned workspace under a v2.8-era checkout is a BLOCKER by design.)
 
 Run it from a protocol checkout for a TRUST decision and point --workspace
 at the workspace you want to check. (Stamping also drops a copy of this file
@@ -72,9 +72,9 @@ ABS_PATH_RE = re.compile(
 # Protocol versions this suite knows how to validate. A workspace pinned outside
 # the set is a BLOCKER (its file/stamp expectations are undefined here); a
 # workspace pinned inside it is checked against its OWN version, so a live v2.5,
-# v2.6 or v2.7 workspace and a fresh v2.8 one all pass under one checkout of this
+# v2.6, v2.7 or v2.8 workspace and a fresh v2.9 one all pass under one checkout of this
 # tool.
-SUPPORTED_VERSIONS = ("v2.5", "v2.6", "v2.7", "v2.8")
+SUPPORTED_VERSIONS = ("v2.5", "v2.6", "v2.7", "v2.8", "v2.9")
 VERSION_RE = re.compile(r"v2\.\d+")
 
 
