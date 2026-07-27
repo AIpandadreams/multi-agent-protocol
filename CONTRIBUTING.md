@@ -15,6 +15,10 @@ the protocol prescribes.**
    `plugins/agent-protocol/`), include a filled amendment header (below).
 4. Protocol changes get an independent review round before merge; docs and
    tooling changes get a normal review.
+5. Merges to `main` land as **merge commits**. Squash and rebase merges are
+   disabled on this repository on purpose: a landing here is approved against
+   one specific reviewed commit, and a squash would land a new commit that
+   nobody reviewed.
 
 A green scrub in step 2 covers less than it looks like it covers — read
 [What a green scrub does not prove](#what-a-green-scrub-does-not-prove) before
