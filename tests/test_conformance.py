@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Regression tests for the workspace conformance suite's side-name checks.
+"""Regression tests for the conformance suite and the workspace stamper.
 
-Covers the role-rename feature (SIDE_NAMES / ROLE_ALIASES): that new_project
-stamps the right ROLE_ALIASES row (empty by default, present when a side is
-renamed), that a default stamp stays byte-identical, and that
-conformance_check.check_side_names classifies malformed / renamed workspaces
-correctly. Stdlib unittest only, importlib-loading the tools the same way
-test_release_scrub.py does:
+Covers, among other things, the role-rename feature (SIDE_NAMES /
+ROLE_ALIASES): that new_project stamps the right ROLE_ALIASES row (empty by
+default, present when a side is renamed), that a default stamp stays
+byte-adjacent, and that conformance_check.check_side_names classifies
+malformed / renamed workspaces correctly. Also compares one axis the two tools
+share: the stamper's `PROFILE_CHOICES` and the checker's `PROFILE_ROLES` are
+independent literals, and this file asserts they name the same profiles -- the
+names only, not what a name means to either tool. Stdlib unittest only,
+importlib-loading the tools the same way test_release_scrub.py does:
 
     python -m unittest discover -s tests
 """
@@ -78,7 +81,8 @@ class DefaultStampTest(unittest.TestCase):
     def test_default_stamp_has_no_alias_row_and_is_byte_adjacent(self):
         # Regression-guard the template: an all-defaults stamp emits an empty
         # alias_row, so SIDE_NAMES is immediately followed by CANONICAL_REPO
-        # (no ROLE_ALIASES row inserted) — byte-identical to a pre-change stamp.
+        # (no ROLE_ALIASES row inserted) — the rows that would sit
+        # around it stay adjacent.
         with tempfile.TemporaryDirectory() as d:
             dest = Path(d) / "ws"
             self.assertEqual(_stamp(dest, []), 0)
@@ -248,6 +252,72 @@ class CorruptSideNameTest(unittest.TestCase):
         f = _side_findings("engine / helper / orch", ROLES_3,
                            role_aliases="engine->owner, helper->builder")
         self.assertEqual(_sev(f, "BLOCKER"), [])
+
+
+class ProfileAxisTest(unittest.TestCase):
+    """`new_project.PROFILE_CHOICES` against `conformance_check.PROFILE_ROLES`.
+
+    They are independent literals in two different tools, and neither reads
+    the other's literal. This test compares them, and rejects a literal
+    that is empty or holds an empty name. Two literals that name nothing can
+    compare equal, so the comparison alone would pass while neither tool
+    names anything.
+
+    It does not describe what the rest of the suite does about drift
+    between the two. Some of its blind spots can be named here; the list
+    is not a survey. Two literals can name the same profiles and still disagree
+    about what a name MEANS -- `new_project` decides the role set by
+    parsing the name, `conformance_check` by looking it up in a table -- and
+    this test compares names only. A name repeated in `PROFILE_CHOICES` is
+    invisible to it, because a set collapses the repetition;
+    `PROFILE_ROLES` is a dict, where a repeated key is already gone before
+    any set is built. Beyond the two literals, a profile name can also be
+    spelled out elsewhere, and nothing here binds those spellings to
+    either -- among them the stamper's own defaults, both when `--profile`
+    is omitted and under the deprecated `--no-orchestrator` alias, the
+    wizard's string, which is composed from fragments rather than written
+    whole, usage text, and prose surfaces elsewhere in the tree. Nothing
+    here reports such a spelling drifting. Whether anything else catches
+    one varies from spelling to spelling, and is not this test's claim to
+    make.
+
+    The invocation `scale_workspace.py` builds is listed apart from them,
+    because it is not the same kind of thing: it passes `--profile` to
+    `new_project.main`, so argparse checks it against `PROFILE_CHOICES`
+    and a lockstep rename makes it exit rather than drift. It is a blind
+    spot of this test, which reads neither tool's call sites, but not a
+    silent one.
+    """
+
+    def test_stamper_and_checker_name_the_same_profiles(self):
+        # Set equality, in both directions, because divergence has two
+        # directions and a comparison that only reported one of them would
+        # be silent on the other. What each direction COSTS is a property of
+        # the tools rather than of this test, and is not asserted here.
+        #
+        # The failure names the side rather than leaving it to be recovered
+        # from the argument order of a set-difference report.
+        # A literal that is empty, or that holds an empty name, is
+        # rejected before the comparison runs. Two literals that name
+        # nothing can compare equal while neither tool names anything.
+        # This names the side for the same reason the comparison below does.
+        bad = [name for name, literal in (
+            ("tools/new_project.py PROFILE_CHOICES", np.PROFILE_CHOICES),
+            ("tools/conformance_check.py PROFILE_ROLES", cc.PROFILE_ROLES))
+            if not literal or not all(literal)]
+        self.assertEqual(
+            bad, [],
+            "a profile literal is empty or holds an empty name: %s" % bad)
+
+        only_stamper = sorted(set(np.PROFILE_CHOICES) - set(cc.PROFILE_ROLES))
+        only_checker = sorted(set(cc.PROFILE_ROLES) - set(np.PROFILE_CHOICES))
+        self.assertEqual(
+            (only_stamper, only_checker), ([], []),
+            "profile drift between the two tools: "
+            "offered by tools/new_project.py PROFILE_CHOICES but unknown to "
+            "tools/conformance_check.py PROFILE_ROLES: %s; known to "
+            "PROFILE_ROLES but not offered by PROFILE_CHOICES: %s"
+            % (only_stamper, only_checker))
 
 
 if __name__ == "__main__":

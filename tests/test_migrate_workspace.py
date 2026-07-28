@@ -742,9 +742,10 @@ class MigrateChainedHopsTest(unittest.TestCase):
             self.assertEqual(reported, expected)
 
     def test_v25_era_records_stay_green_under_newest_pin(self):
-        """OC-142 pin 1 — the load-bearing property of the whole design. A
-        chained v2.5 -> v2.9 migration leaves `[PROTOCOL v2.5]`-stamped records
-        in a v2.9-pinned workspace, and that must be GREEN: pin-aware
+        """The load-bearing property of the whole design.
+
+        A chained v2.5 -> v2.9 migration leaves `[PROTOCOL v2.5]`-stamped
+        records in a v2.9-pinned workspace, and that must be GREEN: pin-aware
         `_record_stamp_ok` accepts any supported stamp at-or-below the pin.
         If this ever stopped holding, chained migration would silently
         manufacture findings on records it never touched.
