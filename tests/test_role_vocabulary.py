@@ -146,7 +146,18 @@ class TheVocabularyIsOneTable(unittest.TestCase):
         self.assertTrue(set(cc.LEGACY_ALIASES.values()) <= set(cc.CANONICAL_ROLES))
 
     def test_the_vocabulary_knows_the_seat_that_prompted_this(self):
-        self.assertIn("creator", cc.CANONICAL_ROLES)
+        """…and knows it as an IDENTITY, which is not the same as a seat.
+
+        This assertion first read `assertIn("creator", CANONICAL_ROLES)`, and
+        that version passed while the tool was wrong: the seat-trap in
+        `check_side_names` iterates every canonical role, so membership made
+        `creator` illegal as a side name in every workspace — on the stated
+        grounds that "/wake resolves canonical names first", which `wake.md`
+        resolves for exactly owner|builder|orchestrator. A test can only be as
+        careful as the distinction it asserts.
+        """
+        self.assertIn("creator", cc.LOCK_VOCABULARY)
+        self.assertNotIn("creator", cc.CANONICAL_ROLES)
 
 
 class ReadingALockIsNotAGrep(unittest.TestCase):
@@ -263,6 +274,64 @@ class AnUnknownRoleIsRefusedNotDropped(unittest.TestCase):
         msgs = self._run({"owner", "builder"}, "orchestrator / builder")
         self.assertTrue(any("canonical name of the orchestrator role" in m
                             for m in msgs), msgs)
+
+
+class AnIdentityIsNotAutomaticallyASeat(unittest.TestCase):
+    """`creator` may name a lock; it may not take a positional slot.
+
+    ⛔ THE DEFECT THESE HOLD WAS MINE, and it was invisible to every test I had
+    written: `creator` as a fourth `ROLE_VOCABULARY` row passed the whole suite
+    while making `creator` illegal as a side name in EVERY workspace, because
+    the seat-trap iterates all canonical roles. It surfaced only when the AST
+    was asked which sites a table row actually reaches, and then only when the
+    separating profile was RUN against both versions.
+    """
+
+    def _side(self, roles, side_names):
+        f = cc.Findings()
+        cc.check_side_names({"SIDE_NAMES": side_names}, roles, f)
+        return ([m for sev, m in f.items if sev == "BLOCKER"],
+                [m for sev, m in f.items if sev == "WARN"])
+
+    def test_a_side_named_creator_is_not_blocked(self):
+        """The separating case. Under the fourth-row version this blocked."""
+        blockers, _ = self._side({"owner", "builder"}, "owner / creator")
+        self.assertEqual([m for m in blockers if "creator" in m], [], blockers)
+
+    def test_the_control_a_side_named_after_a_REAL_seat_still_blocks(self):
+        """⭐ Without this the test above passes on a trap that never fires."""
+        blockers, _ = self._side({"owner", "builder"}, "owner / orchestrator")
+        self.assertTrue(any("canonical name of the orchestrator role" in m
+                            for m in blockers), blockers)
+
+    def test_a_profile_declaring_creator_warns_rather_than_blocks_or_drops(self):
+        """A known non-seat is its own condition — not unknown, not silent."""
+        blockers, warns = self._side({"owner", "builder", "creator"},
+                                     "owner / builder")
+        self.assertEqual([m for m in blockers if "vocabulary" in m], [], blockers)
+        self.assertTrue(any("creator" in m and "not as a positional seat" in m
+                            for m in warns), warns)
+
+    def test_a_lock_may_still_name_the_non_seat_identity(self):
+        """The whole point of the split: the cure survives it."""
+        self.assertEqual(
+            cc.role_lock_role("ROLE_LOCK: this workspace's CREATOR sessions "
+                              "only.\n"), "creator")
+
+    def test_the_two_vocabularies_are_derived_and_disjoint(self):
+        self.assertEqual(list(cc.LOCK_VOCABULARY),
+                         list(cc.CANONICAL_ROLES) + list(cc.NON_SEAT_IDENTITIES))
+        self.assertFalse(set(cc.CANONICAL_ROLES) & set(cc.NON_SEAT_IDENTITIES))
+
+    def test_positional_order_is_unchanged_by_the_split(self):
+        """SIDE_NAMES are positional, so a reorder is a silent mis-mapping.
+
+        The seat order is the load-bearing property the whole table comment
+        warns about; asserting it here means a future edit that appends a seat
+        in the wrong place fails loudly rather than shifting every workspace's
+        side names by one.
+        """
+        self.assertEqual(cc.CANONICAL_ROLES, ["owner", "builder", "orchestrator"])
 
 
 if __name__ == "__main__":

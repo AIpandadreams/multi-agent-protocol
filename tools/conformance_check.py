@@ -123,10 +123,29 @@ ROLE_VOCABULARY = (
     ("owner",          "owner"),
     ("builder",        "builder"),
     ("orchestrator",   "orch"),
-    ("creator",        "creator"),
 )
 CANONICAL_ROLES = [role for role, _side in ROLE_VOCABULARY]
 DEFAULT_SIDE = {role: side for role, side in ROLE_VOCABULARY}
+# ── IDENTITIES THAT ARE NOT SEATS ────────────────────────────────────────────
+# `creator` began as a fourth row above, and putting it there was wrong in a way
+# only a run could show: the seat-trap in check_side_names iterates ALL canonical
+# roles, so the row made `creator` illegal as a side name in every workspace. The
+# trap's own stated grounds are that "/wake resolves canonical names first" — and
+# `wake.md` resolves exactly `owner | builder | orchestrator` at tier 1. There is
+# no /wake collision to protect against, so the block was true by mechanism and
+# false by justification. BINDINGS.md:13 (auth-0359) says the same thing from the
+# other side: creator is "NOT a SIDE_NAME — a THIRD identity category".
+#
+# So the file carries TWO vocabularies, and wake.md already implies both: tier-1
+# resolution and SIDE_NAMES positions are about SEATS, while the role identity
+# artifacts (ROLE_LOCK, `memory/<role>/`, `start/START_SESSION.<role>.md`) are
+# about IDENTITIES. A lock line may name any identity; only a seat gets a
+# positional slot.
+NON_SEAT_IDENTITIES = ("creator",)
+LOCK_VOCABULARY = tuple(CANONICAL_ROLES) + NON_SEAT_IDENTITIES
+assert not set(CANONICAL_ROLES) & set(NON_SEAT_IDENTITIES), (
+    "an identity may be a seat or a non-seat, never both: %r"
+    % sorted(set(CANONICAL_ROLES) & set(NON_SEAT_IDENTITIES)))
 # Filename-grammar charset for a side name — underscore is FORBIDDEN because it
 # is the `<from>_to_<to>_<date>` channel-filename separator.
 SIDE_CHARSET_RE = re.compile(r"^[A-Za-z0-9-]+$")
@@ -205,7 +224,9 @@ def role_lock_role(text):
     decl = decl.split(".")[0]
     if _NEGATION_RE.search(decl):
         return None
-    found = {role for role in CANONICAL_ROLES
+    # LOCK_VOCABULARY, not CANONICAL_ROLES: a lock declares an IDENTITY, and the
+    # non-seat identities are exactly the ones a positional check must not see.
+    found = {role for role in LOCK_VOCABULARY
              if re.search(_WORDISH % role, decl, re.IGNORECASE)}
     return found.pop() if len(found) == 1 else None
 
@@ -514,12 +535,21 @@ def check_side_names(slots, roles, f: Findings):
     # canonical role went uncaught, and the silence was indistinguishable from a
     # clean result. A check that quietly stops checking is worse than one that
     # refuses: refusal is visible.
-    unknown = sorted(set(roles) - set(CANONICAL_ROLES))
+    unknown = sorted(set(roles) - set(LOCK_VOCABULARY))
     if unknown:
         f.blocker(f"profile declares role(s) {unknown} that this checker's role "
-                  f"vocabulary does not define (known: {CANONICAL_ROLES}) — "
+                  f"vocabulary does not define (known: {list(LOCK_VOCABULARY)}) — "
                   "SIDE_NAMES are positional against that vocabulary, so the "
                   "side-name checks below cannot be trusted for this profile")
+    # A KNOWN identity that is not a seat is a different condition from an
+    # unknown one, and collapsing the two would be the silent drop again wearing
+    # a blocker's clothes: it gets no SIDE_NAMES slot by design, so the count
+    # mismatch warning below would otherwise fire and read as a profile defect.
+    non_seat = sorted(set(roles) & set(NON_SEAT_IDENTITIES))
+    if non_seat:
+        f.warn(f"profile declares {non_seat}, which this checker knows as an "
+               "identity but not as a positional seat — it takes no SIDE_NAMES "
+               "slot, and the positional checks below skip it by design")
     ordered = [r for r in CANONICAL_ROLES if r in roles]
     raw = slots.get("SIDE_NAMES", "")
     # A SIDE_NAMES value may carry a trailing parenthetical note (a
@@ -680,7 +710,7 @@ def check_one_agent_per_role(ws: Path, roles, f: Findings):
             f.blocker(f"memory/{role}/MEMORY.md has no parseable ROLE_LOCK line "
                       "— one-agent-per-role can't be confirmed (fails closed); "
                       "the declaration's first sentence must name exactly one "
-                      f"of {CANONICAL_ROLES} and must not negate")
+                      f"of {list(LOCK_VOCABULARY)} and must not negate")
             continue
         declared.setdefault(got, []).append(role)
         if got != role:
