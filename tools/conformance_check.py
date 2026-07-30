@@ -106,25 +106,97 @@ FILL_RE = re.compile(r"\{\{FILL(?::[^}]*)?\}\}")
 # but the message says so, and --strict still catches it.
 DEFERRED_RE = re.compile(r"\{\{DEFERRED(?::[^}]*)?\}\}")
 SLOT_RE = re.compile(r"^\|\s*([A-Z_/ ]+?)\s*\|\s*(.*?)\s*\|\s*$")
-# ROLE_LOCK declaration inside a memory index — the canonical role a memory
-# directory locks its sessions to (P-1: one agent per role per workspace).
-ROLE_LOCK_RE = re.compile(r"ROLE_LOCK[^\n]*?\b(OWNER|BUILDER|ORCHESTRATOR)\b",
-                          re.IGNORECASE)
-
-# SIDE_NAMES are positional against this canonical order; each role's DEFAULT
-# side name is what a plain stamp uses (owner/builder keep the canonical name,
-# the orchestrator's conventional short name is `orch`). A side whose name
-# differs from its default is a rename that should carry a ROLE_ALIASES entry.
-CANONICAL_ROLES = ["owner", "builder", "orchestrator"]
-DEFAULT_SIDE = {"owner": "owner", "builder": "builder", "orchestrator": "orch"}
+# ── THE ROLE VOCABULARY ──────────────────────────────────────────────────────
+# One table. Every role-name enumeration in this file DERIVES from it, so adding
+# a role is one row here and nothing anywhere else. It was four independent
+# literals — an alternation, an ordered list, a default-side map, and an alias
+# map's value set — each of which had to be edited in step and none of which
+# said so. SIDE_NAMES are positional against this order, so rows are APPENDED,
+# never reordered: position is meaning.
+#
+# Each role's DEFAULT side name is what a plain stamp uses; most keep the
+# canonical name, and the orchestrator's conventional short name is `orch`. A
+# side whose name differs from its default is a rename that should carry a
+# ROLE_ALIASES entry.
+ROLE_VOCABULARY = (
+    # canonical role   default side name
+    ("owner",          "owner"),
+    ("builder",        "builder"),
+    ("orchestrator",   "orch"),
+    ("creator",        "creator"),
+)
+CANONICAL_ROLES = [role for role, _side in ROLE_VOCABULARY]
+DEFAULT_SIDE = {role: side for role, side in ROLE_VOCABULARY}
 # Filename-grammar charset for a side name — underscore is FORBIDDEN because it
 # is the `<from>_to_<to>_<date>` channel-filename separator.
 SIDE_CHARSET_RE = re.compile(r"^[A-Za-z0-9-]+$")
 # /wake's legacy built-in aliases (kept so pre-2.6 workspaces still resolve).
 # A renamed side covered by one of these resolves without a ROLE_ALIASES row.
 LEGACY_ALIASES = {"engine": "owner", "helper": "builder", "orch": "orchestrator"}
+# This map states a DIFFERENT fact from the vocabulary — which historical display
+# names /wake still resolves — so it stays its own literal rather than being
+# derived. What it may not do is name a role the vocabulary does not have: that
+# would resurrect the split this table exists to end, quietly, at whichever call
+# site looked it up first. Checked at import, so the file cannot load in that
+# state.
+assert set(LEGACY_ALIASES.values()) <= set(CANONICAL_ROLES), (
+    "LEGACY_ALIASES targets %r, which ROLE_VOCABULARY does not define"
+    % sorted(set(LEGACY_ALIASES.values()) - set(CANONICAL_ROLES)))
 # ROLE_ALIASES entries accept either arrow form: `display→role` or `display->role`.
 ALIAS_SEP_RE = re.compile(r"\s*(?:→|->)\s*")
+
+# ── READING A ROLE_LOCK LINE ─────────────────────────────────────────────────
+# The line this reads is prose, not a field. Every workspace in the corpus, and
+# `new_project.py`'s own generator, writes a SENTENCE:
+#
+#     ROLE_LOCK: this workspace's OWNER sessions only.
+#     ROLE_LOCK: this workspace's sessions are the ORCHESTRATOR only. <more>
+#     ROLE_LOCK: this workspace's BUILDER sessions only (a note). <more>
+#
+# so there is no value to read, and a grammar pinned to any one of those
+# sentences rejects the others. What this must NOT do is what it used to: scan
+# the line for the first role-shaped token anywhere on it. That succeeded on
+# `— this seat is NOT the OWNER`, on `none (see the ORCHESTRATOR for authority)`,
+# on `CO-OWNER`, and on `CREATOR, deputising for the OWNER` — four confident,
+# specific, WRONG answers. A wrong role is worse than no role: it names
+# something and invites the reader to go and fix the wrong thing.
+#
+# So: read the first sentence of the declaration, and accept it only when it
+# names exactly one role and does not negate. Everything else is unparseable,
+# which the caller already treats as a fail-closed BLOCKER.
+_ROLE_LOCK_LINE_RE = re.compile(r"^[^\S\n]*ROLE_LOCK[^\S\n]*:?(.*)$", re.M)
+_PARENTHETICAL_RE = re.compile(r"\([^)]*\)")
+# A whole word, where `-` counts as part of the word: `CO-OWNER` is not `OWNER`.
+_WORDISH = r"(?<![\w-])%s(?![\w-])"
+_NEGATION_RE = re.compile(r"(?<![\w-])(?:not|never|no|none|except|excluding)"
+                          r"(?![\w-])|n't", re.IGNORECASE)
+
+
+def role_lock_role(text):
+    """The canonical role a ROLE_LOCK declaration names, or None if ambiguous.
+
+    None means "this text does not unambiguously name one role" — it does NOT
+    mean the file is unlocked, and the caller must treat it as a failure to
+    confirm rather than as an absence of a lock.
+
+    Ambiguity is deliberate policy here: a declaration naming two roles is
+    refused rather than resolved by position, because there is no reading of
+    `CREATOR, deputising for the OWNER` that this function is entitled to pick.
+    """
+    m = _ROLE_LOCK_LINE_RE.search(text or "")
+    if not m:
+        return None
+    # Parentheticals are stripped BEFORE the sentence split, so a note's own
+    # punctuation cannot end the sentence early and a role mentioned inside an
+    # aside is not read as the declaration. `check_side_names` strips them from
+    # SIDE_NAMES for the same reason.
+    decl = _PARENTHETICAL_RE.sub(" ", m.group(1))
+    decl = decl.split(".")[0]
+    if _NEGATION_RE.search(decl):
+        return None
+    found = {role for role in CANONICAL_ROLES
+             if re.search(_WORDISH % role, decl, re.IGNORECASE)}
+    return found.pop() if len(found) == 1 else None
 
 
 class Findings:
@@ -423,6 +495,20 @@ def check_side_names(slots, roles, f: Findings):
     """
     if slots is None:
         return
+    # ⛔ An unrecognised role used to be DROPPED here, and the drop was silent.
+    # Everything downstream is positional against `ordered`, so a profile
+    # carrying a role this file does not know made the list short, and the
+    # trap-check below — guarded by `if i < len(ordered)` — simply stopped
+    # running for the trailing positions. A side literally named after another
+    # canonical role went uncaught, and the silence was indistinguishable from a
+    # clean result. A check that quietly stops checking is worse than one that
+    # refuses: refusal is visible.
+    unknown = sorted(set(roles) - set(CANONICAL_ROLES))
+    if unknown:
+        f.blocker(f"profile declares role(s) {unknown} that this checker's role "
+                  f"vocabulary does not define (known: {CANONICAL_ROLES}) — "
+                  "SIDE_NAMES are positional against that vocabulary, so the "
+                  "side-name checks below cannot be trusted for this profile")
     ordered = [r for r in CANONICAL_ROLES if r in roles]
     raw = slots.get("SIDE_NAMES", "")
     # A SIDE_NAMES value may carry a trailing parenthetical note (a
@@ -578,12 +664,13 @@ def check_one_agent_per_role(ws: Path, roles, f: Findings):
         p = ws / "memory" / role / "MEMORY.md"
         if not p.is_file():
             continue  # missing-file BLOCKER already raised by check_structure
-        m = ROLE_LOCK_RE.search(p.read_text(encoding="utf-8", errors="replace"))
-        if not m:
+        got = role_lock_role(p.read_text(encoding="utf-8", errors="replace"))
+        if got is None:
             f.blocker(f"memory/{role}/MEMORY.md has no parseable ROLE_LOCK line "
-                      "— one-agent-per-role can't be confirmed (fails closed)")
+                      "— one-agent-per-role can't be confirmed (fails closed); "
+                      "the declaration's first sentence must name exactly one "
+                      f"of {CANONICAL_ROLES} and must not negate")
             continue
-        got = m.group(1).lower()
         declared.setdefault(got, []).append(role)
         if got != role:
             f.blocker(f"memory/{role}/MEMORY.md ROLE_LOCK names '{got}', not its "
