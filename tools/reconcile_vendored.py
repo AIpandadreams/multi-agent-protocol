@@ -34,15 +34,23 @@ carry code the canonical does not have, because someone edited the vendored
 file in place. Overwriting the second case DESTROYS work that exists nowhere
 else, and the pre-fix tool could not tell them apart: both were "DRIFT", and
 `--fix` rewrote both. Measured 2026-07-30 across the four stamped workspaces:
-one of them defines four module-level names the canonical lacks,
-so this was a live hazard, not a hypothetical one.
+one of them defines module-level names the canonical has never
+had, so this was a live hazard, not a hypothetical one.
 
-So a copy that DEFINES module-level names the canonical does not is reported
-DIVERGED, and `--fix` REFUSES it by name. The question is asked of the AST,
-not of a spelling: a name is not a mechanism, and a grep for the names that
-happen to be there today would go blind the moment someone adds a fifth. Being
-merely OLD is not divergence -- a stale copy defines a SUBSET, and the test
-suite carries a real older canonical to hold that direction.
+So a copy that DEFINES module-level names the canonical has NEVER DEFINED is
+reported DIVERGED, and `--fix` REFUSES it by name. Two things about that
+sentence are load-bearing, and both were bought:
+
+  * asked of the AST, not of a spelling. A name is not a mechanism, and a
+    grep for the names that happen to be there today would go blind the
+    moment someone adds another;
+  * asked of the canonical's WHOLE HISTORY, not its current shape. The first
+    version compared against today's canonical, and it was falsified within
+    the hour: a cut landed that DELETED a module-level name, and three
+    untouched workspaces immediately read as local work because they still
+    defined it. `canonical_ever_defined` explains that in full. Being merely
+    OLD is not divergence, and a subset test alone does not deliver that --
+    the deletion direction is what breaks it.
 
 Exit codes:  0 all reconciled | 1 drift, divergence or missing | 2 usage error
 """
@@ -50,6 +58,7 @@ import argparse
 import ast
 import hashlib
 import re
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -127,8 +136,54 @@ def defined_names(text):
     return out
 
 
-def local_additions(body, canonical_text):
-    """Names the vendored BODY defines that the canonical does not.
+def canonical_ever_defined(root=None, relpath="tools/conformance_check.py"):
+    """Every module-level name the canonical has EVER defined, from git.
+
+    ASKED OF HISTORY, AND THE REASON IS A FALSE POSITIVE I MEASURED. The first
+    version of this compared the copy against TODAY's canonical, which is wrong
+    the moment the canonical DELETES a name: an untouched stale copy still
+    defines it, and reads as local work. That is not hypothetical -- the
+    role-vocabulary cut landed while this unit was being written, it removed
+    `ROLE_LOCK_RE`, and three pristine workspaces immediately reported
+    DIVERGED. A predicate that depends on the canonical's shape TODAY decays
+    with every landing.
+
+    Returns None when history cannot be read. Callers must disclose that,
+    because without history the predicate is the over-firing one again.
+    """
+    root = Path(root) if root else ROOT
+    log = subprocess.run(["git", "-C", str(root), "log", "--format=%H", "--",
+                          relpath], capture_output=True, text=True)
+    if log.returncode != 0 or not log.stdout.strip():
+        return None
+    revs = log.stdout.split()
+    spec = "".join("%s:%s\n" % (r, relpath) for r in revs)
+    batch = subprocess.run(["git", "-C", str(root), "cat-file", "--batch"],
+                           input=spec.encode("utf-8"), capture_output=True)
+    if batch.returncode != 0:
+        return None
+
+    ever, buf, seen = set(), batch.stdout, 0
+    while seen < len(buf):
+        nl = buf.index(b"\n", seen)
+        header = buf[seen:nl].split()
+        seen = nl + 1
+        if len(header) != 3:            # "<oid> missing" -- skip this rev
+            continue
+        size = int(header[2])
+        names = defined_names(buf[seen:seen + size].decode("utf-8", "replace"))
+        seen += size + 1                # payload plus its trailing newline
+        if names:
+            ever |= names
+    return ever or None
+
+
+def local_additions(body, canonical_text, ever=None):
+    """Names the vendored BODY defines that the canonical has never defined.
+
+    `ever` is the historical union from `canonical_ever_defined`. Without it
+    the comparison falls back to today's canonical alone, which over-fires on
+    deletions -- so callers that pass None must say so in what they print.
 
     Empty when either side fails to parse -- see `defined_names`.
     """
@@ -136,7 +191,8 @@ def local_additions(body, canonical_text):
     ours = defined_names(canonical_text)
     if theirs is None or ours is None:
         return []
-    return sorted(theirs - ours)
+    known = ours | (ever or set())
+    return sorted(theirs - known)
 
 
 def make_stamp(canonical_text, when):
@@ -188,8 +244,13 @@ def write_vendored(target, text):
     target.write_text(text, encoding="utf-8", newline="")
 
 
-def inspect(target, canonical_text):
-    """Return (status, detail) for one vendored copy."""
+def inspect(target, canonical_text, ever=None):
+    """Return (status, detail) for one vendored copy.
+
+    `ever` is the historical union from `canonical_ever_defined`; passing None
+    means the divergence question is asked against today's canonical alone,
+    and the detail line says so rather than letting the caller assume.
+    """
     if not target.is_file():
         return "MISSING", "no vendored copy present"
     text = target.read_text(encoding="utf-8")
@@ -220,10 +281,14 @@ def inspect(target, canonical_text):
     # Asked AFTER drift is established, because a copy that matches canonical
     # byte-for-code cannot have local additions, and BEFORE returning, because
     # the caller decides what `--fix` may touch from the status alone.
-    added = local_additions(body, canonical_text)
+    added = local_additions(body, canonical_text, ever)
     if added:
-        return "DIVERGED", (detail + "; defines %d name(s) the canonical lacks:"
-                            " %s" % (len(added), ", ".join(added)))
+        note = "" if ever else (" [NO HISTORY AVAILABLE -- compared against"
+                                " today's canonical only, so a name the"
+                                " canonical DELETED reads as local work]")
+        return "DIVERGED", (detail + "; defines %d name(s) the canonical has"
+                            " never defined: %s%s"
+                            % (len(added), ", ".join(added), note))
     return "DRIFT", detail
 
 
@@ -251,16 +316,23 @@ def main(argv=None):
               file=sys.stderr)
         return 2
 
+    ever = canonical_ever_defined()
     print("canonical: %s" % CANONICAL)
     print("  sha256 %s | supports through %s"
           % (sha_of(canonical_text)[:12], supported_through(canonical_text)))
+    if ever:
+        print("  divergence judged against %d name(s) the canonical has ever"
+              " defined, read from git history" % len(ever))
+    else:
+        print("  WITHOUT git history: divergence is judged against today's"
+              " canonical alone and may over-report")
     print()
 
     when = date.today().isoformat()
     bad = 0
     for ws in ns.workspaces:
         target = ws / "tools" / "conformance_check.py"
-        status, detail = inspect(target, canonical_text)
+        status, detail = inspect(target, canonical_text, ever)
         print("%-8s %-24s %s" % (status, ws.name, detail))
         if status == "OK":
             continue
@@ -276,7 +348,7 @@ def main(argv=None):
             continue
         if ns.fix and status == "DRIFT":
             write_vendored(target, vendor_text(canonical_text, when))
-            again, d2 = inspect(target, canonical_text)
+            again, d2 = inspect(target, canonical_text, ever)
             print("         re-vendored -> %s (%s)" % (again, d2))
             if again == "OK":
                 bad -= 1

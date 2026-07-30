@@ -192,6 +192,47 @@ class DivergedIsNotDrift(unittest.TestCase):
         status, detail = rv.inspect(self.target, CANON)
         self.assertEqual(status, "DRIFT", detail)
 
+    def test_a_name_the_canonical_DELETED_is_not_local_work(self):
+        """The control the test above could NOT be: canonical LOSES a name.
+
+        `OLDER` differs from `CANON` only in version strings, so it can never
+        exercise a deletion -- the subset control passed while the predicate
+        was wrong. Measured, not imagined: the role-vocabulary cut landed
+        mid-unit, removed `ROLE_LOCK_RE` from the canonical, and three
+        untouched workspaces read DIVERGED within the hour.
+        """
+        retired = CANON                                        # no such name
+        copy = CANON.replace("def main():", "RETIRED_NAME = 1\n\n\ndef main():")
+        self.assertNotIn("RETIRED_NAME", retired)              # control
+
+        # Without history the deletion reads as local work -- the defect,
+        # reproduced here so the cure below is shown to be the cure.
+        self.assertEqual(rv.local_additions(copy, retired), ["RETIRED_NAME"])
+        # With history it does not.
+        self.assertEqual(
+            rv.local_additions(copy, retired, ever={"RETIRED_NAME"}), [])
+
+    def test_genuine_local_work_survives_the_history_widening(self):
+        """The widening must not swallow the status it exists to raise."""
+        copy = CANON + "\nLOCAL_ONLY_HELPER = 1\n"
+        self.assertEqual(
+            rv.local_additions(copy, CANON, ever={"RETIRED_NAME", "main"}),
+            ["LOCAL_ONLY_HELPER"])
+
+    def test_a_degraded_run_says_so_in_the_detail(self):
+        """A predicate that can over-fire must announce when it is over-firing.
+
+        `inspect` without `ever` is the pre-cure predicate. It is still
+        reachable -- a workspace checked outside a git checkout has no history
+        -- so it is allowed, and it declares itself.
+        """
+        self.target.write_text(rv.vendor_text(CANON, "2026-07-28") + self.ADDED,
+                               encoding="utf-8")
+        _, degraded = rv.inspect(self.target, CANON)
+        _, informed = rv.inspect(self.target, CANON, ever={"x"})
+        self.assertIn("NO HISTORY AVAILABLE", degraded)
+        self.assertNotIn("NO HISTORY AVAILABLE", informed)   # control
+
     def test_divergence_is_asked_of_the_AST_not_of_a_spelling(self):
         """A copy that MENTIONS a name has not defined one."""
         mention = (rv.vendor_text(CANON, "2026-07-28")
@@ -219,6 +260,37 @@ class DivergedIsNotDrift(unittest.TestCase):
     def test_defined_names_reports_None_rather_than_guessing(self):
         self.assertIsNone(rv.defined_names("def (:\n"))
         self.assertIn("main", rv.defined_names(CANON))      # control
+
+
+class HistoryUnion(unittest.TestCase):
+    """`canonical_ever_defined` must actually reach names that are GONE."""
+
+    def test_it_reaches_a_name_the_current_canonical_no_longer_defines(self):
+        """Grounded in this repository's real history, not a fixture.
+
+        `ROLE_LOCK_RE` was a module-level name in `conformance_check.py` until
+        the role-vocabulary cut removed it. It is precisely the shape that
+        falsified the first predicate, so the union is asked for it directly,
+        with the current canonical checked to confirm it really is gone.
+        """
+        ever = rv.canonical_ever_defined()
+        self.assertIsNotNone(ever, "no git history available in this checkout")
+        current = rv.defined_names(
+            (ROOT / "tools" / "conformance_check.py").read_text(
+                encoding="utf-8"))
+        self.assertNotIn("ROLE_LOCK_RE", current)      # control: really gone
+        self.assertIn("ROLE_LOCK_RE", ever)
+        self.assertTrue(current <= ever, "history must contain the present")
+
+    def test_it_returns_None_rather_than_an_empty_set_outside_git(self):
+        """None and 'nothing was ever defined' must not be the same value.
+
+        An empty set would silently become the pre-cure predicate; None makes
+        the caller disclose.
+        """
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            self.assertIsNone(rv.canonical_ever_defined(root=d))
 
 
 class FixRefusesDivergence(unittest.TestCase):
