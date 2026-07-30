@@ -282,6 +282,15 @@ class HistoryUnion(unittest.TestCase):
         self.assertIn("ROLE_LOCK_RE", ever)
         self.assertTrue(current <= ever, "history must contain the present")
 
+    def test_a_readable_history_that_yields_no_names_is_None_not_empty(self):
+        """Reached only when git SUCCEEDS and nothing parses.
+
+        Found by mutation: `return ever or set()` survived every test, because
+        the outside-git test returns None from an earlier branch and never
+        reaches this line. A tracked file that is not Python exercises it.
+        """
+        self.assertIsNone(rv.canonical_ever_defined(relpath="CHANGELOG.md"))
+
     def test_it_returns_None_rather_than_an_empty_set_outside_git(self):
         """None and 'nothing was ever defined' must not be the same value.
 
@@ -328,6 +337,52 @@ class FixRefusesDivergence(unittest.TestCase):
         self.assertIn("DIVERGED", out)
         self.assertIn("REFUSING --fix", out)
         self.assertEqual(rc, 1, "a refusal must still exit non-zero")
+
+    def test_main_itself_reads_history_not_just_the_classifier(self):
+        """The classifier was held and the CALLER was not. Found by mutation.
+
+        Setting `ever = None` inside `main` disabled the whole history cure and
+        every test still passed, because they all reached `inspect` directly.
+        This drives the real regression end to end: a workspace carrying a
+        PRISTINE OLDER canonical -- the exact state of three real workspaces on
+        2026-07-30 -- must read DRIFT through `main`, not DIVERGED.
+
+        The older body is derived from git rather than pinned to a sha, so the
+        test keeps testing the property rather than a moment.
+        """
+        older = self._newest_revision_defining_a_since_deleted_name()
+        if older is None:
+            self.skipTest("no revision of the canonical has lost a name yet — "
+                          "this property is not exercisable in this history")
+        rv.write_vendored(self.target, rv.vendor_text(older, "2026-07-28"))
+        rc, out = self._run_check()
+        self.assertIn("DRIFT", out)
+        self.assertNotIn("DIVERGED", out)
+        self.assertEqual(rc, 1)
+
+    def _newest_revision_defining_a_since_deleted_name(self):
+        import subprocess
+        current = rv.defined_names(self.REAL)
+        log = subprocess.run(["git", "-C", str(ROOT), "log", "--format=%H",
+                              "--", "tools/conformance_check.py"],
+                             capture_output=True, text=True)
+        for rev in log.stdout.split():
+            blob = subprocess.run(
+                ["git", "-C", str(ROOT), "show",
+                 "%s:tools/conformance_check.py" % rev], capture_output=True)
+            if blob.returncode:
+                continue
+            text = blob.stdout.decode("utf-8", "replace")
+            names = rv.defined_names(text)
+            if names and not names <= current:
+                return text
+        return None
+
+    def _run_check(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = rv.main(["--check", str(self.ws)])
+        return rc, buf.getvalue()
 
     def test_the_control_fix_still_repairs_an_ordinary_DRIFT(self):
         """Without this, a `--fix` that refused everything would pass above."""
