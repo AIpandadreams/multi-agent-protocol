@@ -17,9 +17,25 @@ tests exist to enforce are the ones the module's own comments make; a comment
 asserting a property nothing checks is the defect this repository's units are
 about, and it applies to the cure as much as to the thing cured.
 """
+import ast
+import pathlib
 import unittest
 
 from tools import conformance_check as cc
+
+
+def _module_ast():
+    """Parse the checker's source.
+
+    ⛔ `pathlib.read_text` rather than a bare `open(...).read()`. The bare form
+    leaks the handle, and CPython's ResourceWarning about it is written into the
+    test runner's own output stream — mid-line, between a test's name and its
+    `... ok`. Two of the cases here did exactly that, and the damage is not
+    cosmetic: it splits the outcome token, so the stream no longer reconciles
+    against `Ran N`. ⭐ A test that corrupts the runner's output breaks the
+    instrument used to certify the run it belongs to.
+    """
+    return ast.parse(pathlib.Path(cc.__file__).read_text(encoding="utf-8"))
 
 
 class TheVocabularyIsOneTable(unittest.TestCase):
@@ -53,8 +69,7 @@ class TheVocabularyIsOneTable(unittest.TestCase):
         tell a definition from a docstring quoting one, and this module's own
         prose quotes the old alternation.
         """
-        import ast
-        tree = ast.parse(open(cc.__file__, encoding="utf-8").read())
+        tree = _module_ast()
         checked = 0
         for node in ast.walk(tree):
             if not isinstance(node, (ast.Assign, ast.AnnAssign)):
@@ -98,8 +113,7 @@ class TheVocabularyIsOneTable(unittest.TestCase):
         shown to be derived — a comprehension reading ROLE_VOCABULARY — and not
         merely to hold the right answer today.
         """
-        import ast
-        tree = ast.parse(open(cc.__file__, encoding="utf-8").read())
+        tree = _module_ast()
         seen = {}
         for node in ast.walk(tree):
             if not isinstance(node, ast.Assign):
