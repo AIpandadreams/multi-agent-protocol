@@ -25,6 +25,7 @@ alias for `--profile 2agent.local` (a dual-role-owner workspace).
 """
 import argparse
 import datetime as dt
+import importlib.util
 import json
 import re
 import shutil
@@ -33,6 +34,22 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _vendor_stamper():
+    """Load `tools/reconcile_vendored.py`, which owns the vendor stamp.
+
+    Loaded by PATH rather than by `import reconcile_vendored`: this file is
+    run as a script (`python tools/new_project.py`, where `tools/` is on
+    sys.path) but is also loaded from a file spec by the test suite, where it
+    is not. Loading by path works under both, and matches how the tests load
+    their own subjects.
+    """
+    path = ROOT / "tools" / "reconcile_vendored.py"
+    spec = importlib.util.spec_from_file_location("reconcile_vendored", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 # Canonical role order (SIDE_NAMES are positional against this) and each
 # role's DEFAULT side name — the argparse defaults below. A ROLE_ALIASES row
@@ -964,22 +981,21 @@ def stamp(name, dest, profile, roles, role_side, principal,
     # In-workspace conformance copy — a HYGIENE self-check, NOT a trust gate
     # (C2): running it from inside the workspace prints a SELF-CHECK MODE banner
     # because it is workspace-owned code. A mandatory provenance header (C/D-5)
-    # records where and when it was stamped; to vet an unfamiliar workspace, run
-    # the protocol checkout's copy instead.
+    # records what code was stamped, and when; to vet an unfamiliar workspace,
+    # run the protocol checkout's copy instead.
+    #
+    # The stamp is built by `reconcile_vendored.vendor_text`, which is the ONLY
+    # implementation of it. Formatting a second one here is what let the old
+    # header hardcode its protocol version: the writer and the checker could
+    # drift, and the stamp then described code it no longer sat on. Everything
+    # in the stamp except the date is derived from the file being vendored, so
+    # `reconcile_vendored --check` can detect rot from inside the workspace.
     conf_src = ROOT / "tools" / "conformance_check.py"
     if conf_src.is_file():
-        header = ("# STAMPED COPY — multi-agent-protocol PROTOCOL v2.9 @ "
-                  f"{today}. In-workspace HYGIENE SELF-CHECK (workspace-owned "
-                  "code); for a trust decision run the protocol checkout's "
-                  "copy against this workspace.\n")
-        src_text = conf_src.read_text(encoding="utf-8")
-        if src_text.startswith("#!"):
-            nl = src_text.index("\n") + 1
-            src_text = src_text[:nl] + header + src_text[nl:]
-        else:
-            src_text = header + src_text
-        (dest / "tools" / "conformance_check.py").write_text(
-            src_text, encoding="utf-8")
+        rv = _vendor_stamper()
+        rv.write_vendored(
+            dest / "tools" / "conformance_check.py",
+            rv.vendor_text(conf_src.read_text(encoding="utf-8"), today))
 
     print(f"stamped {name} at {dest} (roles: {', '.join(roles)})")
     return 0

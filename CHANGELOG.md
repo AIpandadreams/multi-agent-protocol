@@ -23,6 +23,40 @@ changes only through the
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
 
+## [Unreleased]
+
+**The vendored conformance checker is reconcilable.** `new_project.py` writes a
+copy of `tools/conformance_check.py` into every workspace it stamps, and until
+now that copy carried a provenance header with the protocol version written in
+as a literal, while nothing ever compared the copy against the checkout it came
+from. Both halves failed together in the field: all four workspaces stamped by
+this tooling carried checkers whose `SUPPORTED_VERSIONS` would have refused a
+v2.9 workspace, and three of them carried byte-identical code under three
+different header stamps — so the stamp did not even indicate which code was
+present, which is the one thing a provenance header exists to say.
+
+The stamp is now DERIVED from the file it describes: the supports-through
+version is read out of the vendored body's own `SUPPORTED_VERSIONS` rather than
+written as a literal, and a sha256 of the canonical body is recorded, so a
+workspace can detect its own drift without the protocol checkout to hand. That
+hash is taken over the decoded, stamp-free text, so it reports code drift and
+not byte drift: a copy differing from canonical only in line endings is
+reconciled deliberately, which is the right sensitivity for a file checked out
+on several platforms and is stated so the number is not read as a byte
+digest. The writer is the other half of that and is deliberately faithful: it
+writes the vendored copy without platform newline translation, so re-vendoring
+into a workspace cannot silently rewrite every line of a file whose endings
+differ from the host's. A new
+`tools/reconcile_vendored.py` reports `OK` / `DRIFT` / `MISSING` per workspace
+and re-vendors on `--fix`; a hand-edited stamp still fails, because the sha is
+taken over the body with the stamp removed.
+
+`reconcile_vendored.py` owns the ONLY implementation of the stamp, and
+`new_project.py` calls it rather than formatting its own. A second
+implementation of a consistency stamp is the same drift defect one axis over —
+writer and checker would be free to disagree, which is exactly how the old
+header came to name a protocol version the code beneath it did not support.
+
 ## [1.6.0] — 2026-07-27
 
 **`PROTOCOL v2.9`.** The protocol stamp crosses to v2.9 in this release.

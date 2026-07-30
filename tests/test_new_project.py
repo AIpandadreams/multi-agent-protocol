@@ -167,11 +167,17 @@ class StampTest(unittest.TestCase):
                           "Ada")
             self.assertEqual(rc, 0)
             self.assertTrue((dest / "BINDINGS.md").is_file())
-            # in-workspace conformance copy carries the provenance header
+            # in-workspace conformance copy carries the provenance stamp.
+            # The stamp is DERIVED from the vendored body (see
+            # tests/test_vendor_stamp.py); this asserts only that stamping
+            # happened and left the copy reconcilable, which is the property
+            # the old hardcoded `# STAMPED COPY` header could not offer.
             copy = dest / "tools" / "conformance_check.py"
             self.assertTrue(copy.is_file())
-            self.assertIn("STAMPED COPY",
-                          copy.read_text(encoding="utf-8").splitlines()[1])
+            text = copy.read_text(encoding="utf-8")
+            self.assertTrue(text.splitlines()[1].startswith(
+                "# --- BEGIN VENDOR STAMP"))
+            self.assertIn("supports-through: v", text)
 
     def test_stamp_refuses_non_empty_dest(self):
         with tempfile.TemporaryDirectory() as d:
