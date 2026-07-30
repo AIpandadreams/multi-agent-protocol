@@ -28,9 +28,26 @@ The cure is to make the stamp DERIVED FROM THE CONTENT it describes:
 A stamp edited by hand still fails, because the sha is taken over the body
 with the stamp removed.
 
-Exit codes:  0 all reconciled | 1 drift or missing found | 2 usage error
+DRIFT IS NOT ONE THING, and `--fix` must not treat it as one. A copy can be
+behind canonical -- ordinary rot, and re-vendoring is exactly right. Or it can
+carry code the canonical does not have, because someone edited the vendored
+file in place. Overwriting the second case DESTROYS work that exists nowhere
+else, and the pre-fix tool could not tell them apart: both were "DRIFT", and
+`--fix` rewrote both. Measured 2026-07-30 across the four stamped workspaces:
+one of them defines four module-level names the canonical lacks,
+so this was a live hazard, not a hypothetical one.
+
+So a copy that DEFINES module-level names the canonical does not is reported
+DIVERGED, and `--fix` REFUSES it by name. The question is asked of the AST,
+not of a spelling: a name is not a mechanism, and a grep for the names that
+happen to be there today would go blind the moment someone adds a fifth. Being
+merely OLD is not divergence -- a stale copy defines a SUBSET, and the test
+suite carries a real older canonical to hold that direction.
+
+Exit codes:  0 all reconciled | 1 drift, divergence or missing | 2 usage error
 """
 import argparse
+import ast
 import hashlib
 import re
 import sys
@@ -80,6 +97,46 @@ def supported_through(text):
         return None
     vers = re.findall(r'"([^"]+)"', m.group(1))
     return vers[-1] if vers else None
+
+
+def defined_names(text):
+    """Module-level names `text` DEFINES -- functions, classes, assignments.
+
+    Module level only, deliberately. A name bound inside a function body is an
+    implementation detail of a definition already counted, and counting it
+    would make an ordinary refactor read as divergence.
+
+    Returns None when the text does not parse. An unparseable copy is a defect
+    in its own right, but it is not evidence of local work, and guessing
+    either way would be worse than saying so.
+    """
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return None
+    out = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef,
+                             ast.ClassDef)):
+            out.add(node.name)
+        elif isinstance(node, ast.Assign):
+            out.update(t.id for t in node.targets if isinstance(t, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target,
+                                                            ast.Name):
+            out.add(node.target.id)
+    return out
+
+
+def local_additions(body, canonical_text):
+    """Names the vendored BODY defines that the canonical does not.
+
+    Empty when either side fails to parse -- see `defined_names`.
+    """
+    theirs = defined_names(body)
+    ours = defined_names(canonical_text)
+    if theirs is None or ours is None:
+        return []
+    return sorted(theirs - ours)
 
 
 def make_stamp(canonical_text, when):
@@ -159,6 +216,14 @@ def inspect(target, canonical_text):
         detail += "; vendored copy supports only through %s" % through
     if recorded and recorded.group(1) == actual:
         detail += "; its stamp is self-consistent but STALE"
+
+    # Asked AFTER drift is established, because a copy that matches canonical
+    # byte-for-code cannot have local additions, and BEFORE returning, because
+    # the caller decides what `--fix` may touch from the status alone.
+    added = local_additions(body, canonical_text)
+    if added:
+        return "DIVERGED", (detail + "; defines %d name(s) the canonical lacks:"
+                            " %s" % (len(added), ", ".join(added)))
     return "DRIFT", detail
 
 
@@ -200,6 +265,15 @@ def main(argv=None):
         if status == "OK":
             continue
         bad += 1
+        if ns.fix and status == "DIVERGED":
+            # Stated, not implied. A refusal that happens only because the
+            # status string fails an equality test elsewhere is a protection
+            # nobody can find, and the next edit to this loop removes it
+            # without noticing.
+            print("         REFUSING --fix: re-vendoring would DESTROY the "
+                  "names listed above, which exist only in this copy. "
+                  "Reconcile them into the canonical first.")
+            continue
         if ns.fix and status == "DRIFT":
             write_vendored(target, vendor_text(canonical_text, when))
             again, d2 = inspect(target, canonical_text)

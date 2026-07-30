@@ -11,7 +11,9 @@ Each test below names the property it holds, and the drift tests REPLAY the
 real pre-fix header form rather than a convenient stand-in: a detector that
 has never seen the defect it exists for has not been shown to catch it.
 """
+import contextlib
 import importlib.util
+import io
 import unittest
 from pathlib import Path
 
@@ -153,6 +155,123 @@ class InspectStatuses(unittest.TestCase):
         self.assertIn("supports only through v2.6", detail)
 
 
+class DivergedIsNotDrift(unittest.TestCase):
+    """A copy carrying local code is not a copy that fell behind.
+
+    Both were "DRIFT" before this, and `--fix` rewrote both. The direction
+    tests matter as much as the firing test: a detector that calls every
+    non-matching copy DIVERGED would pass the first test below and destroy the
+    distinction, so the stale-copy control sits beside it.
+    """
+
+    ADDED = "\n\nLOCAL_ONLY_HELPER = 1\n"
+
+    def setUp(self):
+        import tempfile
+        self._tmp = tempfile.TemporaryDirectory()
+        self.ws = Path(self._tmp.name)
+        (self.ws / "tools").mkdir()
+        self.target = self.ws / "tools" / "conformance_check.py"
+        self.addCleanup(self._tmp.cleanup)
+
+    def test_a_copy_defining_a_name_the_canonical_lacks_is_DIVERGED(self):
+        self.target.write_text(rv.vendor_text(CANON, "2026-07-28") + self.ADDED,
+                               encoding="utf-8")
+        status, detail = rv.inspect(self.target, CANON)
+        self.assertEqual(status, "DIVERGED", detail)
+        self.assertIn("LOCAL_ONLY_HELPER", detail)
+
+    def test_the_control_a_copy_that_is_merely_OLD_is_DRIFT_not_DIVERGED(self):
+        """The other direction, and the one that makes the status mean anything.
+
+        A stale copy defines a SUBSET of the canonical's names. If staleness
+        read as divergence, `--fix` would refuse every workspace it exists to
+        repair.
+        """
+        self.target.write_text(LEGACY_HEADER + OLDER, encoding="utf-8")
+        status, detail = rv.inspect(self.target, CANON)
+        self.assertEqual(status, "DRIFT", detail)
+
+    def test_divergence_is_asked_of_the_AST_not_of_a_spelling(self):
+        """A copy that MENTIONS a name has not defined one."""
+        mention = (rv.vendor_text(CANON, "2026-07-28")
+                   + "\n# see also LOCAL_ONLY_HELPER in the workspace notes\n"
+                   + '"""LOCAL_ONLY_HELPER is discussed here, not defined."""\n')
+        self.target.write_text(mention, encoding="utf-8")
+        status, detail = rv.inspect(self.target, CANON)
+        self.assertEqual(status, "DRIFT", detail)
+        self.assertNotIn("LOCAL_ONLY_HELPER", detail)
+
+    def test_a_name_bound_inside_a_function_is_not_divergence(self):
+        inner = rv.vendor_text(CANON, "2026-07-28").replace(
+            "    return 0\n", "    local_binding = 1\n    return local_binding\n")
+        self.target.write_text(inner, encoding="utf-8")
+        status, detail = rv.inspect(self.target, CANON)
+        self.assertEqual(status, "DRIFT", detail)
+
+    def test_an_unparseable_copy_is_DRIFT_and_does_not_crash(self):
+        """Unparseable is a defect, but it is not evidence of local work."""
+        self.target.write_text(rv.vendor_text(CANON, "2026-07-28")
+                               + "\ndef (:\n", encoding="utf-8")
+        status, detail = rv.inspect(self.target, CANON)
+        self.assertEqual(status, "DRIFT", detail)
+
+    def test_defined_names_reports_None_rather_than_guessing(self):
+        self.assertIsNone(rv.defined_names("def (:\n"))
+        self.assertIn("main", rv.defined_names(CANON))      # control
+
+
+class FixRefusesDivergence(unittest.TestCase):
+    """`--fix` must leave a diverged copy byte-identical, and say why.
+
+    Driven through `main` rather than `inspect`, because the destruction this
+    prevents happens in the loop, not in the classifier.
+    """
+
+    REAL = (ROOT / "tools" / "conformance_check.py").read_text(encoding="utf-8")
+
+    def setUp(self):
+        import tempfile
+        self._tmp = tempfile.TemporaryDirectory()
+        self.ws = Path(self._tmp.name)
+        (self.ws / "tools").mkdir()
+        self.target = self.ws / "tools" / "conformance_check.py"
+        self.addCleanup(self._tmp.cleanup)
+
+    def _run_fix(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = rv.main(["--fix", str(self.ws)])
+        return rc, buf.getvalue()
+
+    def test_fix_refuses_and_the_bytes_are_unchanged(self):
+        text = rv.vendor_text(self.REAL, "2026-07-28") + "\nLOCAL_ONLY = 1\n"
+        rv.write_vendored(self.target, text)
+        before = self.target.read_bytes()
+
+        rc, out = self._run_fix()
+
+        self.assertEqual(self.target.read_bytes(), before,
+                         "--fix overwrote a diverged copy")
+        self.assertIn("DIVERGED", out)
+        self.assertIn("REFUSING --fix", out)
+        self.assertEqual(rc, 1, "a refusal must still exit non-zero")
+
+    def test_the_control_fix_still_repairs_an_ordinary_DRIFT(self):
+        """Without this, a `--fix` that refused everything would pass above."""
+        text = rv.vendor_text(self.REAL, "2026-07-28") + "\n# a local comment\n"
+        rv.write_vendored(self.target, text)
+        before = self.target.read_bytes()
+
+        rc, out = self._run_fix()
+
+        self.assertNotEqual(self.target.read_bytes(), before,
+                            "--fix did not rewrite an ordinary drifted copy")
+        self.assertNotIn("REFUSING", out)
+        self.assertEqual(rc, 0)
+        self.assertEqual(rv.inspect(self.target, self.REAL)[0], "OK")
+
+
 class WritesFaithfully(unittest.TestCase):
     """The writer must not invent line endings the source did not have.
 
@@ -185,17 +304,35 @@ class WritesFaithfully(unittest.TestCase):
 
 
 class ExitCodes(unittest.TestCase):
-    """A usage error is not a failing gate, and must not read as one."""
+    """A usage error is not a failing gate, and must not read as one.
+
+    These call argparse in-process, and argparse writes its usage text to
+    stderr. Left uncaptured that text lands in the RUNNER's stream, splitting
+    the case's own ``... ok`` across lines: the run still reports OK while the
+    per-case stream no longer sums to ``Ran N``. A test that corrupts the
+    runner's output breaks the instrument used to certify the run it belongs
+    to, so the capture below is part of the test, not tidiness.
+    """
+
+    @contextlib.contextmanager
+    def _usage_exit(self):
+        """Assert SystemExit(2) while keeping argparse's text off the stream."""
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            with self.assertRaises(SystemExit) as cm:
+                yield
+        self.assertEqual(cm.exception.code, 2)
+        # The message is captured, not discarded — a usage error that says
+        # nothing is its own defect.
+        self.assertTrue(buf.getvalue().strip(), "usage error printed nothing")
 
     def test_no_workspaces_is_a_usage_error_not_a_failure(self):
-        with self.assertRaises(SystemExit) as cm:
+        with self._usage_exit():
             rv.main([])
-        self.assertEqual(cm.exception.code, 2)
 
     def test_check_and_fix_are_mutually_exclusive(self):
-        with self.assertRaises(SystemExit) as cm:
+        with self._usage_exit():
             rv.main(["--check", "--fix", "."])
-        self.assertEqual(cm.exception.code, 2)
 
 
 class SingleSource(unittest.TestCase):
