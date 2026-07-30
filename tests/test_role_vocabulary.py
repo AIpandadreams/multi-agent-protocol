@@ -204,6 +204,33 @@ class ReadingALockIsNotAGrep(unittest.TestCase):
         self.assertIsNone(cc.role_lock_role("ROLE_LOCK: CREATOR then OWNER"))
         self.assertIsNone(cc.role_lock_role("ROLE_LOCK: OWNER then CREATOR"))
 
+    def test_a_wrapped_prose_line_is_not_a_declaration(self):
+        """⛔ Found against the live corpus, and it cost a whole cure iteration.
+
+        A memory index that DISCUSSES role locks has sentences whose line break
+        happens to put `ROLE_LOCK` at column 0 — two live orchestrator indexes
+        carry exactly that, e.g. `ROLE_LOCK vs the shipped conformance regex's
+        hardcoded 3-role alternation`. A line-start anchor alone cannot tell that
+        from a declaration.
+
+        ⭐ The colon is the field marker. There is no bare field VALUE in this
+        format, but there IS a separator, and requiring it is what distinguishes
+        the declaration from everything that merely mentions it. Worse than
+        cosmetic: a prose line naming a DIFFERENT role would otherwise be
+        answered confidently and wrongly.
+        """
+        text = ("ROLE_LOCK is set by the ORCHESTRATOR at first bind.\n\n"
+                "ROLE_LOCK: this workspace's OWNER sessions only.\n")
+        self.assertEqual(cc.role_lock_role(text), "owner")
+
+    def test_two_real_declarations_in_one_file_are_refused(self):
+        """Ambiguity is refused at the FILE grain too, not just the line grain.
+
+        Taking the first would be the same confident-wrong guess one level up.
+        """
+        self.assertIsNone(cc.role_lock_role("ROLE_LOCK: owner\n"
+                                            "ROLE_LOCK: builder\n"))
+
     def test_absent_declaration_is_none_not_an_exception(self):
         self.assertIsNone(cc.role_lock_role("# index\n\nno lock here\n"))
         self.assertIsNone(cc.role_lock_role(""))

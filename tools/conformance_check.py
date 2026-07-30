@@ -164,7 +164,13 @@ ALIAS_SEP_RE = re.compile(r"\s*(?:→|->)\s*")
 # So: read the first sentence of the declaration, and accept it only when it
 # names exactly one role and does not negate. Everything else is unparseable,
 # which the caller already treats as a fail-closed BLOCKER.
-_ROLE_LOCK_LINE_RE = re.compile(r"^[^\S\n]*ROLE_LOCK[^\S\n]*:?(.*)$", re.M)
+# ⛔ THE COLON IS REQUIRED, AND IT IS THE WHOLE SELECTOR. Making it optional
+# matched WRAPPED PROSE: a memory index discussing role locks has sentences whose
+# line break happens to put `ROLE_LOCK` at column 0 — `ROLE_LOCK vs the shipped
+# conformance regex's ...` — and two live orchestrator indexes carry exactly that.
+# So there IS a field marker here even though there is no bare field value: the
+# colon separates the declaration from everything that merely mentions it.
+_ROLE_LOCK_LINE_RE = re.compile(r"^[^\S\n]*ROLE_LOCK[^\S\n]*:(.*)$", re.M)
 _PARENTHETICAL_RE = re.compile(r"\([^)]*\)")
 # A whole word, where `-` counts as part of the word: `CO-OWNER` is not `OWNER`.
 _WORDISH = r"(?<![\w-])%s(?![\w-])"
@@ -179,18 +185,23 @@ def role_lock_role(text):
     mean the file is unlocked, and the caller must treat it as a failure to
     confirm rather than as an absence of a lock.
 
-    Ambiguity is deliberate policy here: a declaration naming two roles is
-    refused rather than resolved by position, because there is no reading of
-    `CREATOR, deputising for the OWNER` that this function is entitled to pick.
+    Ambiguity is deliberate policy here, and it applies at BOTH grains. A
+    declaration naming two roles is refused rather than resolved by position,
+    because there is no reading of `CREATOR, deputising for the OWNER` that this
+    function is entitled to pick. A FILE carrying two declaration lines is
+    refused for the same reason: taking the first would let a prose line that
+    happens to begin `ROLE_LOCK ...` outrank the real declaration below it, and
+    if that prose named another role the answer would be confidently wrong —
+    which is the failure this reader exists to end, one grain up.
     """
-    m = _ROLE_LOCK_LINE_RE.search(text or "")
-    if not m:
+    declarations = _ROLE_LOCK_LINE_RE.findall(text or "")
+    if len(declarations) != 1:
         return None
     # Parentheticals are stripped BEFORE the sentence split, so a note's own
     # punctuation cannot end the sentence early and a role mentioned inside an
     # aside is not read as the declaration. `check_side_names` strips them from
     # SIDE_NAMES for the same reason.
-    decl = _PARENTHETICAL_RE.sub(" ", m.group(1))
+    decl = _PARENTHETICAL_RE.sub(" ", declarations[0])
     decl = decl.split(".")[0]
     if _NEGATION_RE.search(decl):
         return None
