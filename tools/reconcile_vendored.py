@@ -152,6 +152,23 @@ def canonical_ever_defined(root=None, relpath="tools/conformance_check.py"):
     because without history the predicate is the over-firing one again.
     """
     root = Path(root) if root else ROOT
+    # A SHALLOW CHECKOUT HAS HISTORY, JUST NOT ENOUGH, and that is a different
+    # answer from "no history" -- which is the only one the guard below can
+    # give. Measured, not supposed: CI ran `actions/checkout@v4` at its default
+    # `fetch-depth: 1`, so `git log` SUCCEEDED over a one-commit history and the
+    # union equalled the CURRENT name set. Every name the canonical had ever
+    # deleted was invisible, `ROLE_LOCK_RE` among them, and the caller was told
+    # nothing. The predicate silently reverts to the over-firing one this
+    # function exists to replace, while looking like it worked.
+    #
+    # An instrument must refuse a question its input cannot answer. Returning
+    # None here routes a truncated corpus to the SAME disclosure path as an
+    # unreadable one, because for this predicate they have the same standing.
+    shallow = subprocess.run(["git", "-C", str(root), "rev-parse",
+                              "--is-shallow-repository"],
+                             capture_output=True, text=True)
+    if shallow.returncode == 0 and shallow.stdout.strip() == "true":
+        return None
     log = subprocess.run(["git", "-C", str(root), "log", "--format=%H", "--",
                           relpath], capture_output=True, text=True)
     if log.returncode != 0 or not log.stdout.strip():

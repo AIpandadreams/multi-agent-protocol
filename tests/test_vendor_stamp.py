@@ -301,6 +301,39 @@ class HistoryUnion(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             self.assertIsNone(rv.canonical_ever_defined(root=d))
 
+    def test_a_shallow_checkout_is_no_history_not_a_short_history(self):
+        """A truncated corpus must not be answered over confidently.
+
+        THIS IS THE DEFECT THAT TURNED CI RED, and the rc/empty guard could
+        not see it: a shallow repo is a WORKING repo, so `git log` returns 0
+        with one commit and the union equals the current name set. The test
+        above then asks for a name the canonical no longer defines and cannot
+        find it -- not because history lacks it, but because the checkout does.
+
+        Reproduced before curing, with a control: at commit c506f4dd a
+        `--depth 1` clone FAILS that test while a full clone of the SAME
+        commit (83 commits) passes. Same tree, different history depth, so
+        the failure is attributable to depth and to nothing else.
+
+        The is-shallow assertion below is the construction's own control: if
+        the clone came back full, this test must fail rather than pass over a
+        setup that never established the condition under test.
+        """
+        import subprocess as sp
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            wt = Path(d) / "shallow"
+            made = sp.run(["git", "clone", "--depth", "1", "--quiet",
+                           ROOT.as_uri(), str(wt)], capture_output=True)
+            if made.returncode != 0:
+                self.skipTest("no shallow clone available here")
+            self.assertEqual(
+                sp.run(["git", "-C", str(wt), "rev-parse",
+                        "--is-shallow-repository"],
+                       capture_output=True, text=True).stdout.strip(),
+                "true", "the construction is not shallow -- nothing was tested")
+            self.assertIsNone(rv.canonical_ever_defined(root=wt))
+
 
 class FixRefusesDivergence(unittest.TestCase):
     """`--fix` must leave a diverged copy byte-identical, and say why.

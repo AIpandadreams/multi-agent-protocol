@@ -7,6 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # actions/checkout defaults to fetch-depth: 1 -- a ONE-COMMIT clone.
+          # The vendored-copy check grounds itself in the canonical's real
+          # history (it asks which names the canonical has EVER defined, so a
+          # deleted name does not read as local work). Over a one-commit
+          # history that union collapses to the current name set and the test
+          # fails in CI while passing on every full clone. Give CI the history
+          # the test is designed to read.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
