@@ -17,11 +17,12 @@ with it, or agents review their own work and call it done. This protocol is
 the distillation of a system that ran for months on real production work —
 every rule in it exists because its absence caused a real defect.
 
-## The four parties
+## The parties
 
 | party | who | job |
 |---|---|---|
 | **Principal** | you, the human | holds ALL authorization gates. Authorization is only ever your word |
+| **Orchestrator** | a Claude Code session | your single point of contact: runs the queue, dispatches the workers, briefs you — an interface role that carries your approvals as auditable log events, never its own authority |
 | **Owner** | a Claude Code session | decision quality on the canonical repo; the project's memory of record |
 | **Builder** | a Claude Code session | execution-heavy work: builds, censuses, QA sweeps, advisory deliverables |
 | **Reviewer** | a *different-vendor* model (e.g. Codex) | independent adversarial review gating every round — never the author's own model |
