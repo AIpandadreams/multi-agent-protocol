@@ -342,11 +342,20 @@ def check_bindings(ws: Path, slots, roles, pinned, f: Findings):
             set_aside = sorted(roles & set(NON_SEAT_IDENTITIES))
             # Name what was set aside. A message reporting only the seats
             # would read as though memory/ held nothing else.
+            #
+            # The remainder is listed with NO noun, deliberately. `seats` is
+            # `roles - NON_SEAT_IDENTITIES` -- identities not KNOWN to be
+            # non-seats -- so it still contains any unrecognised directory,
+            # which is precisely not a seat. Calling the list "seats" states
+            # something false about exactly the directory the operator most
+            # needs described correctly. The note appears exactly when the
+            # remainder differs from `roles`, so it already carries the whole
+            # disclosure: the noun said nothing the note does not.
             note = (f" (non-seat identities not compared: {set_aside})"
                     if set_aside else "")
             f.blocker(
                 f"profile {profile} expects roles {sorted(expected)} but "
-                f"memory/ has seats {sorted(seats)}{note}")
+                f"memory/ has {sorted(seats)}{note}")
 
     # Unbound slots: an untouched {{FILL}}, or a {{DEFERRED}} the operator
     # deliberately postponed. Both are unresolved (WARN; --strict fails on

@@ -383,8 +383,10 @@ class NonSeatIdentityProfileTest(unittest.TestCase):
         """The subtraction must not swallow a real defect standing beside it."""
         got = _profile_blockers(self.PROFILE, {"owner", "builder", "creator"})
         self.assertEqual(len(got), 1, got)
-        # The seats reported are the seats, not the identities.
-        self.assertIn("memory/ has seats ['builder', 'owner']", got[0])
+        # The list reported is the COMPARISON set — identities minus the
+        # enumerated non-seats — and it is listed without a noun, because
+        # that set is only seats when nothing unrecognised is present.
+        self.assertIn("memory/ has ['builder', 'owner']", got[0])
         # ⛔ And the message NAMES what it set aside. Reporting only the seats
         # would be true and proportioned wrong: it reads as though `memory/`
         # held nothing else, which is the same failure direction as silence.
@@ -400,7 +402,7 @@ class NonSeatIdentityProfileTest(unittest.TestCase):
         """
         got = _profile_blockers(self.PROFILE, {"creator"})
         self.assertEqual(len(got), 1, got)
-        self.assertIn("memory/ has seats []", got[0])
+        self.assertIn("memory/ has []", got[0])
         self.assertIn("non-seat identities not compared: ['creator']", got[0])
 
     def test_a_missing_seat_with_no_non_seats_blocks_without_the_note(self):
@@ -421,6 +423,15 @@ class NonSeatIdentityProfileTest(unittest.TestCase):
         got = _profile_blockers(self.PROFILE, self.SEATS | {extra})
         self.assertEqual(len(got), 1, got)
         self.assertNotIn("non-seat identities", got[0])
+        # ⛔ POSITIVE assertion on the REMAINDER, not just the note's absence.
+        # An unrecognised directory survives the subtraction, so it is named
+        # in the mismatch — but it is NOT a seat, and the message must not
+        # call it one. Asserting only that the note is absent would let the
+        # remainder be mislabelled silently, which is how the noun defect
+        # this test now pins against survived its own round.
+        self.assertIn(f"memory/ has {sorted(self.SEATS | {extra})}", got[0])
+        self.assertNotIn("has seats", got[0])
+
 
 if __name__ == "__main__":
     unittest.main()
