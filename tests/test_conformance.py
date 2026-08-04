@@ -672,5 +672,111 @@ class NonRoleDirsTest(unittest.TestCase):
             self.assertNotIn("NON_ROLE_DIRS", out)
 
 
+def _not_a_seat(name):
+    """The identity-in-a-seat BLOCKER, built once.
+
+    ⛔ Pinned here rather than inline at each call site: the wording moved twice
+    while this unit was being cut (once because the first draft claimed a
+    mechanism that is vacuous when the entry is last), and a literal repeated
+    across assertions is how a message drifts away from the check it describes.
+    """
+    return (f"SIDE_NAMES entry '{name}' is an identity this workspace "
+            "carries, not a seat it has")
+
+
+def _no_seat_at(position):
+    """The out-of-range subject used by the trap when a position has no seat."""
+    return f"position {position}, which maps to no seat in this profile"
+
+
+class PositionalGuardTest(unittest.TestCase):
+    """The positional guard: it must not stop checking at the seat count, and a
+    non-seat identity must not hold a position at all.
+
+    ⛔ Spellings are derived from the module's own tables, never typed — a test
+    keyed to one spelling certifies every other.
+    """
+
+    def setUp(self):
+        self.roles = list(cc.CANONICAL_ROLES)
+        self.defaults = [cc.DEFAULT_SIDE[r] for r in self.roles]
+        self.non_seat = sorted(cc.NON_SEAT_IDENTITIES)[0]
+        # A canonical ROLE name that is NOT already a default side name. Without
+        # this the duplicate check — which runs at every position, outside the
+        # guard — fires instead, and its BLOCKER makes the escape look closed.
+        free = [r for r in self.roles if r not in self.defaults]
+        self.assertTrue(free, "no role name is free of the default side names")
+        self.collide = free[0]
+
+    def _blockers(self, names, roles=None):
+        return _sev(_side_findings(" / ".join(names), roles or self.roles),
+                    "BLOCKER")
+
+    def test_a_trailing_side_name_is_still_trap_checked(self):
+        # The guard used to be `if i < len(ordered)`, so a name past the seat
+        # count was never trap-checked. Position is the only variable here.
+        blockers = self._blockers(self.defaults + [self.collide])
+        self.assertTrue(
+            any("is the canonical name of" in b for b in blockers),
+            f"a trailing '{self.collide}' escaped the trap: {blockers}")
+
+    def test_the_trailing_message_names_a_position_not_a_role(self):
+        # A surplus position has no role, so the message must not invent one —
+        # and must not leak the absent role as a placeholder.
+        blockers = self._blockers(self.defaults + [self.collide])
+        trap = [b for b in blockers if "is the canonical name of" in b]
+        self.assertEqual(1, len(trap))
+        self.assertIn(_no_seat_at(len(self.defaults) + 1), trap[0])
+        self.assertNotIn("None", trap[0])
+
+    def test_the_same_collision_in_bounds_still_blocks(self):
+        # Control: the cure must not move the case that already worked.
+        names = list(self.defaults)
+        names[1] = self.collide
+        blockers = self._blockers(names)
+        self.assertTrue(any("is the canonical name of" in b for b in blockers))
+
+    def test_a_non_seat_identity_may_not_hold_a_position_anywhere(self):
+        # It is an IDENTITY question, so it is refused at EVERY position — not
+        # only where some other check happens to notice the consequences.
+        roles = self.roles + [self.non_seat]
+        for pos in range(len(self.defaults) + 1):
+            names = list(self.defaults)
+            names.insert(pos, self.non_seat)
+            with self.subTest(position=pos):
+                blockers = self._blockers(names, roles)
+                self.assertTrue(
+                    any(_not_a_seat(self.non_seat) in b for b in blockers),
+                    f"'{self.non_seat}' held position {pos + 1} unrefused")
+
+    def test_a_workspace_without_the_identity_may_still_name_a_side_after_it(self):
+        # ⛔ THE CASE MY OWN 8-CASE TABLE DID NOT CONTAIN, and the full suite
+        # caught it: `test_role_vocabulary.AnIdentityIsNotAutomaticallyASeat`
+        # holds that a side named `creator` is legal in a workspace that does
+        # not carry that identity. An unconditional name check re-introduces a
+        # past defect that made the name illegal EVERYWHERE. The refusal is a
+        # statement about THIS workspace, so it needs `name in roles`.
+        seats = self.roles[:2]
+        names = [cc.DEFAULT_SIDE[seats[0]], self.non_seat]
+        self.assertEqual([], self._blockers(names, seats))
+
+    def test_a_correct_profile_declaring_a_non_seat_identity_stays_clean(self):
+        # The whole point of the identity vocabulary is that DECLARING the
+        # identity is fine; only giving it a SEAT is not.
+        roles = self.roles + [self.non_seat]
+        self.assertEqual([], self._blockers(self.defaults, roles))
+
+    def test_the_non_seat_warn_no_longer_says_the_checks_skip_it(self):
+        # ⛔ Before this round the warn read "the positional checks below skip it
+        # by design" — which pre-excused the count-mismatch warn that followed.
+        # The blocker above now checks exactly that name, so the old sentence is
+        # not merely misleading, it is FALSE.
+        roles = self.roles + [self.non_seat]
+        warns = "\n".join(_sev(_side_findings(" / ".join(self.defaults), roles),
+                               "WARN"))
+        self.assertIn(self.non_seat, warns)
+        self.assertNotIn("skip it by design", warns)
+
+
 if __name__ == "__main__":
     unittest.main()

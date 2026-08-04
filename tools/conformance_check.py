@@ -669,7 +669,8 @@ def check_side_names(slots, roles, f: Findings):
     if non_seat:
         f.warn(f"memory/ holds {non_seat}, which this checker knows as an "
                "identity but not as a positional seat — it takes no SIDE_NAMES "
-               "slot, and the positional checks below skip it by design")
+               "slot, so the count below is measured against the seats alone, "
+               "and a side NAMED after it is refused")
     ordered = [r for r in CANONICAL_ROLES if r in roles]
     raw = slots.get("SIDE_NAMES", "")
     # A SIDE_NAMES value may carry a trailing parenthetical note (a
@@ -702,20 +703,57 @@ def check_side_names(slots, roles, f: Findings):
                       f"{seen[name] + 1} and {i + 1}) — side names must be unique")
         else:
             seen[name] = i
+        # A non-seat identity may not occupy a SIDE_NAMES position at all.
+        #
+        # ⛔ Keyed to the IDENTITY vocabulary, and the trap below is deliberately
+        # NOT — they ask different questions and share only a vocabulary. The
+        # trap asks what /wake RESOLVES, which is canonical roles (tier 1); a
+        # non-seat identity is never resolved by that path (the creator seat
+        # "does not wake through the workspace role-resolution path" —
+        # docs/CREATOR-SEAT-CHARTER.md §6), so re-keying the trap to the
+        # identity vocabulary would raise a BLOCKER asserting a collision that
+        # cannot occur. This check asks the identity question instead — may this
+        # name hold a seat? — which is exactly what the identity vocabulary
+        # answers, and it is what makes a misconfigured seat row fail closed
+        # rather than pass with warnings the reader has been pre-excused for.
+        # ⛔ `and name in roles` is LOAD-BEARING, not a narrowing of convenience.
+        # A workspace that does NOT carry this identity may legitimately name a
+        # side after it — `owner / creator` in a 2-agent workspace is legal, and
+        # test_role_vocabulary.AnIdentityIsNotAutomaticallyASeat holds exactly
+        # that line after a past defect made `creator` illegal as a side name in
+        # EVERY workspace. Blocking on the name alone re-introduces that defect
+        # by a different route. What is refused is narrower and is a statement
+        # about THIS workspace: it carries the identity AND hands it a seat, so
+        # the profile asserts a seat that does not exist.
+        if name in NON_SEAT_IDENTITIES and name in roles:
+            f.blocker(f"SIDE_NAMES entry '{name}' is an identity this workspace "
+                      "carries, not a seat it has — SIDE_NAMES positions map "
+                      "onto seats in order, so this entry claims a seat that "
+                      "does not exist")
         # A side named after a DIFFERENT role's canonical name is a trap —
         # checked against ALL canonical roles, not just this profile's: /wake
         # resolves canonical names FIRST (tier 1), before any workspace alias,
         # so `/wake orchestrator` in a 2-agent workspace whose OWNER side is
         # named `orchestrator` would target the absent orchestrator role.
-        if i < len(ordered):
-            my_role = ordered[i]
-            for other in CANONICAL_ROLES:
-                if other != my_role and name == other:
-                    f.blocker(f"SIDE_NAMES entry '{name}' (the {my_role} side) "
-                              f"is the canonical name of the {other} role — "
-                              "/wake resolves canonical names before any "
-                              "alias, so a side may not be named after "
-                              "another role")
+        #
+        # ⛔ This was guarded by `if i < len(ordered)`, so a name in a position
+        # past the profile's role count was never trap-checked at all — the same
+        # "quietly stops checking" failure this function's own preamble
+        # describes, surviving one layer below the cure that named it. The
+        # collision is a property of the NAME (what /wake resolves), not of the
+        # position, so it is checked at EVERY position. Only the message needs
+        # the position's role, and a surplus position has none.
+        my_role = ordered[i] if i < len(ordered) else None
+        for other in CANONICAL_ROLES:
+            if other != my_role and name == other:
+                whose = (f"the {my_role} side" if my_role is not None
+                         else f"position {i + 1}, which maps to no seat in "
+                              "this profile")
+                f.blocker(f"SIDE_NAMES entry '{name}' ({whose}) "
+                          f"is the canonical name of the {other} role — "
+                          "/wake resolves canonical names before any "
+                          "alias, so a side may not be named after "
+                          "another role")
 
     # Positions carrying a non-default display name (differ from the role's
     # default side name) — the same predicate new_project uses to decide
