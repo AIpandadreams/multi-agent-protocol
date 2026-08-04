@@ -322,10 +322,31 @@ def check_bindings(ws: Path, slots, roles, pinned, f: Findings):
                   f"({', '.join(PROFILE_ROLES)})")
     else:
         expected = PROFILE_ROLES[profile]
-        if roles and roles != expected:
+        # A PROFILE enumerates SEATS. `roles` is every directory under
+        # memory/, which by this file's own doctrine (see IDENTITIES THAT
+        # ARE NOT SEATS) holds IDENTITIES -- seats AND non-seats. Comparing
+        # the two sets directly asks a SEAT question of an IDENTITY set, so
+        # a workspace with a legitimate `memory/creator/` fails a profile it
+        # actually satisfies.
+        #
+        # Subtract non-seats HERE and ONLY here: check_structure still
+        # iterates every identity, so a non-seat's three artifacts stay
+        # REQUIRED and CHECKED -- this admits the identity to the profile,
+        # it does not exempt it from anything.
+        #
+        # The guard stays on `roles`, NOT on `seats`: a workspace holding
+        # ONLY non-seat identities has no seats, and must fail LOUDLY rather
+        # than skip the comparison for having nothing to compare.
+        seats = roles - set(NON_SEAT_IDENTITIES)
+        if roles and seats != expected:
+            set_aside = sorted(roles & set(NON_SEAT_IDENTITIES))
+            # Name what was set aside. A message reporting only the seats
+            # would read as though memory/ held nothing else.
+            note = (f" (non-seat identities not compared: {set_aside})"
+                    if set_aside else "")
             f.blocker(
                 f"profile {profile} expects roles {sorted(expected)} but "
-                f"memory/ has {sorted(roles)}")
+                f"memory/ has seats {sorted(seats)}{note}")
 
     # Unbound slots: an untouched {{FILL}}, or a {{DEFERRED}} the operator
     # deliberately postponed. Both are unresolved (WARN; --strict fails on
