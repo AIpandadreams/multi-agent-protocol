@@ -343,9 +343,9 @@ def check_non_role_dirs(ws: Path, slots, f: Findings):
     for name in sorted(declared):
         if name in LOCK_VOCABULARY:
             f.blocker(
-                f"NON_ROLE_DIRS declares '{name}', which the role vocabulary defines — the "
-                "declaration was REFUSED and the name is still inferred; remove it "
-                "from the row")
+                f"NON_ROLE_DIRS declares '{name}', which the identity vocabulary defines "
+                "— the declaration was REFUSED and the name is still inferred; remove "
+                "it from the row")
         elif name not in present:
             f.warn(f"NON_ROLE_DIRS declares '{name}' but memory/{name}/ does not exist "
                    "— stale exclusion, remove it")
@@ -647,19 +647,27 @@ def check_side_names(slots, roles, f: Findings):
     # canonical role went uncaught, and the silence was indistinguishable from a
     # clean result. A check that quietly stops checking is worse than one that
     # refuses: refusal is visible.
+    #
+    # ⛔ BOTH messages below say `memory/ holds`, NOT "profile declares", and the
+    # distinction is the difference between a fixable report and a wild goose
+    # chase. `roles` reaches this function from `infer_roles(ws, ...)` — it is
+    # read off the memory/ TREE, never off the profile. Saying "profile declares"
+    # sent the operator to BINDINGS.md to delete a declaration that was never
+    # there, while the actual cause was a directory. A message must name the
+    # thing the reader can go change.
     unknown = sorted(set(roles) - set(LOCK_VOCABULARY))
     if unknown:
-        f.blocker(f"profile declares role(s) {unknown} that this checker's role "
+        f.blocker(f"memory/ holds {unknown}, which this checker's identity "
                   f"vocabulary does not define (known: {list(LOCK_VOCABULARY)}) — "
                   "SIDE_NAMES are positional against that vocabulary, so the "
-                  "side-name checks below cannot be trusted for this profile")
+                  "side-name checks below cannot be trusted for this workspace")
     # A KNOWN identity that is not a seat is a different condition from an
     # unknown one, and collapsing the two would be the silent drop again wearing
     # a blocker's clothes: it gets no SIDE_NAMES slot by design, so the count
     # mismatch warning below would otherwise fire and read as a profile defect.
     non_seat = sorted(set(roles) & set(NON_SEAT_IDENTITIES))
     if non_seat:
-        f.warn(f"profile declares {non_seat}, which this checker knows as an "
+        f.warn(f"memory/ holds {non_seat}, which this checker knows as an "
                "identity but not as a positional seat — it takes no SIDE_NAMES "
                "slot, and the positional checks below skip it by design")
     ordered = [r for r in CANONICAL_ROLES if r in roles]
@@ -902,7 +910,8 @@ def main() -> int:
     if applied:
         context += f" | excluded by NON_ROLE_DIRS: {', '.join(sorted(applied))}"
     if refused:
-        context += f" | REFUSED (in the role vocabulary, still inferred): {', '.join(refused)}"
+        context += (f" | REFUSED (in the identity vocabulary, still inferred): "
+                    f"{', '.join(refused)}")
 
     blockers, warns = f.counts()
     if not f.items:

@@ -462,9 +462,22 @@ def _by_sev(out, sev):
 
 
 def _refused(name):
-    return (f"NON_ROLE_DIRS declares '{name}', which the role vocabulary defines — the "
-            "declaration was REFUSED and the name is still inferred; remove it "
-            "from the row")
+    return (f"NON_ROLE_DIRS declares '{name}', which the identity vocabulary defines "
+            "— the declaration was REFUSED and the name is still inferred; remove "
+            "it from the row")
+
+
+def _refused_context(*names):
+    """The verdict-line REFUSED clause, built once.
+
+    ⛔ This existed only as inline literals at two call sites, and that is the
+    fragility this unit is about: a message that has no single constructor gets
+    reworded at the tool and silently keeps its old spelling in the assertions
+    until one of them fails. Both spellings were 'role vocabulary' for a set
+    keyed to LOCK_VOCABULARY, which includes identities that are not roles.
+    """
+    return (f"REFUSED (in the identity vocabulary, still inferred): "
+            f"{', '.join(names)}")
 
 
 CANONICAL_REFUSED = _refused("builder")
@@ -531,7 +544,7 @@ class NonRoleDirsTest(unittest.TestCase):
             self.assertNotEqual(code, 0)
             # PREVENTION: the role is still in the inferred set, and the report says so.
             self.assertIn("'builder'", out.splitlines()[0])
-            self.assertIn("REFUSED (in the role vocabulary, still inferred): builder", out)
+            self.assertIn(_refused_context("builder"), out)
 
     def test_each_refusal_names_ITS_OWN_role(self):
         """Two refusals in one run, asserted as an exact ordered list.
@@ -589,8 +602,31 @@ class NonRoleDirsTest(unittest.TestCase):
             code, out = _conformance(dest)
             self.assertEqual(1, code)
             self.assertIn(NON_SEAT_REFUSED, _by_sev(out, "BLOCKER"))
-            self.assertIn(
-                "REFUSED (in the role vocabulary, still inferred): creator", out)
+            self.assertIn(_refused_context("creator"), out)
+
+    def test_an_unknown_memory_dir_is_named_as_a_DIRECTORY_not_a_declaration(self):
+        """⛔ A message must name the thing the reader can go change.
+
+        `roles` reaches `check_side_names` from `infer_roles(ws, ...)` — read off
+        the memory/ TREE, never off the profile. The old wording ("profile
+        declares role(s) [...]") sent the operator to BINDINGS.md to delete a
+        declaration that was never there, while the actual cause was a directory.
+
+        ⛔⛔ THIS IS THE ONLY ASSERTION ON THAT MESSAGE, AND ITS ABSENCE IS THE
+        REASON IT DRIFTED: reverting that wording broke NO test — proven by
+        mutation before this test existed. A message nobody asserts is a message
+        that regresses silently, which is the same class as a refusal nobody
+        reads.
+        """
+        with tempfile.TemporaryDirectory() as d:
+            dest = self._ws(d)          # stamps, then adds an UNDECLARED memory/heartbeats
+            code, out = _conformance(dest)
+            self.assertNotEqual(0, code)
+            blockers = "\n".join(_by_sev(out, "BLOCKER"))
+            self.assertIn("memory/ holds ['heartbeats']", blockers)
+            # The source axis, asserted as an absence because the defect was a
+            # WRONG NAME rather than a missing one.
+            self.assertNotIn("profile declares", out)
 
     def test_stale_declaration_warns_and_does_not_block(self):
         with tempfile.TemporaryDirectory() as d:
