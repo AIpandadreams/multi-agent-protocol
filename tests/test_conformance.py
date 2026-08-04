@@ -15,6 +15,7 @@ importlib-loading the tools the same way test_release_scrub.py does:
 """
 import importlib.util
 import io
+import re
 import sys
 import tempfile
 import unittest
@@ -431,6 +432,208 @@ class NonSeatIdentityProfileTest(unittest.TestCase):
         # this test now pins against survived its own round.
         self.assertIn(f"memory/ has {sorted(self.SEATS | {extra})}", got[0])
         self.assertNotIn("has seats", got[0])
+
+
+
+# ---------------------------------------------------------------------------
+# NON_ROLE_DIRS — the declared exclusion, and the guard that PREVENTS
+# ---------------------------------------------------------------------------
+
+def _declare_non_role(dest, value):
+    """Write a NON_ROLE_DIRS row into the stamped BINDINGS slot table."""
+    b = dest / "BINDINGS.md"
+    t = b.read_text(encoding="utf-8")
+    t = re.sub(r"\n\| NON_ROLE_DIRS \|[^\n]*\n", "\n", t)
+    if value is not None:
+        t = t.replace("| SIDE_NAMES |",
+                      f"| NON_ROLE_DIRS | {value} |\n| SIDE_NAMES |", 1)
+    b.write_text(t, encoding="utf-8", newline="")
+
+
+def _by_sev(out, sev):
+    """Every finding at exactly this severity, message-only.
+
+    Severity is read from the printed `[SEV]` tag rather than inferred from the exit code:
+    an exit code is a property of the WHOLE run and any unrelated finding can produce it,
+    so a test that reads one cannot attribute it to the thing under test.
+    """
+    tag = f"[{sev}]"
+    return [l.split(tag, 1)[1].strip() for l in out.splitlines() if tag in l]
+
+
+def _refused(name):
+    return (f"NON_ROLE_DIRS declares '{name}', which the role vocabulary defines — the "
+            "declaration was REFUSED and the name is still inferred; remove it "
+            "from the row")
+
+
+CANONICAL_REFUSED = _refused("builder")
+# A NON-SEAT identity is refused on the same footing as a canonical role: the
+# guard keys on LOCK_VOCABULARY, which is CANONICAL_ROLES + NON_SEAT_IDENTITIES.
+NON_SEAT_REFUSED = _refused("creator")
+
+
+class NonRoleDirsTest(unittest.TestCase):
+    """The exclusion is DECLARED, never inferred, and any name in LOCK_VOCABULARY is REFUSED.
+
+    LOCK_VOCABULARY is the identity vocabulary, not the role list: it is every canonical role
+    PLUS every checked non-seat identity. `creator` is the case that separates the two — it is
+    not a role, so a guard keyed to roles would let it through, and it is exactly the identity
+    whose exemption from its own checker this guard exists to prevent.
+
+    Every test here asserts the BLOCKER SET EXACTLY, in a workspace built to contain no other
+    cause of a blocker. That is deliberate and it is the whole point: an assertion like
+    `assertNotEqual(code, 0)` names the right outcome and is satisfied by any unrelated
+    finding, so it cannot tell you the guard under test did anything. Exact-set equality on a
+    clean workspace can only pass for one reason.
+    """
+
+    def _ws(self, d):
+        dest = Path(d) / "ws"
+        self.assertEqual(_stamp(dest, []), 0)
+        (dest / "memory" / "heartbeats").mkdir()   # a real non-role directory
+        return dest
+
+    def test_undeclared_dir_still_blocks(self):
+        # The property that makes "declared, never inferred" worth having: nothing is skipped
+        # for merely LOOKING like runtime state.
+        with tempfile.TemporaryDirectory() as d:
+            dest = self._ws(d)
+            code, out = _conformance(dest)
+            self.assertNotEqual(code, 0)
+            self.assertIn("missing required file: memory/heartbeats/MEMORY.md",
+                          "\n".join(_by_sev(out, "BLOCKER")))
+
+    def test_declared_dir_is_excluded_and_workspace_is_clean(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = self._ws(d)
+            _declare_non_role(dest, "heartbeats")
+            code, out = _conformance(dest)
+            self.assertEqual([], _by_sev(out, "BLOCKER"))
+            self.assertEqual(0, code)
+            self.assertIn("excluded by NON_ROLE_DIRS: heartbeats", out)
+
+    def test_canonical_role_is_REFUSED_and_still_inferred(self):
+        """THE MAJOR-5 CURE, asserted on both halves.
+
+        Reporting a canonical-role declaration while still applying the exclusion is an alarm
+        without a prevention — strictly worse than no guard, because the operator sees a
+        complaint and the role vanishes anyway. So this asserts the blocker AND that the role
+        survived inference; either half alone would pass over the defect.
+        """
+        with tempfile.TemporaryDirectory() as d:
+            dest = self._ws(d)
+            _declare_non_role(dest, "heartbeats, builder")
+            code, out = _conformance(dest)
+            # ATTRIBUTION: exactly one blocker, and it is this one. Any other cause of a red
+            # in this workspace breaks the equality rather than hiding inside it.
+            self.assertEqual([CANONICAL_REFUSED], _by_sev(out, "BLOCKER"))
+            self.assertNotEqual(code, 0)
+            # PREVENTION: the role is still in the inferred set, and the report says so.
+            self.assertIn("'builder'", out.splitlines()[0])
+            self.assertIn("REFUSED (in the role vocabulary, still inferred): builder", out)
+
+    def test_each_refusal_names_ITS_OWN_role(self):
+        """Two refusals in one run, asserted as an exact ordered list.
+
+        A single-refusal fixture cannot tell a message built from the role being iterated
+        from a message built from some other member of the declared set — with one canonical
+        name in play the two are the same string. Declaring two makes the identity of each
+        message load-bearing: any substitution that decouples the printed name from the name
+        under refusal collapses both messages onto one and breaks the list.
+        """
+        with tempfile.TemporaryDirectory() as d:
+            dest = self._ws(d)
+            _declare_non_role(dest, "heartbeats, builder, owner")
+            code, out = _conformance(dest)
+            self.assertEqual([_refused("builder"), _refused("owner")],
+                             _by_sev(out, "BLOCKER"))
+            self.assertNotEqual(code, 0)
+            for role in ("builder", "owner"):
+                self.assertIn(f"'{role}'", out.splitlines()[0],
+                              f"{role} was excluded despite being refused")
+
+    def test_refusal_is_a_property_of_the_applied_set_not_the_message(self):
+        """The prevention is measured at the function that computes the applied exclusions,
+        not by reading the sentence the tool prints about itself."""
+        self.assertEqual({"heartbeats"},
+                         cc.effective_exclusions({"heartbeats", "builder", "owner"}))
+        self.assertEqual(set(), cc.effective_exclusions(set(cc.CANONICAL_ROLES)))
+        # ⛔ THE RE-KEY, measured at the function rather than at the message:
+        # the refusal keys on LOCK_VOCABULARY, so NOTHING the vocabulary defines
+        # can be excluded — non-seat identities included.
+        self.assertEqual(set(), cc.effective_exclusions(set(cc.LOCK_VOCABULARY)))
+
+    def test_a_NON_SEAT_identity_is_refused_exactly_like_a_canonical_role(self):
+        """⛔ The reason the guard keys on LOCK_VOCABULARY and not CANONICAL_ROLES.
+
+        `creator` is not a canonical role, so a CANONICAL_ROLES-keyed guard would
+        ADMIT `NON_ROLE_DIRS: creator` — and admitting it would drop `memory/creator/`
+        out of role inference and therefore out of `check_structure`'s artifact
+        requirements. That would let the workspace under test exempt a checked
+        identity from its own checker, decided from inside the file being checked.
+        The exemption must not be reachable from a binding slot at all.
+        """
+        self.assertNotIn("creator", cc.CANONICAL_ROLES)      # not a role …
+        self.assertIn("creator", cc.NON_SEAT_IDENTITIES)     # … but an identity
+        self.assertIn("creator", cc.LOCK_VOCABULARY)         # … the vocabulary defines
+        # Not excluded, and the refusal names ITS OWN name, not some other member.
+        self.assertEqual(set(), cc.effective_exclusions({"creator"}))
+        self.assertEqual({"heartbeats"},
+                         cc.effective_exclusions({"heartbeats", "creator"}))
+        with tempfile.TemporaryDirectory() as td:
+            dest = Path(td) / "ws"
+            _stamp(dest, [])
+            (dest / "memory" / "creator").mkdir()
+            _declare_non_role(dest, "creator")
+            code, out = _conformance(dest)
+            self.assertEqual(1, code)
+            self.assertIn(NON_SEAT_REFUSED, _by_sev(out, "BLOCKER"))
+            self.assertIn(
+                "REFUSED (in the role vocabulary, still inferred): creator", out)
+
+    def test_stale_declaration_warns_and_does_not_block(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = self._ws(d)
+            _declare_non_role(dest, "heartbeats, nonexistent-dir")
+            code, out = _conformance(dest)
+            self.assertEqual([], _by_sev(out, "BLOCKER"))
+            self.assertTrue(any("nonexistent-dir" in m and "stale exclusion" in m
+                                for m in _by_sev(out, "WARN")))
+
+    def test_absent_and_placeholder_declarations_mean_nothing_declared(self):
+        # The HINTED forms are the ones that matter: both placeholders are documented as
+        # accepting `{{FILL: hint}}`, so a literal-string comparison would parse a hinted
+        # placeholder into directory names and exclude them.
+        for value in ("{{FILL}}", "{{DEFERRED}}", "  ",
+                      "{{FILL: which dirs are not roles}}", "{{DEFERRED: pending audit}}"):
+            self.assertEqual(set(), cc.declared_non_role_dirs({"NON_ROLE_DIRS": value}),
+                             f"value {value!r} should declare nothing")
+        self.assertEqual(set(), cc.declared_non_role_dirs({}))
+        self.assertEqual(set(), cc.declared_non_role_dirs(None))
+
+    def test_no_sentinel_value_is_silently_swallowed(self):
+        """`none` is a directory name, not a magic word.
+
+        An undocumented sentinel list is a place for a declaration to disappear quietly; the
+        only values that mean "nothing declared" are the ones the file already documents.
+        """
+        for value in ("none", "n/a", "-"):
+            self.assertEqual({value}, cc.declared_non_role_dirs({"NON_ROLE_DIRS": value}),
+                             f"{value!r} should be read as a directory name")
+
+    def test_separator_forms_parse_equivalently(self):
+        for value in ("a, b", "a,b", "a b", " a ,  b ", "a,,b"):
+            self.assertEqual({"a", "b"}, cc.declared_non_role_dirs({"NON_ROLE_DIRS": value}),
+                             f"value {value!r}")
+
+    def test_default_stamp_declares_nothing_and_is_unaffected(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = Path(d) / "ws"
+            self.assertEqual(_stamp(dest, []), 0)
+            code, out = _conformance(dest)
+            self.assertEqual(0, code)
+            self.assertNotIn("NON_ROLE_DIRS", out)
 
 
 if __name__ == "__main__":

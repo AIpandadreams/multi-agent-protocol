@@ -170,6 +170,8 @@ assert set(LEGACY_ALIASES.values()) <= set(CANONICAL_ROLES), (
     % sorted(set(LEGACY_ALIASES.values()) - set(CANONICAL_ROLES)))
 # ROLE_ALIASES entries accept either arrow form: `display→role` or `display->role`.
 ALIAS_SEP_RE = re.compile(r"\s*(?:→|->)\s*")
+# NON_ROLE_DIRS values are comma- or whitespace-separated.
+NON_ROLE_SPLIT_RE = re.compile(r"[,\s]+")
 
 # ── READING A ROLE_LOCK LINE ─────────────────────────────────────────────────
 # The line this reads is prose, not a field. Every workspace in the corpus, and
@@ -269,11 +271,84 @@ def parse_bindings(ws: Path):
     return slots
 
 
-def infer_roles(ws: Path):
+def declared_non_role_dirs(slots):
+    """The names written in the OPTIONAL NON_ROLE_DIRS slot, verbatim and unfiltered.
+
+    This is the DECLARATION, not the exclusion that gets applied — the two are deliberately
+    separate functions so that refusing a declared name is a property of the code rather than
+    a promise in a message. `effective_exclusions` decides what is actually applied.
+
+    An absent row, an empty cell, or an unresolved placeholder all mean "nothing declared" —
+    the placeholder forms are recognized with the file's own FILL/DEFERRED matchers rather than
+    by literal comparison, because both are documented as accepting a hint (`{{FILL: hint}}`),
+    and a literal match would parse a hinted placeholder as a list of directory names. An
+    unresolved slot still earns its unbound-slot WARN from `check_bindings`; it just does not
+    exclude anything. No other sentinel value is special: a cell reading `none` declares a
+    directory named `none`, which — absent such a directory — surfaces as a stale exclusion
+    rather than being silently swallowed.
+
+    Values are comma- or whitespace-separated.
+    """
+    if not slots:
+        return set()
+    raw = (slots.get("NON_ROLE_DIRS") or "").strip()
+    if not raw or FILL_RE.search(raw) or DEFERRED_RE.search(raw):
+        return set()
+    return {n for n in NON_ROLE_SPLIT_RE.split(raw) if n}
+
+
+def effective_exclusions(declared):
+    """The exclusions actually APPLIED to role inference: declared names MINUS every name in
+    LOCK_VOCABULARY.
+
+    LOCK_VOCABULARY, not CANONICAL_ROLES: the subtraction is keyed to the IDENTITY vocabulary —
+    every canonical role AND every checked non-seat identity. `creator` is why the distinction is
+    load-bearing rather than pedantic: it is not a canonical role, so a role-keyed subtraction
+    would let `NON_ROLE_DIRS: creator` through and drop `memory/creator/` out of the structural
+    checks — a checked identity exempting itself from its own checker.
+
+    THIS is what makes the rule true rather than merely announced. A declaration naming such a
+    name is reported as a BLOCKER by `check_non_role_dirs`, but reporting alone would leave it
+    excluded anyway — an alarm without a prevention, which is strictly worse than no guard at
+    all, because the operator sees a complaint and the identity still vanishes from inference.
+    Filtering here means the sentence "a checked identity cannot be excluded" is a fact about the
+    code path, and the blocker is the notification of a refusal that has ALREADY happened.
+    """
+    return {n for n in declared if n not in LOCK_VOCABULARY}
+
+
+def infer_roles(ws: Path, excluded=()):
     mem = ws / "memory"
     if not mem.is_dir():
         return set()
-    return {d.name for d in mem.iterdir() if d.is_dir()}
+    excluded = set(excluded)
+    return {d.name for d in mem.iterdir() if d.is_dir() and d.name not in excluded}
+
+
+def check_non_role_dirs(ws: Path, slots, f: Findings):
+    """Report on the DECLARATION. Returns nothing; the applied set comes from
+    `effective_exclusions`, which has already refused every name in LOCK_VOCABULARY — canonical
+    role or checked non-seat identity alike — by the time this runs.
+
+    ⛔ The membership test below must stay keyed to the same LOCK_VOCABULARY. Keyed to
+    CANONICAL_ROLES it would silently omit the `creator` refusal even while `effective_exclusions`
+    correctly retained it: the name would be inferred, but the operator would never be told the
+    declaration had been refused.
+    """
+    declared = declared_non_role_dirs(slots)
+    if not declared:
+        return
+    mem = ws / "memory"
+    present = {d.name for d in mem.iterdir() if d.is_dir()} if mem.is_dir() else set()
+    for name in sorted(declared):
+        if name in LOCK_VOCABULARY:
+            f.blocker(
+                f"NON_ROLE_DIRS declares '{name}', which the role vocabulary defines — the "
+                "declaration was REFUSED and the name is still inferred; remove it "
+                "from the row")
+        elif name not in present:
+            f.warn(f"NON_ROLE_DIRS declares '{name}' but memory/{name}/ does not exist "
+                   "— stale exclusion, remove it")
 
 
 def check_structure(ws: Path, roles, f: Findings):
@@ -801,11 +876,14 @@ def main() -> int:
 
     f = Findings()
     slots = parse_bindings(ws)
-    roles = infer_roles(ws)
+    declared = declared_non_role_dirs(slots)
+    applied = effective_exclusions(declared)
+    roles = infer_roles(ws, excluded=applied)
     pinned = pinned_version(slots)
     if not roles:
         f.blocker("no memory/<role>/ directories found — not a workspace?")
 
+    check_non_role_dirs(ws, slots, f)
     check_structure(ws, roles, f)
     check_bindings(ws, slots, roles, pinned, f)
     check_side_names(slots, roles, f)
@@ -815,12 +893,23 @@ def main() -> int:
     check_channel(ws, pinned, f)
     check_channel_entry_format(ws, f)
 
+    # The role set is the denominator every structural check below is measured against, so it
+    # is printed beside the verdict — together with what was excluded and what was REFUSED —
+    # and on the red path as well as the green one. A verdict a reader cannot reconcile against
+    # `ls memory/` is one they have to take on trust.
+    refused = sorted(declared - applied)
+    context = f"roles: {sorted(roles)}"
+    if applied:
+        context += f" | excluded by NON_ROLE_DIRS: {', '.join(sorted(applied))}"
+    if refused:
+        context += f" | REFUSED (in the role vocabulary, still inferred): {', '.join(refused)}"
+
     blockers, warns = f.counts()
     if not f.items:
-        print(f"CONFORMANCE: clean ({ws.name}, roles: {sorted(roles)})")
+        print(f"CONFORMANCE: clean ({ws.name}, {context})")
         return 0
 
-    print(f"CONFORMANCE: {blockers} blocker(s), {warns} warning(s) [{ws.name}]")
+    print(f"CONFORMANCE: {blockers} blocker(s), {warns} warning(s) [{ws.name}, {context}]")
     for sev, msg in f.items:
         print(f"  [{sev}] {msg}")
     fail = blockers > 0 or (args.strict and warns > 0)

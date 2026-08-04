@@ -150,7 +150,8 @@ It verifies, profile-aware:
 - every required file for the profile exists (orchestrator-only files are
   required only for `3agent.local`);
 - `PROTOCOL_VERSION` is one of the supported versions (v2.5, v2.6, v2.7, v2.8 or v2.9) and the
-  profile's role set matches the `memory/` tree;
+  profile's role set matches the `memory/` tree — minus any directory the
+  optional `NON_ROLE_DIRS` slot declares (see below);
 - the **PROXY_AUTH guard is intact** — the six never-listable super-classes
   are all still named in the slot (a deployer who edits the slot and drops
   one silently weakens the safety property; this catches it), and if the lane
@@ -176,6 +177,42 @@ So a freshly stamped workspace passes with warnings for its unfilled slots; a
 fully bound one passes `--strict` clean. (The load-bearing version signal —
 `PROTOCOL_VERSION` in BINDINGS — is a BLOCKER; the per-file stamps are the
 softer, cosmetic layer.)
+
+**Non-role directories under `memory/`.** The role set is read off the
+`memory/` tree, so an operational directory parked there — a heartbeat
+scratch area, a scheduled-tick log — reads as an undeclared role and fails the
+check. The optional `NON_ROLE_DIRS` binding slot names those directories so
+they are skipped:
+
+```
+| NON_ROLE_DIRS | heartbeats |
+```
+
+Two properties of that slot are worth stating, because they are what keep it
+from becoming a way to weaken the check it exempts you from:
+
+- The exclusion is **declared, never inferred.** Nothing is skipped for
+  merely resembling runtime state; an undeclared directory is still a
+  BLOCKER. A name declared with no directory behind it is a WARN — a stale
+  exclusion, not a silent one.
+- **Any name in the workspace's identity vocabulary is REFUSED** — every
+  canonical role (`owner`, `builder`, `orchestrator`) *and* every non-seat
+  identity the protocol checks, such as `creator`. The row raises a BLOCKER
+  *and the name is still inferred*, so every structural check that applies to
+  that identity continues to apply to it. A guard that only complained would
+  be worse than no guard, because the operator would see the complaint and
+  the identity would vanish from the checks anyway.
+
+  The distinction matters most where it is easiest to miss: a non-seat
+  identity is *not* a canonical role, so "directories that are not role
+  memory" reads as though it covered one. It does not. The slot is for
+  **operational** directories — a heartbeat area, a tick log — and the
+  refusal is keyed to the identity vocabulary as a whole, not to the roles
+  within it.
+
+Conformance prints the exclusions it applied, and any it refused, beside its
+verdict — on the green path as well as the red one, so the denominator is
+visible when the check passes.
 
 For a trust decision, run it from a protocol checkout pointed at the
 workspace (`--workspace path/to/ws`) — the checkout's copy, never the
