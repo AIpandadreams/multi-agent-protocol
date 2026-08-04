@@ -320,5 +320,107 @@ class ProfileAxisTest(unittest.TestCase):
             % (only_stamper, only_checker))
 
 
+def _profile_findings(profile, roles):
+    """Call `check_bindings` on hand-built slots; return the Findings object.
+
+    Only the profile/role-set leg is under test. The version slot is filled
+    FROM `SUPPORTED_VERSIONS` rather than written as a literal: a hardcoded
+    version here would turn the next protocol bump into a failure in a test
+    that is not about versions.
+    """
+    pinned = cc.SUPPORTED_VERSIONS[-1]
+    slots = {"PROTOCOL_VERSION": pinned, "PROFILE": profile}
+    f = cc.Findings()
+    with tempfile.TemporaryDirectory() as td:
+        cc.check_bindings(Path(td), slots, roles, pinned, f)
+    return f
+
+
+def _profile_blockers(profile, roles):
+    """The blockers this leg raises, and only this leg's."""
+    return [m for m in _sev(_profile_findings(profile, roles), "BLOCKER")
+            if "expects roles" in m]
+
+
+class NonSeatIdentityProfileTest(unittest.TestCase):
+    """A PROFILE enumerates SEATS; `memory/` holds IDENTITIES.
+
+    `infer_roles` returns every directory under `memory/`, which by this
+    module's own doctrine (IDENTITIES THAT ARE NOT SEATS) includes non-seats.
+    Comparing that set directly against a profile asks a seat question of an
+    identity set, so a workspace with a legitimate `memory/creator/` failed a
+    profile it actually satisfied — a fail-closed BLOCKER that no correct file
+    at that seat could clear.
+
+    That defect was cured in halves. The vocabulary half landed with
+    `NON_SEAT_IDENTITIES` / `LOCK_VOCABULARY`; the profile comparison kept
+    reading the identity set, so the blocker was RELOCATED, not removed. These
+    cases pin the second half.
+
+    ⭐ The first case FAILS against the un-subtracted comparison, so this class
+    proves its own liveness rather than asserting it. The rest are the controls
+    that keep the cure from becoming a hole: subtracting non-seats must not
+    make a genuinely wrong role set pass, and must not turn a missing seat into
+    silence.
+    """
+
+    SEATS = {"owner", "builder", "orchestrator"}
+    PROFILE = "3agent.local"
+
+    def test_the_exact_seat_set_passes(self):
+        self.assertEqual(_profile_blockers(self.PROFILE, set(self.SEATS)), [])
+
+    def test_a_non_seat_identity_does_not_fail_a_profile_it_satisfies(self):
+        """R1's purpose. This is the case that fails without the subtraction."""
+        for non_seat in cc.NON_SEAT_IDENTITIES:
+            with self.subTest(non_seat=non_seat):
+                self.assertEqual(
+                    _profile_blockers(self.PROFILE, self.SEATS | {non_seat}), [],
+                    "a non-seat identity must not fail a profile whose seats "
+                    "are all present")
+
+    def test_a_missing_seat_still_blocks_when_a_non_seat_is_present(self):
+        """The subtraction must not swallow a real defect standing beside it."""
+        got = _profile_blockers(self.PROFILE, {"owner", "builder", "creator"})
+        self.assertEqual(len(got), 1, got)
+        # The seats reported are the seats, not the identities.
+        self.assertIn("memory/ has seats ['builder', 'owner']", got[0])
+        # ⛔ And the message NAMES what it set aside. Reporting only the seats
+        # would be true and proportioned wrong: it reads as though `memory/`
+        # held nothing else, which is the same failure direction as silence.
+        self.assertIn("non-seat identities not compared: ['creator']", got[0])
+
+    def test_a_workspace_of_only_non_seats_blocks_rather_than_skipping(self):
+        """The guard stays on `roles`, never on `seats`.
+
+        Guarding on `seats` would be the obvious form and is a fail-silent:
+        a workspace holding only non-seat identities has no seats, so the
+        comparison would be skipped for having nothing to compare — a hole
+        introduced by the cure itself.
+        """
+        got = _profile_blockers(self.PROFILE, {"creator"})
+        self.assertEqual(len(got), 1, got)
+        self.assertIn("memory/ has seats []", got[0])
+        self.assertIn("non-seat identities not compared: ['creator']", got[0])
+
+    def test_a_missing_seat_with_no_non_seats_blocks_without_the_note(self):
+        """No set-aside, no note — the disclosure is earned, not decorative."""
+        got = _profile_blockers(self.PROFILE, {"owner", "builder"})
+        self.assertEqual(len(got), 1, got)
+        self.assertNotIn("non-seat identities", got[0])
+
+    def test_an_unrecognised_directory_is_not_a_non_seat_and_still_blocks(self):
+        """R1 admits the enumerated non-seats. It legalises nothing else.
+
+        A workspace carrying some other extra `memory/` directory is still a
+        profile mismatch — this is the boundary of what the change does, held
+        by a test so it cannot quietly widen.
+        """
+        extra = "heartbeats"
+        self.assertNotIn(extra, cc.NON_SEAT_IDENTITIES)
+        got = _profile_blockers(self.PROFILE, self.SEATS | {extra})
+        self.assertEqual(len(got), 1, got)
+        self.assertNotIn("non-seat identities", got[0])
+
 if __name__ == "__main__":
     unittest.main()
