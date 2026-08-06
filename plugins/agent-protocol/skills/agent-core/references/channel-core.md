@@ -181,6 +181,32 @@ did, what the crossed entry changes, and either (a) your action stands, with
 reason, or (b) a dated corrective amendment. Anything already surfaced to the
 principal's queue gets a correction rider the same cycle.
 
+**A duplicate id is TWO different faults, and the writer count picks the cure —
+not the symptom.** One id appearing twice looks identical from outside, so
+establish which happened before correcting either, and establish it **from the
+minting record** — the commits that introduced each entry — never from how the
+pair reads. If TWO writers minted concurrently into the same lane, both entries
+are genuine and neither may be withdrawn: keep both, suffix each with the arm
+that minted it — `-tick` for a scheduled arm, `-live` for an interactive seat
+— and record one registry row per instance, keyed by id AND heading timestamp,
+so a later citation resolves to exactly one entry. **Those two suffixes
+discriminate a scheduled-arm-versus-interactive-seat collision and nothing
+else.** Where both instances were minted by the SAME arm the suffix cannot
+disambiguate them, and the (id, heading-timestamp) registry row is what resolves
+the citation — so a citation into a same-arm collision carries the timestamp,
+not the suffix alone. If ONE writer re-appended — a retry, a resumed run —
+both entries still stand under the forward-only rule and a dated supersession
+corrigendum names which instance is authoritative; **no suffix is minted**,
+because there is no second arm for one to name. **Where the minting record
+cannot settle the writer count, apply the two-writer cure.** Keeping both and
+suffixing costs a redundant label; guessing single-writer leaves a bare
+duplicate standing — the two branches are not equally safe, so an
+undeterminable case resolves to the safe one. **After a two-writer collision a
+bare id is ambiguous by construction**, so the suffix is not cosmetic — it is
+what makes every later citation resolve. Choosing the corrigendum shape by how
+the duplicate LOOKS rather than by what the minting record shows produces a
+record that reads as settled and cites two different entries.
+
 **A re-ask is crossed copy until you check (the receiver's half of the rollback
 rule).** When a peer asks for work you have already delivered, the default
 reading is NOT that the work is missing — it is that the peer holds a stale
