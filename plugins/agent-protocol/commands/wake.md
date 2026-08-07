@@ -1,6 +1,6 @@
 ---
 description: "Wake an agent role in this session: bind, verify, resume from its workspace state"
-argument-hint: "<owner|builder|orchestrator>"
+argument-hint: "<owner|builder|orchestrator|creator>"
 ---
 
 # /wake — reload a role from workspace state [PROTOCOL v3.1]
@@ -75,9 +75,15 @@ Requested role: $ARGUMENTS
    remote before real work. Warn-and-continue, not a stop.
 
 4. **Resolve the role** to a canonical role (`owner` | `builder` |
-   `orchestrator`), in three tiers — first match wins:
-   1. **Canonical name** — `owner`, `builder`, `orchestrator` resolve to
-      themselves.
+   `orchestrator` | `creator`), in three tiers — first match wins:
+   1. **Canonical name** — `owner`, `builder`, `orchestrator`, `creator`
+      resolve to themselves. (`creator` is canonical because the frozen
+      plan schema's seat enum admits it; it binds only in a workspace that
+      provisions `memory/creator/` — the one-agent-per-role conformance
+      gate still governs. With the tier-3 aliases below, the resolver
+      spans the schema's full six-seat space: `engine`/`helper` normalize,
+      the other four self-resolve — one normalization contract with the
+      step-6b digest and the renderer.)
    2. **The workspace's `ROLE_ALIASES` row** in BINDINGS.md — each
       `<display>→<canonical>` maps a bound SIDE_NAME to its canonical role.
       An explicit workspace binding always beats the built-ins below.
@@ -99,19 +105,216 @@ Requested role: $ARGUMENTS
    bind to BINDINGS.md, verify integrity, read `memory/<role>/MEMORY.md`
    (⚡ working-state block FIRST), poll the channel for unacked peer entries.
 
-6. **Lock the role** for this session: state plainly that you are the
+6. **Verify against the machine ledger (`plans/`).** Records protect only
+   the agent that reads them; this step is the mechanical read — it runs on
+   every wake, whether or not anything looks wrong. Three checks, fixed
+   order, each with a fixed output that lands in the report (step 8). A
+   workspace with no `plans/` directory has not adopted the ledger: skip
+   6a/6b (the report's `Ledger:` line says `no plans/ ledger adopted`) but
+   ALWAYS run 6c — the stale-head hazard predates the ledger.
+
+   a. **Daemon liveness (F4).** Read `plans/.daemon_heartbeat` (ISO-8601
+      stamp of the clock daemon's last completed sweep). Four DOWN states,
+      each with its own verbatim lead line — the report LEADS with it as
+      its first line. "Older than 15 minutes" is compared in SECONDS
+      (strictly greater than 900); `<M>` is the age in whole minutes
+      rounded UP, so the printed age is never below the printed threshold.
+      - Stamp older than 15 minutes:
+      `⛔ CLOCK DAEMON DOWN — last sweep <STAMP> (<M> min ago, threshold 15) — timed clocks are NOT firing; treat every clocks[] row as unswept.`
+      - Heartbeat file absent:
+      `⛔ CLOCK DAEMON DOWN — no heartbeat at plans/.daemon_heartbeat — daemon never ran or the stamp was lost; treat every clocks[] row as unswept.`
+      - File present but the stamp does not parse as an ISO datetime
+        (a present-but-garbage stamp is NOT "no heartbeat" — say what is
+        actually true):
+      `⛔ CLOCK DAEMON DOWN — heartbeat at plans/.daemon_heartbeat is unparseable — treat every clocks[] row as unswept.`
+      - Stamp in the future of now (clock skew or a corrupted stamp —
+        never a silent pass):
+      `⛔ CLOCK DAEMON DOWN — heartbeat at plans/.daemon_heartbeat is future-dated (<STAMP>) — clock skew or corrupted stamp; treat every clocks[] row as unswept.`
+      Probe the instrument, not the silence: a quiet lane proves nothing
+      while the sweeper is down.
+
+   b. **Open-ledger digest (M4).** Load every `plans/*.plan.yaml` with
+      `state: open` and render a typed digest for the bound seat. Seat
+      names compare NORMALIZED through the wake aliases (`engine`→`owner`,
+      `helper`→`builder`; `orchestrator`, `owner`, `builder`, `creator`
+      map to themselves) — the frozen schema admits all six seats and the
+      digest must not go blind on an alias:
+      - every step whose `owner` (REQUIRED by the frozen schema — there
+        is NO fallback to the plan's `owner_seat`; a step with no `owner`
+        is a schema defect and renders as a `DEFECT` line in EVERY
+        seat's digest — surfaced loudly, never guessed, never dropped)
+        normalizes to this seat and whose status is `pending`,
+        `in-progress`, or `blocked`;
+      - every gate with `ruled: null` on a plan this seat owns, plus any
+        gate that `unblocks` a step this seat owns;
+      - every UNFIRED clock (`fired` null or absent — a non-null `fired`
+        stamp excludes the clock from the digest, per schema FD-2) on a
+        plan this seat owns — future AND overdue (mark overdue rows
+        `OVERDUE`; the daemon may be down);
+      - every live constraint on a plan this seat owns (`until` timestamp
+        not passed, or `until` gate not yet ruled, or `until: close`).
+      The digest is a projection of typed fields, never a summary: it may
+      drop NOTHING that is open/pending/unruled/unfired/live for this
+      seat, and it must contain nothing owned only by other seats
+      (`creator`-owned items render only in a creator-bound session's
+      digest — they are the creator's, not lost). It renders into the
+      report's `Ledger:` block.
+
+   c. **Stale-head freshness cross-check (F3).** First count the role
+      file's Next-Step-shaped headings per the renderer's CANONICAL
+      CENSUS (ONE grammar with the renderer,
+      never a second counter): ATX level-2 headings, 0–3 space indent,
+      case-insensitive, trailing suffix / ATX-closing-hash / CR variants
+      ALL count (`## Next Step [SUPERSEDED …]` is still a live second
+      surface), heading-shaped lines inside fenced code blocks are
+      content; a demoted `#### [superseded …]` heading is historical
+      bytes, not a head. The count then splits three ways:
+      - **ZERO heads** is the missing-head defect, NOT a second surface:
+        the report's `Next step:` line is the verbatim `⚠ NO HEAD` line
+        (Rules below), and the wake follows the Rules recovery — render,
+        never dispatch a guess.
+      - **MORE than one head** is a second-dispatch-surface defect: NO
+        head is treated as an instruction, and the report's `Next step:`
+        line is replaced, verbatim, by:
+      `⛔ SECOND DISPATCH SURFACE — <K> Next-Step-shaped headings (canonical census) in the role file — no head is an instruction until exactly one remains; demote the extras via the renderer (tools/render_head --adopt) — pre-adoption workspace (no plans/): the bootstrap hand demotion (Rules).`
+      - **Exactly one head** proceeds to the freshness legs below.
+      With the single head, its text (the BODY graded below) runs from
+      the heading to the DEMOTED-HISTORY BOUNDARY — a `#### [superseded …]`
+      demotion heading — or the next `##` heading or EOF. A benign
+      sub-heading that is PART of the live head (e.g.
+      `### ▼ DISPATCH REGION …`) does NOT end the body; only a demotion
+      marker or a new `##` surface does — history preserved byte-intact
+      under a demoted `####` heading below the head is NEVER part of the
+      head (the documented supersession pattern must wake clean), and the
+      WHOLE dispatch region of the live head must survive into the report.
+      Then derive the live lane tails PER LANE FAMILY. A LANE FAMILY is the
+      `<sender>_to_<recipient>` pair taken across EVERY date file that
+      carries it (`<sender>_to_<recipient>_<YYYY-MM-DD>.md`; lanes rotate
+      by date) — never a single dated file: a per-file grouping puts almost
+      every distance under the bar and makes this check UNFIREABLE. For each
+      id PREFIX WITHIN EACH LANE FAMILY, order the `## <PREFIX>-<n>` entry
+      headers CHRONOLOGICALLY — by the date each lane filename carries,
+      NEVER by raw filename (a sender-major sort resolves an ancient echoed
+      id as the tail). The two sentences beginning `Within a date, order
+      lane files` apply INSIDE the derivation of a SINGLE lane family's
+      sequence and never across families. C1 has already partitioned the
+      corpus by family; nothing below merges those sequences. Within one
+      family a date resolves to exactly ONE file -- the filename IS
+      `<sender>_to_<recipient>_<YYYY-MM-DD>.md`, so the family and the
+      date together DETERMINE it -- which makes the family-name ordering
+      inert in the only scope where it is licensed. It is stated
+      regardless, because a comparator that read it ACROSS families
+      would re-interleave the lanes C1 has just separated and would
+      silently reinstate the very defect C1 removes. Per-family is not
+      the preferred reading of that ordering rule; it is the only one.
+      Within a date, order lane files by the lane
+      family name, ascending, and entries within a file by position. The
+      ordering must be total: where two entries are otherwise equal the
+      comparator MUST NOT depend on directory iteration order. The same id mirrored into more than one lane (an echo
+      of an earlier entry) is DEDUPED to its first (origin) occurrence WITHIN
+      THAT FAMILY, so a repeat never displaces the tail nor grades as fresh
+      from a late echo; that family's tail is its newest surviving entry.
+      Entry ids may be written with or without the hyphen (`ABC-123` and
+      `XY456` are both live forms). An id OCCURS in a lane family only
+      where it appears on an ENTRY'S HEADING LINE; a mention inside an
+      entry's body is not an occurrence. The heading line is where a lane
+      publishes what an entry IS, so reading bodies would make every lane
+      that merely DISCUSSES an id a family that holds it — and under the
+      largest-distance rule below that inflates the compared set with
+      families the id never belonged to. Extract every id the head cites (an id
+      occurring in no lane family is not a lane citation — ignore it) and
+      compare each against THE TAIL OF THE LANE FAMILY ITS OWN (deduped)
+      occurrence BELONGS TO — never against a tail assembled from every lane
+      that happens to share the prefix: a shared id prefix is a SENDER's
+      numbering space, not a delivery channel, and traffic addressed to
+      another recipient is not evidence that this head is stale. Where
+      an id has a deduped occurrence in MORE THAN ONE lane family it
+      belongs to each of them: compare it against EVERY such family's
+      tail and take the LARGEST distance, and report the tail of the
+      family that produced it, so that `<TAIL>` and `<N>` are fixed by
+      one rule and cannot disagree. A maximum over a set does not depend
+      on the order the families are visited, so this is total without
+      appealing to any further ordering; and a head that is stale with
+      respect to ANY family the cited id occupies is stale. The maximum is total, but the
+      family that PRODUCED it need not be unique: two or more families may
+      TIE at that largest distance. A tie changes nothing about the
+      verdict — `<N>` is the same number and a head stale by it is stale —
+      so what a tie leaves undetermined is `<TAIL>` alone, and the
+      replacement line below can hold exactly one. Under a tie, report
+      every tied family's tail using the TIE FORM given with that line.
+      ⛔ Do NOT break the tie by comparing the tails themselves: tails of
+      different families are ids in different senders' numbering spaces
+      and are not ordered against each other. No such tie occurs in the
+      corpus as measured; the rule is pinned because a rule that claims
+      totality must have it, not because the case fires today.
+      Count
+      ENTRIES between that id's authoritative (deduped) position and its
+      FAMILY's tail — ids can be burned or skipped, so never subtract id
+      numbers. Any cited id more than 10
+      entries behind its tail → the head is NOT an instruction: still
+      bind, but the report's `Next step:` line is replaced, verbatim, by:
+      `⚠ STALE HEAD — demoted to historical: cites <ID> but lane tail is <TAIL> (<N> entries behind). Not an instruction — re-derive before acting.`
+      That line is the form for every UNTIED case and is unchanged. Where
+      the largest distance is TIED across more than one lane family, it is
+      replaced instead, verbatim, by the TIE FORM:
+      `⚠ STALE HEAD — demoted to historical: cites <ID>, <N> entries behind in each of <K> lane families — tails: <TAILS>. Not an instruction — re-derive before acting.`
+      where `<K>` is the number of tied families and `<TAILS>` lists them
+      as `<lane family>:<tail>`, comma-separated, ordered by lane family
+      name. ⛔ That order is a RENDERING order for one report field and
+      NEVER feeds the comparator — it orders families for DISPLAY only
+      and never merges, interleaves or re-sequences their ENTRY
+      SEQUENCES, so the inertness pinned above is untouched. A reader must be able to reproduce the line exactly, which
+      is the only reason an order is fixed at all.
+      A head carrying a `render_head` footer (an HTML comment stamping
+      `rendered_at` plus each source file's mtime) ALSO faces the
+      footer-staleness leg on every wake. The footer is RECOGNIZED per
+      the grammar it shares with the renderer, scoped to
+      the live head BODY (above any demoted `####` block): the UNIQUE
+      footer-shaped physical line in that body (line stripped, full-line
+      match) — never first-match anywhere in the file, never by position;
+      a footer-shaped line inside a demoted block, or anywhere outside the
+      live head body, is inert (it must never bind as the live head's
+      footer and pass a stale hand head). TWO or more footer-shaped lines
+      in the head body — OR a rendered live head whose demoted block ALSO
+      carries a footer — are an AMBIGUOUS STAMP — an appended lookalike
+      never becomes the footer and never silently un-renders the head;
+      fail closed, demote, verbatim:
+      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> footer-shaped lines inside the Next Step section — an appended lookalike never becomes the footer). Not an instruction — regenerate (tools/render_head) and re-derive.`
+      With the unique footer, compare every stamped mtime against that
+      source's ACTUAL mtime — any source whose mtime DIFFERS from its
+      stamp (forward OR backward — a backdated/restored source is never
+      fresh), or stamped but missing from disk or unreadable, demotes
+      the head, verbatim:
+      `⚠ STALE HEAD — demoted to historical: rendering is stale (<PATH> changed since the last render). Not an instruction — regenerate (tools/render_head) and re-derive.`
+      A footer whose sources token does not parse as
+      `<rel>@<epoch>[,…]` is CORRUPT — fail CLOSED (never crash, never
+      dispatch on a stamp that cannot be read), demote, verbatim:
+      `⚠ STALE HEAD — demoted to historical: render_head footer is corrupt (sources token unparseable). Not an instruction — regenerate (tools/render_head) and re-derive.`
+      A demoted head is never executed; re-derive the next action from
+      the digest (6b) plus the channel tails, then regenerate the head
+      via the renderer (`tools/render_head`) —
+      a rendered head is derived, not authored, so regeneration
+      overwrites no judgment, and a wake never hand-writes head text
+      (sole exception: the bootstrap carve-out — Rules below).
+
+7. **Lock the role** for this session: state plainly that you are the
    <role> for this workspace and will not act as any other role here.
 
-7. **Report the resume point**, then act:
+8. **Report the resume point**, then act:
 
    ```
    ---
    ☀️ AWAKE — <role> @ <workspace> [PROTOCOL vX.Y]
    State: <1-line ⚡ summary — counters, in-flight units>
    Channel: <N unacked peer entries | clean>
-   Next step: <the ## Next Step from memory, verbatim>
+   Ledger: <step-6b digest — or "no plans/ ledger adopted">
+   Next step: <the ## Next Step from memory, verbatim — or the step-6c demotion / refusal line, or the no-head defect line>
    ---
    ```
+
+   When step 6a fired, the `⛔ CLOCK DAEMON DOWN` line is the FIRST line of
+   the report, directly under the opening `---` and above the ☀️ AWAKE
+   header — a dead sweeper outranks everything else the report has to say.
 
    When the workspace binds a display name that differs from the canonical
    role (via SIDE_NAMES / ROLE_ALIASES), the header names both:
@@ -128,5 +331,36 @@ Requested role: $ARGUMENTS
 - If memory and the channel disagree, trust the committed artifacts, note
   the discrepancy in memory, and say so in the wake report.
 - A wake that finds no `## Next Step` reports that the last session slept
-  without one (a checkpoint defect), reconstructs the state from the ⚡
-  block + channel, and writes the missing `## Next Step` before proceeding.
+  without one — the report's `Next step:` line reads, verbatim:
+  `⚠ NO HEAD — last checkpoint slept without a ## Next Step (checkpoint defect); reconstruct from the ⚡ block + channel and render one (tools/render_head; pre-adoption: bootstrap hand head) before acting.`
+  It then reconstructs the state from the ⚡ block + channel and RENDERS
+  the missing head via the renderer (`tools/render_head`) before
+  proceeding — a wake never hand-writes a `## Next Step` outside the
+  bootstrap carve-out below.
+- **Bootstrap carve-out (pre-adoption workspaces).** A workspace with no
+  `plans/` directory has not adopted the ledger, and the renderer REFUSES
+  to run there (`render_head` renders adopted workspaces only — rc 2), so
+  a step-6c or Rules cure that names `tools/render_head` degrades to its
+  HAND form in exactly that state — byte-safe, loud, and the ONLY
+  sanctioned hand head writes:
+  1. **Extra heads** → bootstrap hand demotion IN PLACE: rewrite ONLY each
+     extra heading line to
+     `#### [superseded <date> — bootstrap hand demotion (pre-adoption), historical next step, not an instruction] <old title>`,
+     body bytes untouched. Keep the single LIVE head — the one the ⚡
+     block designates (when ambiguous, the most recent checkpoint's) —
+     and demote every other.
+  2. **Missing head** → hand-write ONE transitional footerless head
+     reconstructed from the ⚡ block + channel tails (the admitted
+     transitional population; it faces the lane-tail comparator on every
+     wake and sleep).
+  3. **Stale hand head** → hand supersession: demote the old head
+     byte-intact as in (1), then write a fresh head citing the live
+     tails.
+  The carve-out exists only while `plans/` is absent; adopting the ledger
+  ends it, and the first post-adoption render goes through
+  `tools/render_head --adopt`.
+- A head demoted by step 6c stays demoted for the whole session:
+  re-derivation, never the old text, produces the next action, and the
+  demotion is recorded in memory at the next checkpoint. The step-6 checks
+  are not optional even when the ⚡ block looks current — head divergence
+  is measured (6c), never judged by eye.

@@ -137,11 +137,14 @@ DEFAULT_SIDE = {role: side for role, side in ROLE_VOCABULARY}
 # `creator` began as a fourth row above, and putting it there was wrong in a way
 # only a run could show: the seat-trap in check_side_names iterates ALL canonical
 # roles, so the row made `creator` illegal as a side name in every workspace. The
-# trap's own stated grounds are that "/wake resolves canonical names first" — and
-# `wake.md` resolves exactly `owner | builder | orchestrator` at tier 1. There is
-# no /wake collision to protect against, so the block was true by mechanism and
-# false by justification. BINDINGS.md:13 (auth-0359) says the same thing from the
-# other side: creator is "NOT a SIDE_NAME — a THIRD identity category".
+# trap's own stated grounds were that "/wake resolves canonical names first" and
+# that `wake.md` resolves no such name at tier 1 — grounds that no longer hold:
+# tier 1 now self-resolves `creator`, though only in a workspace that provisions
+# `memory/creator/`. The conclusion survives on a measured ground instead: the
+# identity check reads `name in NON_SEAT_IDENTITIES and name in roles`, and
+# `roles` is `infer_roles()` — the `memory/<role>/` directory names. Those are
+# the SAME condition, so the block already fires exactly where a collision is
+# possible, at every seat position, and stays silent where it is not.
 #
 # So the file carries TWO vocabularies, and wake.md already implies both: tier-1
 # resolution and SIDE_NAMES positions are about SEATS, while the role identity
