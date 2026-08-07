@@ -47,8 +47,7 @@ The standing stewardship lane for the fleet's protocol and its public face:
    reference material). Currency reviews, amendment drafting, and mirror-port
    hygiene between the two.
 2. **Documentation pipeline** — the project's docs and any periodic
-   writeups, including the sanitization pass that turns internal working
-   language into brand-blind public prose.
+   writeups, written and edited for a public audience.
 3. **Public presence** — the community-facing narrative of how the fleet works.
 4. **Cross-team drafting assists** — orchestrator-dispatched, *propose-only*
    drafts for another team's repository, delivered over the relay lane. **The
