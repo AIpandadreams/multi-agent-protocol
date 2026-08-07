@@ -179,3 +179,152 @@ but two live runs earned these notes:
   version in a single run, so a v2.5 workspace needs one checkout, not a
   release-by-release sequence. It flips the version stamps only and points back
   here for the counter/state carry.
+
+---
+
+# Migrating a vendored conformance checker
+
+## Why this release has an ORDER, and what breaks if you ignore it
+
+Most releases here migrate by running the migration tool. **This one does not**, and the
+reason is worth stating because it was found by running it rather than by reading it.
+
+Three things interact — and ⛔ **they are not all changes in this release**, which is
+itself part of why the ordering bites:
+
+1. the conformance checker's vocabulary carries an identity beyond the positional roles —
+   **already shipped, in an earlier cut** (reachable from both `v1.7.0` and `v1.8.0`);
+2. workspaces may declare directories under `memory/` that are *not* roles;
+3. some workspaces carry a **vendored copy** of the checker that predates both.
+
+⚠ **Owed, not shipped:** a further amendment to how the checker treats a name that shadows
+a side-name is **still under review and is not part of any release yet**. Do not plan
+around it; this note describes only behaviour that has landed.
+
+Taken in the wrong order, each of the first two breaks against the third.
+
+### ⛔ The two failure modes, both observed in practice
+
+**(a) Re-vendor before fixing the declaration → every wake stops.**
+A workspace that provisions the new identity's directory *and* declares that directory a
+non-role has, until now, been running a checker that **accepts the declaration silently** —
+its refusal is keyed only to positional roles, and the new identity is not one. The updated
+checker keys the same refusal to the **full identity vocabulary**, so the declaration is
+**refused**, the name is inferred anyway, and the declaration becomes a blocker:
+
+> `NON_ROLE_DIRS declares '<name>', which the identity vocabulary defines — the declaration
+> was REFUSED and the name is still inferred; remove it from the row`
+
+⭐ The finding **names its own remedy**, and the remedy is a **one-token edit** — remove
+that name from the row. But if you re-vendor first and read the row second, the workspace
+is hard-stopped in between.
+
+**(b) Re-vendor before porting local additions → a guard disappears silently.**
+⛔ **This is the dangerous one, and it is dangerous precisely because it is quiet.**
+A vendored copy is not always merely *behind*; it may carry checks that the canonical
+version **has never had**. Deployments commonly add local checks that guard a *publication
+surface* — commit metadata is the usual example, since it is published by definition and
+is easy to get wrong once and never notice — along with local recording that something
+downstream depends on.
+
+A straight re-vendor **deletes them**. Nothing goes red. No finding appears. Wakes keep
+passing. ⭐ **Failure mode (a) is loud and gets fixed within a minute; (b) is silent and
+could run for months.** Loud breakage is the cheap kind.
+
+### ✅ The order that works
+
+1. **Inventory first.** For every workspace with a vendored checker, ask whether it is
+   *behind* the canonical or *diverged from* it — i.e. does it define anything the
+   canonical has never defined? ⛔ **"Out of date" and "carries local code" are different
+   conditions with different remedies, and one tool reporting both as "needs attention"
+   will get one of them wrong.**
+   ⚠ **Verify this by hand in this release.** The tooling does not yet separate the two
+   conditions for you, so diff your copy against the canonical file and read what your
+   side defines that canonical does not. It is the one step of this order that is manual,
+   and it is the step that matters most — ⭐ **the whole failure mode below is a local
+   definition nobody knew was local.**
+2. **Port or retire the local additions, explicitly.** Anything the vendored copy defines
+   and the canonical does not is either **moved into the canonical** or **retired with a
+   stated reason**. ⛔ Neither is "it disappeared during an upgrade."
+3. **Fix the declaration row**, in the workspaces that carry one, and verify in a scratch
+   copy before touching a live workspace.
+4. **Then re-vendor**, and re-run conformance.
+5. **Verify the guards still exist** after the re-vendor — by name, not by a green run.
+   ⭐ A guard's absence is not something a passing check reports.
+
+## Conformance changes since your last vendored copy
+
+⚠ **Framed by your copy's age, not by this release — deliberately.** Several of these
+landed in **earlier** cuts: the identity-vocabulary refusal, for instance, is reachable
+from **both `v1.7.0` and `v1.8.0`** (verified against the tags, not inferred). If you
+vendored before those, they are new *to you* even though they are not new to the project.
+⛔ **Check the tag your copy came from; do not read this table as a changelog for the
+newest release.**
+
+| change | effect on an existing workspace |
+|---|---|
+| the identity vocabulary is checked, not just positional roles | a declaration excluding a vocabulary name is **refused and reported**; the name is still inferred |
+| the applied exclusions and any refusals print beside the verdict | on the **green** path as well as the red one — so a refusal is visible without a failure |
+
+⭐ **Why a refusal still infers the name.** A guard that complains while the exclusion goes
+through anyway is worse than no guard: the operator sees a complaint, and the directory
+leaves the structural checks regardless. So the refusal does both — it reports, *and* the
+name stays governed.
+
+## ⛔ Two INPUT-COMPATIBILITY breaks a name-level diff will not show you
+
+Both were found by an adversarial review of the first real port done under this note — not
+by the note, and not by the capability guard. ⚠ **Neither is a bug in the canonical: both
+are deliberate canonical decisions, stated in the canonical source.** They are listed here
+because "port your local additions" is a *name*-level instruction, and these live inside
+function bodies where no name-level diff and no AST surface census can reach them. ⭐ **If
+your inventory was a name diff — and step 1 above tells you to do a name diff — this
+section is the part you have not checked.**
+
+**(1) `NON_ROLE_DIRS` sentinel values and backticks are no longer normalized.**
+A fork that treated `none` / `-` / `n/a` as "nothing declared", or stripped backticks
+before splitting, will change behaviour on those cells:
+
+| cell | fork | canonical |
+|---|---|---|
+| `none` · `-` · `n/a` | nothing declared | a directory literally named `none` / `-` / `n/a` is declared → a **stale-exclusion WARN**, and rc=1 under `--strict` |
+| `` `cache` `` | excludes `cache` | declares a directory named `` `cache` `` → the real `memory/cache/` is **inferred, not excluded** |
+
+⭐ This is canonical's stated intent, in its own words at `declared_non_role_dirs`: a cell
+reading `none` surfaces as a stale exclusion *rather than being silently swallowed*.
+⛔ **Do not "fix" it by re-adding the fork's normalization** — that is not porting a local
+addition, it is overriding a canonical decision from a downstream copy, and the next
+re-vendor deletes it again. **Fix the CELL**: leave it empty, or use the documented
+`{{FILL}}` / `{{DEFERRED}}` placeholder forms, which canonical does recognize.
+
+**(2) `ROLE_LOCK` now requires the colon form.**
+`ROLE_LOCK = OWNER`, or any line naming a role without `ROLE_LOCK:`, parsed under a fork
+whose regex scanned the whole line; canonical requires the colon-form declaration. ⭐ The
+colon is doing real work — without it the reader matched WRAPPED PROSE in memory indexes
+that merely *discussed* role locks, and two live orchestrator indexes carried exactly that.
+
+⚠ **Grep every `memory/*/MEMORY.md` for its `ROLE_LOCK` line before the swap.** This one
+is fail-CLOSED — an unparseable lock is already a BLOCKER, so it announces itself rather
+than mis-reading — but it announces itself *at the next wake*, which is a bad moment to
+find out. **One command, before you swap, not after.**
+
+## If you maintain a vendored copy
+
+Answer these before upgrading:
+
+- Does your copy define anything the canonical does not? **Check by name, not by size or
+  date.** ⛔ A newer file is not a superset.
+- Is anything in your copy load-bearing for a **publication** surface — commit metadata,
+  release artefacts, anything that leaves the machine? Those are the ones whose loss is
+  silent.
+- Does your workspace declare a `memory/` directory that the new vocabulary now claims?
+  Fix the row **before** the swap, not after.
+
+## Honest limits of this note
+
+- It describes the ordering hazard as **measured on the deployments we could inspect**
+  (two). A deployment we have not seen may carry local additions we have not
+  enumerated — the inventory step exists because the list cannot be written in advance.
+- The one-token declaration fix is **stated by the instrument**; verify it in a scratch
+  copy end-to-end before applying it live. ⛔ *An instrument naming its own remedy is not
+  the same as that remedy having been run.*
