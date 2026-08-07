@@ -87,7 +87,11 @@ surfacing) persist across postures.
   seats** in different teams — identical role names are different agents.
 - **Isolation.** Never write another workspace's channel or memory from this
   session, except the sanctioned relay lane (append-only, narrow-pathspec
-  commits) and the relay inbox for drafting assists.
+  commits) and the relay inbox for drafting assists, and — only where the conformance checker actually in force in that workspace has
+been VERIFIED to govern this seat's directory — a coordination surface a deployment
+provisions for it (append-only, narrow-pathspec commits, same discipline). Where that
+governance has not been verified, this exception does not apply and the surface is
+not written.
 - **Fleet-wide standing rules apply unchanged** — the pre-flight fan-out
   checks, the convergence-before-any-face rule, and the no-idle-within-existing-
   authority rule all bind the seat exactly as they bind every other agent.
@@ -102,8 +106,12 @@ surfacing) persist across postures.
 - **Wake / watch.** Exactly one persistent monitor on the inbound lane, armed
   **and verified** first at every wake — an unarmed watcher is
   indistinguishable from a quiet lane. The seat's live operational state lives
-  in its own session/project memory, **outside the product repo**, not in a
-  tracked repo file.
+  in its own session/project memory, **outside the product repo**. A deployment may
+additionally provision a tracked directory intended as a coordination surface for
+this seat; the product repo is still never that surface. Provisioning alone does not
+make it one — until the checker in force in that workspace is verified to govern the
+directory, it is an ordinary directory of that workspace and the isolation rule
+applies to it without exception.
 - **Delivery.** Every deliverable is a workpaper (propose-only) plus a lane
   entry carrying commit pins; outward artifacts stage-to-ready and **hold** for
   the principal's click, routed through the orchestrator.
@@ -125,8 +133,8 @@ team**, and a **chartered external seat**.
 This does not contradict the bootstrap doc's "you are not a role inside a
 workspace." "Chartered" names a *stewardship mandate*; it does not make the seat
 a workspace side name. The seat keeps the canonical `<project>/<side>` identity
-**form** — its own product repo plus a `creator`-class seat name — and remains
-outside every stamped team workspace.
+**form** — its own product repo plus a `creator`-class seat name — and takes no side-name row in any stamped team
+workspace, whether or not a deployment has provisioned a directory there for it.
 
 The bootstrap doc's design-phase duty to "present decisions to the principal" is
 read **topology-aware**: a standalone creator session presents directly; a
@@ -136,17 +144,50 @@ reversal of it.
 
 ## 6. Cold-start — how a successor reconstructs the seat
 
-The creator seat does **not** wake through the workspace role-resolution path:
-that path resolves only a workspace's bound side names from a `BINDINGS.md`, and
-the creator has no such role or binding row. A successor cold-starts instead by
-reading two named sources, in order:
+A successor does **not** reconstruct this seat by role resolution. That is a claim
+about the seat's mandate, not about its name: where a deployment provisions a
+`memory/creator/` directory — as the global-PA workspace does, provisioned for this
+seat — a wake can resolve the name and bind a session there, and
+does so today. What such a path supplies is a bound session and a canonical
+identity. It does not supply the mandate: the resolver's tier table records which
+identities exist; it does not contain this charter.
 
-1. the seat's **operational state** — its own session/project memory (outside
-   the product repo), where live task state and standing commissions live; and
+Governance likewise follows the instrument in force, not the name. A conformance
+checker carrying the identity vocabulary infers `creator` as a governed identity and
+refuses any declaration that it is not one; a deployment running an older vendored
+copy does not acquire that governance merely by provisioning the directory.
+
+**Governed before used.** A seat may treat such a directory as its coordination
+surface, bind a session against it, or write to it, ONLY after verifying that the
+checker in force in that workspace governs it. Until that is verified the directory
+is an ordinary part of another workspace, and the isolation rule applies to it with
+no exception. This is a precondition, not a caution: unverified means do not proceed.
+
+**Where governance is not yet in force.** This precondition withholds a surface; it
+does not withhold the seat's work. A seat whose deployment has not yet brought its
+checker into governance operates from its own session/project memory, which the
+isolation rule has always permitted and which is sufficient on its own; it simply has
+no coordination surface until the deployment reconciles its checker. Reconciling it is
+the deployment's act, on its own schedule, and nothing in this charter sets a date for
+it. A seat MUST NOT treat an ungoverned directory as the surface in the meantime, and
+MUST NOT read the absence of a surface as a reason to stop.
+
+A successor cold-starts by reading two named sources, in order:
+
+1. the seat's **operational state** — its own session/project memory, together with
+   any coordination surface a deployment provisions for it **and whose governance the
+   successor has verified** (see "governed before used" above), where live task state
+   and standing commissions live; and
 2. this **ratified charter** — the durable, in-repo record of the seat's mandate
    and boundaries, reconstructable by a cold successor with no prior context.
 
-A direct-session load of those two, not a role resolution.
+A direct-session load of those two. A wake may bind the name; the mandate is read,
+not resolved.
+
+A name that the resolver decides at tier 1 must never silently displace a
+workspace's own side name of the same spelling. Where both exist, the wake is
+AMBIGUOUS and takes the resolver's existing stop-and-ask path — the principal is
+asked once which is meant, and nothing is guessed.
 
 ## 7. What ratifying this charter does — and does not — grant
 
