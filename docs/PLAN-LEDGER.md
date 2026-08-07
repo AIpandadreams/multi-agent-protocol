@@ -28,23 +28,27 @@ ordinary one. ⛔ **Reading them loosely is the fastest way to misread all three
 
 ## What this release contains, and what it does not
 
-⛔ **Read this before the design below.** This release ships **this document** — the
-specification. It does **not** ship the tooling the document describes. Every part below
-carries its own status, and none of the five is in the repository you are reading:
+⛔ **Read this before the design below.** The 1.9.0 release shipped **this document** —
+the specification — with none of the five parts as tooling. **As of 1.9.1, part 2 (the
+memory failsafe) ships as runnable tooling** (`tools/compaction_inject.py` with its
+shared ledger-access module `tools/plan_common.py`), and the `plans/` directory exists
+with its operator-facing README. Every part below carries its own status:
 
 | part | status in this release |
 |---|---|
-| 1. The ledger file format | **specified here** — no schema file and no example plan file ship |
-| 2. The memory failsafe (compaction hook) | **specified here, deferred** |
+| 1. The ledger file format | **specified here** — `plans/README.md` (operator seed) ships as of 1.9.1; no schema file and no example plan file ship |
+| 2. The memory failsafe (compaction hook) | **ships as of 1.9.1** — `tools/compaction_inject.py` + `tools/plan_common.py` |
 | 3. The enforcement check | **specified here, deferred** — its source and test suite are not ported |
 | 4. The clock sweep | **specified here, deferred** |
 | 5. Wake integration | **specified here, deferred** |
 
-So the design below is written in the present tense of a **specification**, not of an
-installed system: it describes what these parts do *when built*, and you should not expect
-to find, run, or verify any of them in this checkout. ⭐ **A deferral that is stated is a
-scope decision; a deferral that is silent is a broken promise** — this table is the whole
-list, not a sample.
+So the design below is written in the present tense of a **specification**: for parts
+3–5 it describes what those parts do *when built*, and you should not expect to find,
+run, or verify them in this checkout. Part 2 you now can — its hook wiring (PreCompact
+`--mark`, SessionStart `--inject`) is described in `plans/README.md`, and note that its
+`--ack` discharge path completes only when part 3 (the enforcement gate) lands. ⭐ **A
+deferral that is stated is a scope decision; a deferral that is silent is a broken
+promise** — this table is the whole list, not a sample.
 
 ---
 
@@ -115,10 +119,14 @@ instruction.
 
 ---
 
-## What an operator can do with this, once it is built
+## What an operator can do with this, as the parts land
 
-⚠ **None of the following is available from this release** — see the status table above.
-This is what the design buys an operator when the parts exist:
+⚠ **Most of the following is not yet available from this release** — see the status
+table above. The exception is the last bullet's foundation: the compaction re-injection
+hook (part 2) now ships, so the typed digest a cold successor receives after a
+compaction is real tooling in this checkout; the query, verification, and liveness
+bullets still wait on parts 3–5. This is what the design buys an operator; each
+bullet becomes real as its part lands:
 
 - **Ask what is actually open**, for any seat, and get a typed answer rather than a summary.
 - **See which decisions are waiting on a person**, and what each one is holding up.
