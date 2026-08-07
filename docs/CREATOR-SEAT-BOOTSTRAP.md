@@ -186,8 +186,8 @@ for a "chartered external seat" as a recognized third identity form.
 - **Know your remotes cold.** Multiple repos will have similar names (a
   skills-source repo, a workspace repo, a public repo). Pushing the wrong one
   can destroy a live system. Before EVERY push: `git remote -v`, and keep a
-  standing NEVER list in memory (e.g. "NEVER push <skills-repo> →
-  <workspace-remote>").
+  standing NEVER list in memory (e.g. "NEVER push `<skills-repo>` →
+  `<workspace-remote>`").
 - **Shared live trees: pathspec commits only.** In any repo another agent
   session actively works, `git add <file>` + bare `git commit` commits the
   ENTIRE index — the peer's staged work rides your commit silently. Always

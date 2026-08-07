@@ -20,5 +20,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: python tools/mirror_check.py
-      - run: python tools/release_scrub.py . --patterns examples/scrub_patterns.example.txt --private-path profiles/private
+      - name: scrub wiring check (runs the public example pattern list; not a leak gate)
+        run: python tools/release_scrub.py . --patterns examples/scrub_patterns.example.txt --private-path profiles/private
       - run: python -m unittest discover -s tests -v

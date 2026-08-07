@@ -1485,7 +1485,7 @@ and carried through cross-vendor + isolated-judge convergence review.
   (duties + incident-derived boundaries), a topology-design interview (tandem /
   hub / multi-team, e.g. 3+2 and 3+2+2), a generalized SOP catalog, a runbook
   library (onboarding, live hash-pinned migration, archive hardening,
-  failure surfacing, reviewer-outage recovery), and nine incident case
+  failure surfacing, reviewer-outage recovery), and eleven incident case
   studies that each became protocol.
 - **`docs/SOP-REGISTRY.md`** — the SOP layer: principal-ruled standing orders
   over the protocol, master-number rules, the cross-team `SOPS.md` registry

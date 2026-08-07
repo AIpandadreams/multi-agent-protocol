@@ -244,8 +244,8 @@ a role in any team. Your duties and your boundaries:</p>
 <li><strong>Know your remotes cold.</strong> Multiple repos will have similar names (a
   skills-source repo, a workspace repo, a public repo). Pushing the wrong one
   can destroy a live system. Before EVERY push: <code>git remote -v</code>, and keep a
-  standing NEVER list in memory (e.g. "NEVER push <skills-repo> →
-  <workspace-remote>").</li>
+  standing NEVER list in memory (e.g. "NEVER push <code>&lt;skills-repo&gt;</code> →
+  <code>&lt;workspace-remote&gt;</code>").</li>
 <li><strong>Shared live trees: pathspec commits only.</strong> In any repo another agent
   session actively works, <code>git add &lt;file&gt;</code> + bare <code>git commit</code> commits the
   ENTIRE index — the peer's staged work rides your commit silently. Always
