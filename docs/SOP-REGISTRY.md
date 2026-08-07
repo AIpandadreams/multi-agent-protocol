@@ -25,12 +25,11 @@ expectations — without amending protocol text each time.
 
 ## The collision lesson
 
-In the originating deployment, two teams independently minted "SOP-2" and
-"SOP-4" for DIFFERENT rules before a registry existed. The fix was NOT
-renumbering (principal-dated adoptions stand as written): the collisions are
-documented in the registry, and the standing rule is that any cross-team
-artifact cites SOPs **team-qualified** ("t1-SOP-4", "t2-SOP-2"). A bare
-number is valid only inside its own team's workspace.
+If two teams independently mint the same number (say "SOP-2") for DIFFERENT
+rules before a registry exists, the fix is NOT renumbering (principal-dated
+adoptions stand as written): document the collision in the registry, and
+require that any cross-team artifact cites SOPs **team-qualified**
+("t1-SOP-2"). A bare number is valid only inside its own team's workspace.
 
 Start the registry on day one and mint numbers from a single sequence, and
 you never need this lesson.
