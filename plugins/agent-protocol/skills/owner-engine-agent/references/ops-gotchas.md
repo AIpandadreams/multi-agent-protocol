@@ -1,4 +1,4 @@
-# Environment gotchas — the pattern, plus seed examples [PROTOCOL v2.9]
+# Environment gotchas — the pattern, plus seed examples [PROTOCOL v3.1]
 
 > **Tier: once per project** — then maintain the per-project list in memory and
 > consult it when symptoms match.

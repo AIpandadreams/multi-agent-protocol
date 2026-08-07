@@ -1,4 +1,4 @@
-# Self-improvement protocol [PROTOCOL v2.9]
+# Self-improvement protocol [PROTOCOL v3.1]
 
 > How agents improve their own skills and protocol — review-gated, never
 > self-authorizing. Read when proposing or intaking an amendment.

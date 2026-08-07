@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Migrate a stamped workspace up to PROTOCOL v2.9 [PROTOCOL v2.9].
+"""Migrate a stamped workspace up to PROTOCOL v3.1 [PROTOCOL v3.1].
 
 The version-migrate gap in the lifecycle family: `new_project.py` stamps a
 FRESH workspace, `scale_workspace.py` grows a 2-agent workspace to 3, and
@@ -9,11 +9,14 @@ supported hop, CHAINED in a single run.
 
 WHICH HOPS RUN (the decision tree, derived from `HOPS` — see `_hop_chain`):
 
-    pinned v2.9  ->  no-op, exit 0 (idempotent; safe to re-run)
-    pinned v2.8  ->  one hop:    v2.8 -> v2.9
-    pinned v2.7  ->  TWO hops:   v2.7 -> v2.8 -> v2.9
-    pinned v2.6  ->  THREE hops: v2.6 -> v2.7 -> v2.8 -> v2.9
-    pinned v2.5  ->  FOUR hops:  v2.5 -> v2.6 -> v2.7 -> v2.8 -> v2.9, in ONE run of
+    pinned v3.1  ->  no-op, exit 0 (idempotent; safe to re-run)
+    pinned v3.0  ->  one hop:    v3.0 -> v3.1
+    pinned v2.9  ->  TWO hops:   v2.9 -> v3.0 -> v3.1
+    pinned v2.8  ->  THREE hops: v2.8 -> v2.9 -> v3.0 -> v3.1
+    pinned v2.7  ->  FOUR hops:  v2.7 -> v2.8 -> v2.9 -> v3.0 -> v3.1
+    pinned v2.6  ->  FIVE hops:  v2.6 -> ... -> v3.1
+    pinned v2.5  ->  SIX hops:   v2.5 -> v2.6 -> v2.7 -> v2.8 -> v2.9 -> v3.0 ->
+                     v3.1, in ONE run of
                      THIS checkout — you do NOT need an older checkout for the
                      earlier legs, and you do NOT run the tool once per hop
     anything else -> unsupported, exit 1 (the message names the supported
@@ -45,7 +48,7 @@ WHAT IT DOES (mechanical, idempotent, reversible):
     the workspace's own integrity gates (auth-logs / channel — an early
     v2.5->v2.6 run did exactly that and ate a red CI run) or race a live
     appender (dispatch/tick logs are written by scheduled tasks). This holds at
-    EVERY hop of a chained run: a v2.5-era record survives a v2.5 -> v2.9
+    EVERY hop of a chained run: a v2.5-era record survives a v2.5 -> v3.1
     migration still stamped `[PROTOCOL v2.5]`, and that is GREEN, because
     conformance_check accepts any supported creation-version stamp at or below
     the workspace's pin. EVERY kept record is REPORTED — including those
@@ -68,7 +71,7 @@ WHAT IT DOES NOT DO (judgement — it PRINTS what to do, never does it):
     version token inside one (a PROXY_AUTH change is first-hand-only). If the
     workspace's PROXY_AUTH predates v2.6's canonical super-class wording it
     prints the reword to apply by hand.
-  - it never adds binding slots. v2.9 introduces NO new slots; the v2.6 slot
+  - it never adds binding slots. v2.9, v3.0 and v3.1 introduce NO new slots; the v2.6 slot
     family (TRANSPORT / WORKSPACE_REMOTE / SECRETS / AUTONOMY / WATCHER /
     ROLE_ALIASES) remains advisory — it prints any not yet present, flagged by
     whether they apply to this workspace's profile, so the principal adds the
@@ -78,15 +81,15 @@ WHAT IT DOES NOT DO (judgement — it PRINTS what to do, never does it):
 
 Because it only rewrites version tokens, a migration reverts cleanly with a
 single `git revert`. Pin-aware conformance means a not-yet-migrated workspace
-stays green under a v2.9 checkout, so workspaces migrate independently, each at
+stays green under a v3.1 checkout, so workspaces migrate independently, each at
 its own freeze boundary.
 
 Usage:
   python tools/migrate_workspace.py --workspace path/to/ws            # migrate
   python tools/migrate_workspace.py --workspace path/to/ws --dry-run  # preview
 
-Idempotent: a second run finds v2.9 and does nothing. Exit 0 = migrated /
-already-v2.9 / dry-run; 1 = the pin is not a supported starting version
+Idempotent: a second run finds v3.1 and does nothing. Exit 0 = migrated /
+already-v3.1 / dry-run; 1 = the pin is not a supported starting version
 (unknown version, or no BINDINGS); 2 = usage error. A successful migration may still leave conformance
 findings that need a hand-edit (the PROXY_AUTH reword, unfilled new slots) —
 those are PRINTED, and the operator runs `conformance_check.py --strict` as the
@@ -123,7 +126,7 @@ cc = _load("conformance_check", "conformance_check.py")
 # starting version migrates to NEWEST in ONE run, chaining as many legs as it
 # needs — the operator never has to know the ordering.
 HOPS = (("v2.5", "v2.6"), ("v2.6", "v2.7"), ("v2.7", "v2.8"),
-        ("v2.8", "v2.9"))
+        ("v2.8", "v2.9"), ("v2.9", "v3.0"), ("v3.0", "v3.1"))
 SUPPORTED_FROM = tuple(frm for frm, _ in HOPS)
 NEWEST = HOPS[-1][1]
 
@@ -166,7 +169,7 @@ _STAMP_LINE_PREFIXES = ("#", "<!--", '"""', "'''")
 _LINE_SPLIT = re.compile(r"(\r\n|\r|\n)")
 
 # The v2.6 slot family a workspace may still lack — printed as "consider
-# adding", never stamped. Neither v2.8 nor v2.9 introduces new binding slots, so
+# adding", never stamped. None of v2.8, v2.9, v3.0 or v3.1 introduces new binding slots, so
 # this list is unchanged across both later hops.
 # (name, one-line note, applicability):
 # "always" = add on any workspace; "git-sync" = only when the transport is
@@ -307,7 +310,7 @@ def migrate(ws, dry_run=False):
 
     Chains every hop the workspace's pin requires, oldest first, in ONE run: a
     v2.5 workspace runs v2.5->v2.6, then v2.6->v2.7, then v2.7->v2.8, then
-    v2.8->v2.9, without
+    v2.8->v2.9, then v2.9->v3.0, then v3.0->v3.1, without
     the operator knowing the ordering. Returns a result dict: {status, ...}.
     status is one of
       'migrated' | 'dry-run' | 'already' | 'unsupported' | 'error'.
@@ -335,7 +338,7 @@ def migrate(ws, dry_run=False):
 
     # Records first, once. Their creation stamp is kept at EVERY hop, so the
     # count is over every from-stamp in the chain — a v2.5-era record migrating
-    # v2.5 -> v2.9 is reported for the v2.5 token it keeps.
+    # v2.5 -> v3.1 is reported for the v2.5 token it keeps.
     chain_stamps = [_stamp(frm) for frm, _ in chain]
     records_kept = []
     for p in _text_files(ws):

@@ -1,4 +1,4 @@
-# Proxy-authorization NORMATIVE CORE [PROTOCOL v2.9] — single source of truth
+# Proxy-authorization NORMATIVE CORE [PROTOCOL v3.1] — single source of truth
 
 > Referenced by the orchestrator's authorization-relay reference AND by the
 > receiving role skills (owner, builder). **Principal-locked** (see

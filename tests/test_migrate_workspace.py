@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Regression tests for tools/migrate_workspace.py (the workspace migrator).
 
-The migrator carries a LADDER of hops — v2.5 -> v2.6 -> v2.7 -> v2.8 -> v2.9 — and walks
+The migrator carries a LADDER of hops — v2.5 -> v2.6 -> v2.7 -> v2.8 -> v2.9 ->
+v3.0 -> v3.1 — and walks
 it from whatever the workspace is pinned at up to the newest version, in one run.
 Every hop is supported public capability; the v2.5 one is not a leftover.
 
@@ -52,7 +53,7 @@ mw = _load("migrate_workspace", "tools/migrate_workspace.py")
 
 
 def _stamp(dest, extra_args):
-    """Stamp a fresh v2.9 workspace at `dest`; return exit code."""
+    """Stamp a fresh v3.1 workspace at `dest`; return exit code."""
     saved = sys.argv
     out, err = io.StringIO(), io.StringIO()
     try:
@@ -64,7 +65,7 @@ def _stamp(dest, extra_args):
 
 
 def _downgrade(ws, to="v2.6"):
-    """Turn a fresh v2.9 stamp into a `to`-version workspace — the inverse of
+    """Turn a fresh v3.1 stamp into a `to`-version workspace — the inverse of
     the migrator's flip, for the happy-path round-trip only. (The edge cases
     below use hand-built fixtures instead, so they don't depend on this.)
 
@@ -72,9 +73,9 @@ def _downgrade(ws, to="v2.6"):
     full chained ladder — every hop in one run."""
     for p in mw._text_files(ws):
         text = p.read_text(encoding="utf-8")
-        new = text.replace("[PROTOCOL v2.9]", f"[PROTOCOL {to}]")
+        new = text.replace("[PROTOCOL v3.1]", f"[PROTOCOL {to}]")
         if p.name == "BINDINGS.md":
-            new = new.replace("| PROTOCOL_VERSION | v2.9 |",
+            new = new.replace("| PROTOCOL_VERSION | v3.1 |",
                               f"| PROTOCOL_VERSION | {to} |")
         if new != text:
             p.write_text(new, encoding="utf-8")
@@ -162,7 +163,7 @@ class MigrateMechanicsTest(unittest.TestCase):
             before = _read_all(ws)
             res = mw.migrate(ws)
             self.assertEqual(res["status"], "migrated")
-            self.assertIn("| PROTOCOL_VERSION | v2.9 |",
+            self.assertIn("| PROTOCOL_VERSION | v3.1 |",
                           (ws / "BINDINGS.md").read_text(encoding="utf-8"))
             non_records, records = _split_records(ws, _read_all(ws))
             # no old stamp survives on any NON-record file
@@ -272,8 +273,8 @@ class MigrateMechanicsTest(unittest.TestCase):
             # UNKNOWN, not UNPARSEABLE: the pin has to satisfy the version
             # grammar (v2.<n>) and simply not be in the supported set, or this
             # exercises the absent-pin path instead — which refuses too, and so
-            # would pass while measuring the wrong thing. v2.9 filled this role
-            # until v2.9 became the newest supported version.
+            # would pass while measuring the wrong thing. v3.1 filled this role
+            # until v3.1 became the newest supported version.
             _set_slot(ws, "PROTOCOL_VERSION", "v2.10")
             before = _read_all(ws)
             code, out = _migrate_main(ws)
@@ -315,10 +316,10 @@ class MigrateStructuralPverTest(unittest.TestCase):
 
             res = mw.migrate(ws)
             self.assertEqual(res["status"], "migrated")
-            # the pin is now genuinely v2.9 (not a half-migration)
-            self.assertEqual(cc.pinned_version(cc.parse_bindings(ws)), "v2.9")
+            # the pin is now genuinely v3.1 (not a half-migration)
+            self.assertEqual(cc.pinned_version(cc.parse_bindings(ws)), "v3.1")
             row = _pver_row(ws)
-            self.assertIn("v2.9", row)
+            self.assertIn("v3.1", row)
             self.assertNotIn("v2.6", row)
 
     def test_extra_cell_pver_row_migrates_without_dropping_content(self):
@@ -339,7 +340,7 @@ class MigrateStructuralPverTest(unittest.TestCase):
 
             res = mw.migrate(ws)
             self.assertEqual(res["status"], "migrated")
-            self.assertEqual(cc.pinned_version(cc.parse_bindings(ws)), "v2.9")
+            self.assertEqual(cc.pinned_version(cc.parse_bindings(ws)), "v3.1")
             row = _pver_row(ws)
             self.assertIn("(pinned 2026-01-01)", row)   # extra cell NOT dropped
             self.assertNotIn("v2.6", row)
@@ -392,8 +393,8 @@ class MigratePreservesProtectedContentTest(unittest.TestCase):
             self.assertEqual(after_row, before_row)          # row byte-identical
             self.assertIn("[PROTOCOL v2.6]", after_row)       # token NOT flipped
             # meanwhile the header + the pver row DID migrate
-            self.assertIn("[PROTOCOL v2.9]", after.splitlines()[0])
-            self.assertIn("| PROTOCOL_VERSION | v2.9 |", after)
+            self.assertIn("[PROTOCOL v3.1]", after.splitlines()[0])
+            self.assertIn("| PROTOCOL_VERSION | v3.1 |", after)
 
     def test_memory_body_stamp_token_is_untouched(self):
         with tempfile.TemporaryDirectory() as d:
@@ -508,7 +509,7 @@ class MigratePreservesProtectedContentTest(unittest.TestCase):
             mw.migrate(ws)
 
             out = sh.read_text(encoding="utf-8")
-            self.assertIn("# helper [PROTOCOL v2.9] banner", out)
+            self.assertIn("# helper [PROTOCOL v3.1] banner", out)
             self.assertNotIn("[PROTOCOL v2.6]", out)
 
     def test_bom_prefixed_banner_stamp_flips_and_bom_survives(self):
@@ -528,7 +529,7 @@ class MigratePreservesProtectedContentTest(unittest.TestCase):
 
             out = doc.read_text(encoding="utf-8")
             self.assertTrue(out.startswith("﻿# channel file"))
-            self.assertIn("[PROTOCOL v2.9]", out)
+            self.assertIn("[PROTOCOL v3.1]", out)
             self.assertNotIn("[PROTOCOL v2.6]", out)
 
     def test_mixed_stamp_on_the_banner_is_not_corrupted(self):
@@ -567,7 +568,7 @@ class MigratePreservesBytesTest(unittest.TestCase):
                 if eol == b"\n":
                     self.assertNotIn(b"\r\n", out)             # no LF->CRLF rewrite
                 # and the stamp actually flipped
-                self.assertIn(b"[PROTOCOL v2.9]", out)
+                self.assertIn(b"[PROTOCOL v3.1]", out)
                 self.assertNotIn(b"[PROTOCOL v2.6]", out)
 
     def test_undecodable_file_is_skipped(self):
@@ -614,7 +615,7 @@ class MigratePreservesAuthorityTest(unittest.TestCase):
             self.assertIn("outward-facing/publish actions", out)
 
     def test_canonical_proxy_auth_gives_no_gaps(self):
-        # A fresh v2.9 stamp's PROXY_AUTH is canonical → no gaps reported.
+        # A fresh v3.1 stamp's PROXY_AUTH is canonical → no gaps reported.
         with tempfile.TemporaryDirectory() as d:
             ws = Path(d) / "ws"
             _stamp(ws, ["--profile", "3agent.local"])
@@ -671,7 +672,7 @@ class MigrateGitSyncProfileTest(unittest.TestCase):
 
 
 class MigrateChainedHopsTest(unittest.TestCase):
-    """The v2.5 -> v2.9 ladder: EVERY hop in ONE run of ONE checkout. The v2.5
+    """The v2.5 -> v3.1 ladder: EVERY hop in ONE run of ONE checkout. The v2.5
     hop is not a legacy leftover — it is a supported public capability, and
     removing it silently was the defect this release exists to correct."""
 
@@ -679,13 +680,20 @@ class MigrateChainedHopsTest(unittest.TestCase):
         # the tree the docs promise, asserted against the code that derives it
         self.assertEqual(mw._hop_chain("v2.5"),
                          [("v2.5", "v2.6"), ("v2.6", "v2.7"),
-                          ("v2.7", "v2.8"), ("v2.8", "v2.9")])
+                          ("v2.7", "v2.8"), ("v2.8", "v2.9"),
+                          ("v2.9", "v3.0"), ("v3.0", "v3.1")])
         self.assertEqual(mw._hop_chain("v2.6"),
-                         [("v2.6", "v2.7"), ("v2.7", "v2.8"), ("v2.8", "v2.9")])
+                         [("v2.6", "v2.7"), ("v2.7", "v2.8"), ("v2.8", "v2.9"),
+                          ("v2.9", "v3.0"), ("v3.0", "v3.1")])
         self.assertEqual(mw._hop_chain("v2.7"),
-                         [("v2.7", "v2.8"), ("v2.8", "v2.9")])
-        self.assertEqual(mw._hop_chain("v2.8"), [("v2.8", "v2.9")])
-        self.assertEqual(mw._hop_chain("v2.9"), [])       # no-op
+                         [("v2.7", "v2.8"), ("v2.8", "v2.9"),
+                          ("v2.9", "v3.0"), ("v3.0", "v3.1")])
+        self.assertEqual(mw._hop_chain("v2.8"),
+                         [("v2.8", "v2.9"), ("v2.9", "v3.0"), ("v3.0", "v3.1")])
+        self.assertEqual(mw._hop_chain("v2.9"),
+                         [("v2.9", "v3.0"), ("v3.0", "v3.1")])
+        self.assertEqual(mw._hop_chain("v3.0"), [("v3.0", "v3.1")])
+        self.assertEqual(mw._hop_chain("v3.1"), [])       # no-op
         self.assertIsNone(mw._hop_chain("v2.4"))          # too old
         self.assertIsNone(mw._hop_chain("v9.9"))          # unknown
         self.assertIsNone(mw._hop_chain(None))            # absent
@@ -700,19 +708,33 @@ class MigrateChainedHopsTest(unittest.TestCase):
             res = mw.migrate(ws)
             self.assertEqual(res["status"], "migrated")
             self.assertEqual(res["version_from"], "v2.5")   # ORIGINAL pin
-            self.assertEqual(res["version_to"], "v2.9")
+            self.assertEqual(res["version_to"], "v3.1")
             self.assertEqual(res["hops"], [("v2.5", "v2.6"), ("v2.6", "v2.7"),
-                                           ("v2.7", "v2.8"), ("v2.8", "v2.9")])
-            self.assertIn("| PROTOCOL_VERSION | v2.9 |",
+                                           ("v2.7", "v2.8"), ("v2.8", "v2.9"),
+                                           ("v2.9", "v3.0"), ("v3.0", "v3.1")])
+            self.assertIn("| PROTOCOL_VERSION | v3.1 |",
                           (ws / "BINDINGS.md").read_text(encoding="utf-8"))
             # no INTERMEDIATE version is left stranded on a non-record file.
-            # The ladder grew, so the intermediates did too: v2.7 and v2.8 both.
+            # The ladder grew, so the intermediates did too: v2.9 and v3.0 are
+            # intermediates now, and a stamp stranded at either is the same
+            # defect this loop was written to catch at v2.7 and v2.8.
             non_records, _ = _split_records(ws, _read_all(ws))
             for rel, text in non_records.items():
                 self.assertNotIn("[PROTOCOL v2.5]", text, msg=rel)
                 self.assertNotIn("[PROTOCOL v2.6]", text, msg=rel)
                 self.assertNotIn("[PROTOCOL v2.7]", text, msg=rel)
                 self.assertNotIn("[PROTOCOL v2.8]", text, msg=rel)
+            # v2.9 and v3.0 are intermediates now, and they get a BANNER-scoped
+            # check rather than the whole-text one above. conformance_check.py
+            # MENTIONS `[PROTOCOL v3.0]` in a comment, as its example of a
+            # second marker that breaks the exactly-one rule — a whole-text
+            # assertion cannot tell that mention from a stamp. A stranded
+            # half-migration is a BANNER, which is the only thing the migrator
+            # ever writes.
+            for rel, text in non_records.items():
+                banner = next((l for l in text.splitlines() if l.strip()), "")
+                self.assertNotIn("[PROTOCOL v2.9]", banner, msg=rel)
+                self.assertNotIn("[PROTOCOL v3.0]", banner, msg=rel)
 
     def test_v25_records_kept_byte_identical_across_EVERY_hop(self):
         """The keep-records doctrine is current doctrine at EVERY hop — the old
@@ -732,7 +754,7 @@ class MigrateChainedHopsTest(unittest.TestCase):
             _, records_before = _split_records(ws, before)
             # untouched ENTIRELY across the whole chain
             self.assertEqual(records_after, records_before)
-            # and still carrying their v2.5 creation stamp under a v2.9 pin
+            # and still carrying their v2.5 creation stamp under a v3.1 pin
             self.assertTrue(
                 any("[PROTOCOL v2.5]" in t for t in records_after.values()),
                 "fixture proves nothing: no record kept a v2.5 stamp")
@@ -744,8 +766,8 @@ class MigrateChainedHopsTest(unittest.TestCase):
     def test_v25_era_records_stay_green_under_newest_pin(self):
         """The load-bearing property of the whole design.
 
-        A chained v2.5 -> v2.9 migration leaves `[PROTOCOL v2.5]`-stamped
-        records in a v2.9-pinned workspace, and that must be GREEN: pin-aware
+        A chained v2.5 -> v3.1 migration leaves `[PROTOCOL v2.5]`-stamped
+        records in a v3.1-pinned workspace, and that must be GREEN: pin-aware
         `_record_stamp_ok` accepts any supported stamp at-or-below the pin.
         If this ever stopped holding, chained migration would silently
         manufacture findings on records it never touched.
@@ -762,12 +784,12 @@ class MigrateChainedHopsTest(unittest.TestCase):
             res = mw.migrate(ws)
             self.assertEqual(res["status"], "migrated")
 
-            # the premise: v2.5 stamps really did survive into a v2.9 workspace
+            # the premise: v2.5 stamps really did survive into a v3.1 workspace
             _, records = _split_records(ws, _read_all(ws))
             self.assertTrue(
                 any("[PROTOCOL v2.5]" in t for t in records.values()),
                 "premise failed: no v2.5-stamped record survived the chain")
-            self.assertIn("| PROTOCOL_VERSION | v2.9 |",
+            self.assertIn("| PROTOCOL_VERSION | v3.1 |",
                           (ws / "BINDINGS.md").read_text(encoding="utf-8"))
 
             code, out = _conformance(ws, strict=True)
@@ -789,7 +811,8 @@ class MigrateChainedHopsTest(unittest.TestCase):
             res = mw.migrate(ws, dry_run=True)
             self.assertEqual(res["status"], "dry-run")
             self.assertEqual(res["hops"], [("v2.5", "v2.6"), ("v2.6", "v2.7"),
-                                           ("v2.7", "v2.8"), ("v2.8", "v2.9")])
+                                           ("v2.7", "v2.8"), ("v2.8", "v2.9"),
+                                           ("v2.9", "v3.0"), ("v3.0", "v3.1")])
             # BINDINGS is planned on EVERY leg, so it appears once per hop —
             # this count tracks the ladder's length, not a fixed 2.
             bindings_passes = [t for t in res["changed"]
@@ -813,7 +836,7 @@ class MigrateChainedHopsTest(unittest.TestCase):
 class MigrateConformanceTest(unittest.TestCase):
     def test_conformance_passes_after_migrate(self):
         # A canonical v2.6 workspace (a downgraded fresh stamp) is fully
-        # conformant under v2.9 once migrated — 0 blockers.
+        # conformant under v3.1 once migrated — 0 blockers.
         with tempfile.TemporaryDirectory() as d:
             ws = Path(d) / "ws"
             _stamp(ws, ["--profile", "3agent.local"])

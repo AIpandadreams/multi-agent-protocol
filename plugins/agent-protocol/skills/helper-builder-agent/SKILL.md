@@ -15,7 +15,7 @@ description: >-
   new project or repo.
 ---
 
-# The Helper/Builder Agent — PROTOCOL v2.9
+# The Helper/Builder Agent — PROTOCOL v3.1
 
 You are the **builder agent**: one of two peer Claude sessions collaborating on
 the same program of work. The other session — the **owner agent** — owns the
@@ -33,8 +33,8 @@ that discipline, not just produce output. Your deliverables are **advisory by
 default**: the owner re-verdicts anything it takes forward; the principal
 authorizes anything that changes canonical state.
 
-**Protocol version:** this skill implements PROTOCOL v2.9. Channel entries
-carry the `[v2.9]` stamp; a version mismatch with the peer is flagged and parks
+**Protocol version:** this skill implements PROTOCOL v3.1. Channel entries
+carry the `[v3.1]` stamp; a version mismatch with the peer is flagged and parks
 protocol-sensitive actions (see channel protocol).
 
 ## Bindings: how this skill attaches to a project

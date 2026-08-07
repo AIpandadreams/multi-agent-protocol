@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Workspace conformance suite [PROTOCOL v2.5 / v2.6 / v2.7 / v2.8 / v2.9 / v3.0].
+"""Workspace conformance suite [PROTOCOL v2.5 / v2.6 / v2.7 / v2.8 / v2.9 / v3.0 / v3.1].
 
 A self-runnable, point-in-time readiness check for a stamped workspace.
 Where the integrity CI protects the coordination *record over time*
@@ -14,10 +14,10 @@ Version handling is PIN-AWARE: the workspace's own `PROTOCOL_VERSION` must be
 one of the SUPPORTED_VERSIONS (a version outside the set is a BLOCKER — the
 required-file and stamp expectations are undefined for it), and every per-file
 stamp (auth-logs, channel INDEX) is checked against that WORKSPACE'S pinned
-version, not a hardcoded literal. This keeps v2.5 through v2.9 workspaces green
-under a v3.0 checkout of the suite, while fresh v3.0 workspaces are accepted by
+version, not a hardcoded literal. This keeps v2.5 through v3.0 workspaces green
+under a v3.1 checkout of the suite, while fresh v3.1 workspaces are accepted by
 that same checkout. (An OLDER checkout does not learn newer pins — a
-v3.0-pinned workspace under a v2.9-era checkout is a BLOCKER by design.)
+v3.1-pinned workspace under a v2.9-era checkout is a BLOCKER by design.)
 
 Run it from a protocol checkout for a TRUST decision and point --workspace
 at the workspace you want to check. (Stamping also drops a copy of this file
@@ -72,11 +72,11 @@ ABS_PATH_RE = re.compile(
 # Protocol versions this suite knows how to validate. A workspace pinned outside
 # the set is a BLOCKER (its file/stamp expectations are undefined here); a
 # workspace pinned inside it is checked against its OWN version, so a live v2.5
-# through v2.9 workspace and a fresh v3.0 one all pass under one checkout of this
+# through v3.0 workspace and a fresh v3.1 one all pass under one checkout of this
 # tool. Membership in THIS tuple is the acceptance gate; keep it ascending with
 # the newest version LAST (reconcile_vendored.py reads supports-through from the
 # last element positionally).
-SUPPORTED_VERSIONS = ("v2.5", "v2.6", "v2.7", "v2.8", "v2.9", "v3.0")
+SUPPORTED_VERSIONS = ("v2.5", "v2.6", "v2.7", "v2.8", "v2.9", "v3.0", "v3.1")
 # Any-major version-token extractor (widened from v2-only for the v3.0 cut).
 # Acceptance is decided by SUPPORTED_VERSIONS membership above, never by this
 # regex, so widening it admits nothing — it only lets a non-v2 pin be READ so

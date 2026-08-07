@@ -1,0 +1,14 @@
+# Line endings are normalized to LF in the repository and on checkout.
+#
+# Why this file exists: this repository was developed under core.autocrlf=false, and
+# many working-tree files carried CRLF while every committed blob was LF. Under that
+# setting nothing converts in either direction, so committing one of those files would
+# have written its CR bytes INTO the blob — corrupting the store, not just the view.
+# Pinning eol here makes the clean filter normalize at commit regardless of any
+# contributor's autocrlf setting, and byte-level comparisons of working-tree files
+# against committed ones stop failing for reasons that have nothing to do with the
+# change under review.
+#
+# text=auto leaves genuinely binary content alone; it does not force LF into a file
+# whose bytes say it is not text.
+* text=auto eol=lf

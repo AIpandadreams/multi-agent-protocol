@@ -8,6 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.8.0 | v3.1 | `PROTOCOL v3.1`: the protocol stamp crosses to v3.1 with **no normative prose change** — every clause is the text 1.7.0 shipped, and the crossing is the stamp, the tooling that reads it, and the changelog. The bundled workspace-lifecycle tooling crosses in the same commit: `migrate_workspace.py` gains TWO hops beside the ones it already carries (v2.9 → v3.0 and v3.0 → v3.1, so a v2.5 workspace walks six hops in ONE run of ONE checkout), `conformance_check.py` accepts v3.1 while v2.5 through v3.0 stay green, `new_project.py` stamps fresh workspaces v3.1, and `mirror_check.py` gates on the new stamp. No new binding slots. The stamp series skips v3.0 deliberately: 1.7.0 taught conformance to ACCEPT a v3.0 pin so a ratified-ahead workspace would not be refused, but nothing here ever emitted that stamp and no hop reached it — an accepted pin with no way to arrive at it, now reachable and carried forward. Three disclosures ride the release: a measured 752-heading gap in a private lane's identifier locator, whose lesson (a detector keyed to one spelling certifies every other) is in the text this release stamps; NO workspace is restamped by this cut and three stale vendored checkers are the named prerequisite, since a stale vendored copy does not learn a newer pin and will block a migrated workspace on its own hygiene gate by design; and the `/wake` REV3 revision ships as its own unit against its own round. repo: `.gitattributes` pins `* text=auto eol=lf`, closing a narrower and worse defect than "checkouts get CRLF" — this repo sets `core.autocrlf=false` locally (overriding the system-wide `true`), and `false` with no attributes file means git converts in NEITHER direction, so with all 103 blobs at LF but 71 worktree files at CRLF, committing one of those 71 would write CR bytes INTO the blob; measured, the same content hashes to different objects through this repo's clean filter today and to the LF object under the new attribute. It normalizes NO existing committed content (a clean-filter re-run over every tracked file stages nothing — checked against a deliberately dirtied file first, so the zero is measured and not a dead path) |
 | 1.7.0 | v2.9 | conformance: the optional `NON_ROLE_DIRS` binding slot — directories under `memory/` that are not role memory (a heartbeat area, a tick log) are DECLARED excluded from role inference rather than guessed at from their shape, so an undeclared one is still a BLOCKER and a declared one with no directory behind it is a stale-exclusion WARN; **a name in the identity vocabulary is REFUSED** — canonical role or non-seat identity alike — the row blocks AND the name is still inferred, because a guard that only complains while the exclusion goes through anyway is worse than no guard: the operator sees the complaint and the directory leaves the structural checks regardless. The refusal keys on `LOCK_VOCABULARY`, not on `CANONICAL_ROLES`: a non-seat identity such as `creator` is a checked identity, and a slot that could exempt it would let the workspace being checked choose its own checker's vocabulary. The applied exclusions and any refusals print beside the verdict on the green path as well as the red one; conformance: the seat/identity family — ONE role vocabulary with a `ROLE_LOCK` reader that is not a grep, profile comparison on SEATS rather than identities and as literal sets in both directions, an identity is not automatically a seat, a positional guard at every seat position with a carried identity barred from holding a seat, and the identity vocabulary + the `memory/` tree source named in the checker's own output; conformance: `PROTOCOL v3.0` workspace stamps ACCEPTED while v2.5 through v2.9 stay green, so a ratified-ahead workspace is not refused by this checkout's gate; tooling: the vendored conformance checker is reconcilable — its provenance stamp is DERIVED from the vendored body's own `SUPPORTED_VERSIONS` plus a sha256 over the decoded stamp-free text (code drift, not byte drift), `tools/reconcile_vendored.py` reports OK / DRIFT / MISSING per workspace and re-vendors on `--fix`, owns the ONLY implementation of the stamp (`new_project.py` calls it rather than formatting its own), and the writer copies without platform newline translation so re-vendoring cannot silently rewrite every line's endings; docs: the README parties table gains the missing Orchestrator row, stated as interface-not-authority so the four-AUTHORITY-party framing stays true; ci: a shallow checkout is no history, not a short history |
 | 1.6.0 | v2.9 | `PROTOCOL v2.9`: the protocol stamp crosses to v2.9. The bundled workspace-lifecycle tooling crosses in the same commit: `migrate_workspace.py` gains the v2.8 → v2.9 hop *beside* the ones it already carries (a v2.5 workspace now walks four hops in ONE run of ONE checkout), `conformance_check.py` accepts v2.9 while v2.5 through v2.8 stay green, `new_project.py` stamps fresh workspaces v2.9, and `mirror_check.py` gates on the new stamp. No new binding slots. docs: release runbook 6.8 — the five-surface release enumeration (main commit, signed tag, plugin manifest, marketplace manifest, Release object), written from this repo's own 1.5.0 miss, where the first four verified correct while "Latest" still pointed at the previous version; docs: CONTRIBUTING — a gate's green must name its denominator in its own output (the CI scrub runs the example pattern list, so it fires only on a few narrow generic shapes and cannot see a contributor's organizational identifiers; the "CI secret-scans" bullet corrected); docs: AUTONOMY — **full speed**, a standing pre-authorization to proceed without re-asking inside already-authorized work that lies within the scope the grant states, or the narrow default when it states none, documented as a setting independent of the autonomy dial rather than a fifth dial position (the dial answers what can put work in front of a seat without a fresh word; three of its positions touch whether having that work is enough to proceed but answer the question only for work named in advance or as a side effect of a tick being headless, and none states a rule for work in general), carrying never-idle's cadence-not-authority invariant applied to that second question as tempo-not-boundary, the rule that full speed never supplies a missing go, the cost it trades away (the pre-start ask is a point at which a mistaken idea of scope may surface before work begins, and only when the seat states what it is about to do and under what authority), explicit statements that full speed is neither a binding slot, nor a grant a seat may establish from anything but your word in the session that acts on it — which bounds it to that session — nor a grant whose scope the seat may infer, and the duty it adds: surfacing work parked at a gate with its blocker named, at any dial position; docs: CONTRIBUTING — merges to `main` land as merge commits, with squash and rebase disabled on purpose, because a landing is approved against one specific reviewed commit |
 | 1.5.0 | v2.8 | `PROTOCOL v2.8`: the self-improvement loop turned on itself — eight clauses adopted through the amendment loop this repo documents, spanning proposal observability, review-evidence admissibility, the amendment hard rails, decision-record recommendations, and queued-work autonomy (negative-evidence admissibility, an observability guarantee, provenance- and evidence-form admissibility, KPI authorship-and-pairing, dry-dock, a draft-time gate-touch tripwire, and counter-case), plus the R1-R10 standing-instrument package folded into the review/verification surfaces. No new binding slots; the workspace tooling crosses to v2.8 (migrator gains the v2.7 → v2.8 hop, conformance accepts v2.8, fresh workspaces stamp v2.8) |
@@ -23,6 +24,75 @@ changes only through the
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.8.0] — 2026-08-07
+
+**`PROTOCOL v3.1`.** The protocol stamp crosses to v3.1 in this release. There
+is **no normative prose change**: every clause the skills carry is the text
+1.7.0 shipped, and the crossing is the stamp, the tooling that reads it, and
+this entry.
+
+The bundled workspace-lifecycle tooling crosses in the same commit, so no
+checkout is ever internally skewed: `migrate_workspace.py` gains **two** hops
+*beside* the ones it already carries — **v2.9 → v3.0** and **v3.0 → v3.1** — so
+a v2.5 workspace now walks SIX hops in one run of one checkout;
+`conformance_check.py` accepts v3.1 while keeping v2.5 through v3.0 green so
+older workspaces stay conformant under a newer checkout; `new_project.py`
+stamps fresh workspaces v3.1; and `mirror_check.py` gates on the new stamp.
+There are **no new binding slots**.
+
+**Why the stamp series skips a number.** This repository never stamped v3.0.
+1.7.0 taught `conformance_check.py` to ACCEPT a v3.0 pin so that a workspace
+ratified ahead of this checkout would not be refused by its gate, but no
+surface here ever emitted that stamp and no hop reached it — v3.0 was an
+accepted pin with no way to arrive at it. Both halves are now closed: v3.0
+remains accepted, and the ladder can both reach it and carry it forward.
+
+Three disclosures ride this release.
+
+- **The identifier locator in the private lane tooling has a measured gap.**
+  A locator that reads an entry's own identifier out of a heading was measured
+  against the live corpus and found to disagree with an independent
+  re-derivation on 752 headings, because it was keyed to the heading grammars
+  its author had seen rather than derived from the heading's structure. That
+  tooling is not part of this repository and nothing here depends on it; the
+  disclosure is here because the *lesson* is in the normative text this release
+  stamps — a detector keyed to one spelling certifies every other one.
+
+- **No workspace is restamped by this release, and three vendored checkers are
+  the named prerequisite.** Crossing the protocol version does not migrate any
+  live workspace; each migrates at its own freeze boundary, which is what
+  pin-aware conformance exists to permit. Three workspaces are known to carry
+  vendored `conformance_check.py` copies predating this cut. A stale vendored
+  copy does not learn a newer pin, so a workspace migrated to v3.1 while still
+  carrying one will BLOCK on its own hygiene gate — by design, not by defect.
+  Reconcile them (`tools/reconcile_vendored.py --fix`) before migrating.
+
+- **The `/wake` gate revision ships separately.** The REV3 revision to
+  `wake.md` is authored and reviewed but is NOT in this cut; it lands as its
+  own unit against its own review round, because a landing is approved against
+  one specific reviewed commit and folding a second object into an approved cut
+  makes a reviewed thing unreviewed.
+
+Line endings are now pinned: a `.gitattributes` declares `* text=auto eol=lf`.
+The defect it closes is narrower and worse than "checkouts get CRLF". This
+repository sets `core.autocrlf=false` locally, which overrides the system-wide
+`true` — and with no `.gitattributes`, `false` means git converts in **neither**
+direction. Every one of the 103 blobs at the previous commit carries LF, while
+**71 files in a working tree here carry CRLF**, left from checkouts taken before
+that local setting. Committing one of those 71 would therefore write CR bytes
+**into the blob**: hashed through this repository's clean filter today, CRLF
+content produces a different object than the same content with LF, and nothing
+stops it. Under the new attribute the same content normalizes on the way in and
+produces the LF object.
+
+It normalizes **no** existing committed content — re-running the clean filter
+over every tracked file stages nothing, and the run was checked against a
+deliberately dirtied file first, so the empty result is a measured zero rather
+than a dead code path. What changes is what a future commit can contain, which
+is the point: byte-level comparison of a working file against a committed one
+was failing for a reason unrelated to the change under review, and a release
+cut is exactly when someone reaches for that comparison.
 
 ## [1.7.0] — 2026-08-05
 
