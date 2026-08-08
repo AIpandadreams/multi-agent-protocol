@@ -87,7 +87,7 @@ FIRST when something looks broken — most of these masquerade as tool failures.
 
 ## Two-session concurrency
 
-- Shared artifacts (workbook, inbox files) may be written by the other session between
+- Shared artifacts (shared documents, inbox files) may be written by the other session between
   your reads — re-read immediately before any authorized edit.
 - Git commits may be GPG-gated: a cold gpg-agent HANGS non-interactive commits. Probe
   warmth first; if cold, queue the commit and tell the principal rather than bypassing

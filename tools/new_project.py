@@ -806,7 +806,7 @@ def stamp(name, dest, profile, roles, role_side, principal,
 
     # A principal of 'defer' (wizard defer, or `--principal defer`) becomes a
     # DEFERRED marker so conformance WARNs — never a literal 'defer' silently
-    # stamped as the principal's name (Codex M3).
+    # stamped as the principal's name (review M3).
     if principal is not None and principal.strip().lower() == DEFER_TOKEN:
         principal = "{{DEFERRED: principal's name}}"
 

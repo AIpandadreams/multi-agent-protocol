@@ -253,7 +253,7 @@ send, new-money, destructive-to-others, canonical merge, and changes to the
 gate/proxy system itself.
 
 **Block 6 — hygiene bounds.** What data may never appear in channel files,
-memory, or any pushed repo (customer identifiers, credentials, licensed
+memory, or any pushed repo (personal data, credentials, licensed
 content)? Where is the designated off-repo store for anything embargoed?
 What resources are PINNED (exact cloud project IDs, exact directories) —
 everything not pinned is forbidden by default.

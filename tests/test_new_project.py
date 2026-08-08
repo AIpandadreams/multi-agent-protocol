@@ -499,7 +499,7 @@ class AdoptionOnRefusalTest(unittest.TestCase):
             self.assertIn("ADOPTION CHECKLIST", out.getvalue())
 
 
-# ── wizard seeds from CLI flags (Codex M2) ───────────────────────────────────
+# ── wizard seeds from CLI flags (review M2) ──────────────────────────────────
 class WizardSeedTest(unittest.TestCase):
     def test_flags_prefill_defaults_enter_accepts(self):
         # every question answered with Enter ('' forever) — the resolved config
@@ -538,7 +538,7 @@ class WizardSeedTest(unittest.TestCase):
         self.assertEqual(cfg["role_side"]["owner"], "owner")  # fell back
 
 
-# ── defer on PRINCIPAL (Codex M3) ────────────────────────────────────────────
+# ── defer on PRINCIPAL (review M3) ───────────────────────────────────────────
 class PrincipalDeferTest(unittest.TestCase):
     def test_defer_principal_stamps_deferred_marker(self):
         with tempfile.TemporaryDirectory() as d:

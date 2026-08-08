@@ -58,7 +58,7 @@ rule can't silently erode. Rules are generic; bind thresholds/names per project.
 |---|---|---|
 | No personal/confidential data anywhere: records, specs, channel, memory | Privacy boundaries must hold in the collaboration artifacts, not just the product | Hygiene is an explicit review-focus item on every round |
 | Touch only PINNED_RESOURCES | Adjacent resources may hold other people's live data | The pin list is exact IDs/paths; everything not listed is forbidden, including reads |
-| Cross-boundary writes only via the SHARED_ARTIFACTS binding | Real deployments need the occasional shared workbook/ledger; an unexpressed exception erodes the whole boundary rule | Each shared artifact is bound with: path, writer, kept out of the commit surface (git-ignored or off-repo), principal per-batch go, re-read immediately before edit, writes announced in the channel. Anything not listed = the plain never-write rule |
+| Cross-boundary writes only via the SHARED_ARTIFACTS binding | Real deployments need the occasional shared document/ledger; an unexpressed exception erodes the whole boundary rule | Each shared artifact is bound with: path, writer, kept out of the commit surface (git-ignored or off-repo), principal per-batch go, re-read immediately before edit, writes announced in the channel. Anything not listed = the plain never-write rule |
 | Never bypass SIGNING | Signing is the principal's integrity guarantee | If signing is unavailable (e.g. cold key agent), queue the commit and tell the principal — never disable signing |
 | Absence → abstain/mark-unknown, never fabricate | Core product principle, extended to your own outputs | Unknowns labeled; estimates labeled as estimates |
 
