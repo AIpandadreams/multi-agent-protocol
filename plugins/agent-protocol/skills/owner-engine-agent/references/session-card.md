@@ -41,5 +41,5 @@ At a true session boundary (fresh/compaction/successor), run the full
 
 - Reviewer silent after 2 nudges / 2 heartbeats → dead-lane procedure.
 - Persistent peer disagreement (one argued round each way) → principal menu.
-- Scope surprise / new damage axis / protocol version mismatch → flag
+- Scope surprise / new impact axis / protocol version mismatch → flag
   principal, park protocol-sensitive actions.

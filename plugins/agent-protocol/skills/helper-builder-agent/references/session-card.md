@@ -51,5 +51,5 @@ At a true session boundary (fresh/compaction/successor), run the instantiated
   escalation.
 - Size tripwire crossed → same-day principal flag.
 - Persistent owner disagreement (one argued round each way) → principal menu.
-- Scope surprise / new damage axis / protocol version mismatch → flag
+- Scope surprise / new impact axis / protocol version mismatch → flag
   principal, park protocol-sensitive actions.

@@ -45,7 +45,7 @@ Examples below are anonymized but real.
   delegated wave will read gets a frozen snapshot (e.g., `git archive` at a pinned sha)
   so the owner's tree stays untouched and your reads stay reproducible and reviewable.
 - **The ONLY sanctioned cross-boundary writes are artifacts listed in the project's
-  SHARED_ARTIFACTS binding** (e.g., a common workbook the principal designated), each
+  SHARED_ARTIFACTS binding** (e.g., a shared artifact the principal designated), each
   under fixed conditions: kept out of the commit surface (git-ignored or off-repo), a
   current per-batch go from the principal, re-read immediately before any edit, and the
   write announced in the channel. Anything not listed falls under the plain never-write
@@ -110,11 +110,11 @@ Examples below are anonymized but real.
 
 ## 6. Tripwires, embargoes, standing policies
 
-- Any census/register result crossing the agreed size threshold (500 rows in the
-  originating deployment) → **same-day flag to the principal**, not buried in a record.
+- Any census/register result crossing the agreed size threshold (the value set in your
+  bindings) → **same-day flag to the principal**, not buried in a record.
 - Outbound external communication runs under whatever tiered policy the principal set
   (default: drafts only; the principal sends).
-- A new damage axis or scope surprise → surface to the principal and the owner
+- A new impact axis or scope surprise → surface to the principal and the owner
   immediately; never absorb silently.
 - Persistent builder↔owner disagreement (a boundary, a ruling, an intake dispute):
   one argued round each way with evidence, in the channel; still split → both sides

@@ -475,7 +475,7 @@ def _ver_tuple(v):
 # (so a second marker of ANY version shape — `[PROTOCOL v3.0]`, `[PROTOCOL
 # v26]` — breaks the exactly-one rule), then the single survivor must match
 # the strict well-formed stamp. A v2.x-only counting regex would let a
-# non-v2.x second marker escape the count (codex r3 probe).
+# non-v2.x second marker escape the count (review r3 probe).
 _BANNER_ANY_STAMP_RE = re.compile(r"\[PROTOCOL\b[^\]]*\]")
 _BANNER_STAMP_RE = re.compile(r"\[PROTOCOL (v\d+\.\d+)\]")
 

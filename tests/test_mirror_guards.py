@@ -205,7 +205,7 @@ class TwinGuardTest(unittest.TestCase):
         # read as real structure — for FENCED and INDENTED code alike (mask_code
         # blanks both). This is a green-EXPECTED test, so it must not pass merely
         # because nothing was planted: a SENTINEL asserts the markup really landed
-        # in each file before the green is trusted. (Codex r5: the prior version
+        # in each file before the green is trusted. (review r5: the prior version
         # asserted only `assertNotIn`, which the clean tree already satisfies.)
         cases = {
             "fenced": (
@@ -233,7 +233,7 @@ class TwinGuardTest(unittest.TestCase):
                 # the promised green: matched code in BOTH twins must not just
                 # avoid a twin-drift finding, it must leave the whole gate green —
                 # otherwise an unrelated red before the twin comparison would still
-                # satisfy assertNotIn (codex r6).
+                # satisfy assertNotIn (review r6).
                 self.assertEqual(rc, 0, out)
                 self.assertNotIn("twin drift", out)
 

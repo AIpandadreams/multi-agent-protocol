@@ -1949,7 +1949,7 @@ class TrackedCaseCollisionTest(unittest.TestCase):
             self.assertIn("non-portable tracked path", out)
 
     def test_a_normalization_variant_index_pair_is_a_finding(self):
-        """Round 16 (judge NIT, folded): casefold() does not collapse NFC/NFD
+        """Round 16 (review nit, folded): casefold() does not collapse NFC/NFD
         spellings of one name, which collide on a normalization-insensitive
         filesystem — the collision key now folds NFC first."""
         with repo_copy() as repo:
