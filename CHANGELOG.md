@@ -65,6 +65,64 @@ Process: adopted with this release, normal releases land via the PR-flow convent
 the owner direct-push bypass is retained as an emergency escape hatch only, its
 bypass warning remaining the audit record when used.
 
+## [1.9.0] — 2026-08-07
+
+(Heading-form section added 2026-08-09 at the v1.9.1 release completion — the
+content below is the reviewed release-table row for 1.9.0, reshaped into the
+format every other release carries; nothing is new text. See the v1.9.1 release
+notes for why 1.9.0 shipped untagged.)
+
+**Documentation release.** Two documents added. `docs/PLAN-LEDGER.md` specifies the
+plan-ledger obligation model — typed plan files, `done_when` verification (a step is
+finished when a command proves it, not when someone reports it), mechanical gate
+blocking, and liveness as a positive assertion rather than an inference from silence.
+It is a SPECIFICATION: none of the five parts it describes ships as tooling in this
+release, and the document carries a per-part shipped/deferred status table. A
+vendored-checker migration note joins `docs/MIGRATION.md`: the upgrade ordering that
+avoids the two observed failure modes (a loud wake-stop from a refused declaration,
+and the silent loss of local guards under a straight re-vendor — the quiet one is the
+dangerous one), conformance changes framed by the age of YOUR copy rather than by this
+release, and two input-compatibility breaks that no name-level diff can show (sentinel
+cells in `NON_ROLE_DIRS` are no longer normalized away; `ROLE_LOCK` requires the colon
+form). Deferred, stated in full — a deferral that is stated is a scope decision; a
+deferral that is silent is a broken promise: the enforcement check's source and its
+test suite (309 KB across 3 files — a unit of its own, owed its own review round), the
+compaction re-injection hook, the clock-sweep daemon and its heartbeat stamp, wake
+integration, and any plan-file schema or example file (no `plans/` directory ships; a
+fresh checkout contains no plan files). Also in this release: the creator-seat charter
+revision — cold-start restated to what is true of a live deployment (a wake may bind
+the name; the mandate is read, not resolved), a **governed-before-used** precondition
+placed at the permission sites rather than in a distant denial (provisioning a
+directory does not make it a coordination surface; verification of the checker
+actually in force does), a transition provision (ungoverned means no surface, never no
+work), a rule that a name the resolver decides at tier 1 must never silently displace
+a workspace's own side name of the same spelling (ambiguity takes the stop-and-ask
+path), and the documentation-pipeline mandate reworded for a public audience; the
+`/wake` command REV3 revision lands as its own unit against its own round, exactly as
+1.8.0 promised, with its protocol stamp reconciled to v3.1 at landing (the frozen
+revision predated the 1.8.0 stamp crossing — a one-token deviation from the frozen
+source, named here rather than silent), and with two remaining private working-paper
+references caught by the pre-publication scan and dropped at the gate — the same class
+the revision had already removed elsewhere, a second named deviation; a comment-only
+re-grounding in `tools/conformance_check.py` (the identities-that-are-not-seats
+block's stated grounds no longer held once tier 1 self-resolves the identity; the
+conclusion survives on a measured ground — the identity check and the seat positions
+read the same condition), which also removes a private line-address citation from the
+tip (the reference remains in published history — see Known and accepted); the SOP-
+registry collision lesson aligned to the repo's conditional form; two unescaped
+placeholder tokens in `CREATOR-SEAT-BOOTSTRAP` escaped (backtick spans in the `.md`,
+code entities in the `.html`, so the twins stay convergent under the mirror check); an
+incident-case-study count corrected (nine → eleven, re-derived structurally rather
+than by prefix counting — the miscount survived because one case study breaks the
+lead-in shape the old count keyed on); `.claude/` added to `.gitignore` (session-tool
+state should never ride a clone); and the CI scrub step gains an honest name — it is a
+wiring check running the public example pattern list, not a leak gate, and its green
+must never be read as leak assurance. Known and accepted: some earlier commit messages
+in this repository's published history contain internal record identifiers; they are
+left in place deliberately — rewriting published history would change every commit
+hash anyone may have referenced — and checking for them is part of the pre-publication
+routine going forward, which is the half that was actually missing.
+
 ## [1.8.0] — 2026-08-07
 
 **`PROTOCOL v3.1`.** The protocol stamp crosses to v3.1 in this release. There
