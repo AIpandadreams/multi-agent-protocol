@@ -869,7 +869,16 @@ def stamp(name, dest, profile, roles, role_side, principal,
             "last tick: none (never ticked)\n"
             "next TASKQUEUE id: T4\n"
             "next channel entry: 1 · per-peer last-seen: none\n"
-            "next auth grant id: orchestrator-0001 · auth-log tail: header\n"
+            # RESERVED NON-MINTABLE placeholder — deliberately not a concrete
+            # id. A concrete number here can collide byte-for-byte with a real
+            # grant in a downstream workspace's auth-log, so scaffolding a
+            # fresh project would emit a string that reads as a live grant.
+            # This is the same placeholder form the orchestrator START_SESSION
+            # reference already documents; the scaffold was the outlier.
+            # The angle brackets are the operative part: a checker keying on
+            # the family matches any concrete number, so the shape itself has
+            # to be broken, not merely the digits changed.
+            "next auth grant id: orchestrator-<NNNN> · auth-log tail: header\n"
             "dispatch log: memory/orchestrator/dispatch-log.md\n"
             "in-flight dispatches: none\n"
             "briefings: last sent none · next due first-morning\n"
