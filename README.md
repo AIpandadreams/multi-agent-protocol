@@ -151,7 +151,8 @@ tests/                      unit suite for the tools
 .github/                    CI workflows (mirror check et al.)
 docs/                       quickstart · architecture · configurations ·
                             protocol · plan ledger · advanced · design · FAQ
-examples/                   a worked end-to-end cycle you can read like a story
+examples/                   a worked end-to-end cycle you can read like a story,
+                            a sample poller config, sample scrub patterns
 ```
 
 ## Documentation
@@ -176,7 +177,7 @@ for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 - [CLOUD](docs/CLOUD.md) — running peers on separate machines over a git remote (the git-sync transport)
 - [DESIGN](docs/DESIGN.md) — what's proven, what's deliberately simplified, what's roadmap
 - [REVIEW_CONVERGENCE](docs/REVIEW_CONVERGENCE.md) — the independent-review evidence trail behind the early releases (through v1.2.7; later releases' evidence lives in the CHANGELOG entries and their PRs)
-- [CREATOR-SEAT-BOOTSTRAP](docs/CREATOR-SEAT-BOOTSTRAP.md) — a single-file handoff that turns a fresh Claude session into a protocol creator: design interview, SOP catalog, runbook library, incident case studies
+- [CREATOR-SEAT-BOOTSTRAP](docs/CREATOR-SEAT-BOOTSTRAP.md) — a single-file handoff that turns a fresh Claude session into a protocol creator: design interview, SOP catalog, runbook library, incident case studies (a rendered [HTML twin](docs/CREATOR-SEAT-BOOTSTRAP.html) ships beside it; the pair is convergence-gated and fails review together)
 - [CREATOR-SEAT-CHARTER](docs/CREATOR-SEAT-CHARTER.md) — the durable charter for a "chartered external seat": what a standing, repo-isolated, orchestrator-fronted stewardship session is, its mandate and boundaries
 - [SOP-REGISTRY](docs/SOP-REGISTRY.md) — principal-ruled standing orders over the protocol, and the cross-team registry pattern
 - [FAQ](docs/FAQ.md)

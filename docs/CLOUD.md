@@ -216,7 +216,8 @@ git-sync deployments set `TRANSPORT = git-sync`, `WORKSPACE_REMOTE` to the
 remote URL + default branch, and keep any git credential in `SECRETS` (host
 env / connector only, never committed); the `2agent.git-sync` /
 `3agent.git-sync` profiles select the transport at stamp time. Those slots and
-profiles ship in this release — see [profiles/README.md](../profiles/README.md)
+profiles ship in the current checkout — see
+[profiles/README.md](../profiles/README.md)
 (the profile matrix that documents both `.git-sync` profiles) and
 the binding-slot glossary. `CHANNEL` and `MEMORY` stay repo-relative; only each
 host's clone path is machine-specific, and that lives in the host profile, never

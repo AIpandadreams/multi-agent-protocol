@@ -184,13 +184,13 @@ but two live runs earned these notes:
 
 # Migrating a vendored conformance checker
 
-## Why this release has an ORDER, and what breaks if you ignore it
+## Why this migration (added at repo release 1.9.0) has an ORDER, and what breaks if you ignore it
 
 Most releases here migrate by running the migration tool. **This one does not**, and the
 reason is worth stating because it was found by running it rather than by reading it.
 
-Three things interact — and ⛔ **they are not all changes in this release**, which is
-itself part of why the ordering bites:
+Three things interact — and ⛔ **they did not all land in the release this note
+shipped with (1.9.0)**, which is itself part of why the ordering bites:
 
 1. the conformance checker's vocabulary carries an identity beyond the positional roles —
    **already shipped, in an earlier cut** (reachable from both `v1.7.0` and `v1.8.0`);
@@ -238,8 +238,8 @@ could run for months.** Loud breakage is the cheap kind.
    canonical has never defined? ⛔ **"Out of date" and "carries local code" are different
    conditions with different remedies, and one tool reporting both as "needs attention"
    will get one of them wrong.**
-   ⚠ **Verify this by hand in this release.** The tooling does not yet separate the two
-   conditions for you, so diff your copy against the canonical file and read what your
+   ⚠ **Verify this by hand — true as of repo release 1.9.1.** The tooling does not yet
+   separate the two conditions for you, so diff your copy against the canonical file and read what your
    side defines that canonical does not. It is the one step of this order that is manual,
    and it is the step that matters most — ⭐ **the whole failure mode below is a local
    definition nobody knew was local.**
@@ -256,7 +256,8 @@ could run for months.** Loud breakage is the cheap kind.
 
 ## Conformance changes since your last vendored copy
 
-⚠ **Framed by your copy's age, not by this release — deliberately.** Several of these
+⚠ **Framed by your copy's age, not by the release this note shipped with (1.9.0) —
+deliberately.** Several of these
 landed in **earlier** cuts: the identity-vocabulary refusal, for instance, is reachable
 from **both `v1.7.0` and `v1.8.0`** (verified against the tags, not inferred). If you
 vendored before those, they are new *to you* even though they are not new to the project.

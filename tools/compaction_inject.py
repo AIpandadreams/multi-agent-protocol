@@ -32,8 +32,11 @@ Two modes, wired to two harness events:
             never serialized anywhere the filesystem can attest) — and the
             file is writable by any seat, so an earlier revision was
             defeated by a hand-written sidecar re-opening the gate.
-            The gate stays CLOSED until an evidence-bearing `--ack`
-            echoes the nonce out of the injected digest (or supplies a fresh
+            The gate stays CLOSED until an evidence-bearing ack —
+            the `--ack` command of the ENFORCEMENT GATE (plan_gate.py,
+            deferred to its own release), NOT a mode of this tool; this
+            tool's modes are `--mark | --inject` only — echoes the nonce
+            out of the injected digest (or supplies a fresh
             ledger sha). Further: the ack does NOT clear
             the mark either — the mark is RETAINED so the gate re-derives
             the ledger sha against the acked receipt at every subsequent

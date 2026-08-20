@@ -13,6 +13,10 @@ been removed; every mechanism, SOP, runbook, and burned lesson is complete.*
 *Currency: the current protocol version is v3.1; the mechanisms in this
 document have not been re-verified against v3.1.*
 
+*A rendered twin, `CREATOR-SEAT-BOOTSTRAP.html`, ships beside this file for
+browser reading; the two are convergence-gated (`tools/mirror_check.py`) and
+fail review as a pair — amend both or neither.*
+
 ---
 
 ## Part 0 — How to use this document
@@ -300,7 +304,7 @@ document the collision and require team-qualified citations ("t1-SOP-2");
 | 2b | **Rolling decisions sheet** (tandem) | Maintain a running sheet of staged decisions with recommendations so the principal can rule item-by-item in one sitting and gates never starve the work. |
 | 3 | **Fixed fallback judge** | When the independent reviewer is down, the fallback judge is ONE fixed strong model, chosen by the principal, always. If the author IS that model, the judge runs in a fresh isolated session (different-instance replaces different-model). No silent substitutions ever. |
 | 4a | **Persistent wake monitors** | Self-expiring pollers are banned as a wake path. Persistent monitors, armed-and-verified at EVERY wake and resume (see Part 7, the deaf-seat incident). |
-| 4b | **End-of-turn guard** | Never end a turn with a commissioned, ungated unit queued-but-unstarted while claiming progress. Execution wording stays honest: dispatched ≠ done. |
+| 4b | **End-of-turn honesty guard** | Never end a turn with a commissioned, ungated unit queued-but-unstarted while claiming progress. Execution wording stays honest: dispatched ≠ done. |
 | 5 | **Overnight queue-emptying** | Every team, every overnight window: the goal is an EMPTY unblocked-work queue by morning. Gated work is staged-to-ready; blockers are named. |
 | 6 | **Reviewer model pin** | The reviewer CLI runs one pinned model at pinned effort via config. Nobody passes a per-run model flag; the principal may override per-round by explicit live word only, never standing. Record each pin's EFFECTIVE DATE — ledger rows predating it are conforming under the prior pin, not violations (a dated pin preempts false-positive audit findings). |
 | 7 | **Convergence before decisions** | Every decision package presented to the principal for click-through ruling first passes a convergence review: the cross-vendor reviewer + an isolated strong-Claude judge, one pass per batch. Both confirm → present, citing it. A surviving split is DISCLOSED in the question itself. Reviewer down → single-judge + disclose. Package FACTS are written in STRICT tense — past for resolved-during-prep, future for still-open: a reviewer cannot converge an ambiguous tense, and the principal cannot rule on one. |

@@ -17,7 +17,9 @@ scale *out* to more teams without any team gaining reach into another.
 for an identical-looking action. Each team's gates are satisfied only by the
 principal's word *in that team*, or (where PROXY_AUTH is on) by that team's own
 auth-log lane. This is the same first-principle as "authorization never rides
-the channel" (channel-core), lifted one level up: a team boundary is at least as
+the channel"
+([channel-core](../plugins/agent-protocol/skills/agent-core/references/channel-core.md)),
+lifted one level up: a team boundary is at least as
 strong as a channel boundary.
 
 ## The only sanctioned crossover: a relay lane

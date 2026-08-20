@@ -1,0 +1,7 @@
+{
+  "workspaces": [
+    "path/to/workspace-a",
+    "path/to/workspace-b"
+  ],
+  "codex_cmd": "codex exec --sandbox read-only -C {workspace}"
+}

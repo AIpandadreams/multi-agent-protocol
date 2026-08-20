@@ -1,6 +1,7 @@
 # Design notes — what's proven, what's simplified, what's next
 
-This release is a distillation, not a prototype. This page records what
+The released protocol — the current checkout you are reading — is a
+distillation, not a prototype. This page records what
 the released subset is distilled *from*, so you can judge which guarantees
 are evidence-backed and which are engineering judgment.
 
@@ -25,7 +26,7 @@ added in that reviewed lineage, not bolted on.
 | channel discipline survives long collaborations | the 2-agent configuration ran 50+ working rounds on production work under the ancestor protocol |
 | append-only + monotonic-state CI catches tampering | CI checks fire on every push of every workspace; the checks fail closed (an unenumerable diff is a failure, not a pass) |
 
-## What this release deliberately simplifies
+## What the released protocol deliberately simplifies
 
 - **PROXY_AUTH ships off.** It is the most complex subsystem and most
   deployments never need it — first-hand approval in whichever session

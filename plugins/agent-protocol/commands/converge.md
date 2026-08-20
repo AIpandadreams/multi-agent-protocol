@@ -8,7 +8,8 @@ argument-hint: "<artifact>... [--rounds N]"
 Run the multi-round convergence cycle over an **artifact set**: peer round →
 cross-vendor round → fix-confirmation round(s) → stop on the reviewer's own
 convergence declaration. The rules live in
-`agent-core/references/review-convergence.md` (layered over `review-core.md`);
+`plugins/agent-protocol/skills/agent-core/references/review-convergence.md`
+(layered over `plugins/agent-protocol/skills/agent-core/references/review-core.md`);
 this command is the procedure that follows them — it references, never
 restates.
 

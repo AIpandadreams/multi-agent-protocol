@@ -153,20 +153,20 @@ it is one active writer per role at a time; switching which machine is live is
 ## Other bindings, git-sync flavor
 
 - **TRANSPORT** = `git-sync` (the binding slot that selects this profile;
-  conformance checks the profile↔slot agreement). Ships in this release.
+  conformance checks the profile↔slot agreement). Ships in the current checkout.
 - **WORKSPACE_REMOTE** = the git remote URL + default branch the workspace
-  synchronizes through (this transport's rendezvous). Ships in this release.
+  synchronizes through (this transport's rendezvous). Ships in the current checkout.
 - **CHANNEL** / **MEMORY** = **repo-relative** paths (`channel/`,
   `memory/<role>/`) under the provisioned checkout — the same repo-relative
   bindings local-fs uses; only the *machine* clone path differs, and that
   absolute path is host-profile data, never a committed binding.
 - **SECRETS** = host environment / platform connector only — a git credential or
   token lives in the scheduler's secret store, **never committed** to the
-  workspace. Ships in this release.
+  workspace. Ships in the current checkout.
 - **HEARTBEAT** = a scheduled headless wake per role (see the credential
   doctrine); note any per-tick cost under the binding.
 - **Profiles** = `2agent.git-sync` / `3agent.git-sync` select this transport at
-  stamp time. Ship in this release.
+  stamp time. Ship in the current checkout.
 - **SIGNING**, **REVIEWER**, **PRINCIPAL interface** = as bound per deployment
   (unchanged by transport).
 

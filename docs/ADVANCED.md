@@ -82,7 +82,10 @@ dependency).
 
 Alternatives, in preference order:
 
-1. Any other second-vendor CLI — adapt `codex_cmd` in `poller.json`.
+1. Any other second-vendor CLI — adapt `codex_cmd` in your `poller.json`
+   (start from the shipped sample,
+   [examples/poller.example.json](../examples/poller.example.json): keys are
+   `workspaces` and `codex_cmd`, with `{workspace}` substituted per sweep).
 2. A Claude session pinned to a model different from the author's, run as
    a manual reviewer against the same request/verdict file contract.
 3. (Dead-lane fallback only) the author's vendor, different model — the
@@ -105,7 +108,7 @@ findings, followed by blind judge passes. `tools/wave_coverage_check.py`
 verifies the partition actually covered the corpus (the failure mode is
 silent: a wave that skips a shard *looks* identical to one that didn't).
 The full procedure is in the builder skill
-(`helper-builder-agent/references/wave-census-protocol.md`). Niche until
+([wave-census-protocol.md](../plugins/agent-protocol/skills/helper-builder-agent/references/wave-census-protocol.md)). Niche until
 you need it; when you need it, it's the difference between "we checked
 everything" meaning something or not.
 
@@ -266,7 +269,8 @@ orchestrator). The canonical role is load-bearing: `memory/<role>/` paths,
 `start/START_SESSION.<role>.md`, ROLE_LOCK, the auth-log chain, and every
 append-only counter key off it and must never change. You can, however, rename
 the display name (e.g. `builder` → `helper`) without touching any of that. See
-the `SIDE_NAMES` / `ROLE_ALIASES` slots in `binding-slots.md`.
+the `SIDE_NAMES` / `ROLE_ALIASES` slots in
+[binding-slots.md](../plugins/agent-protocol/skills/agent-core/references/binding-slots.md).
 
 Do it at a **session boundary**, not mid-flight:
 

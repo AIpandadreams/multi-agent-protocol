@@ -1685,6 +1685,67 @@ if REGISTRY.is_file() and BOOT_MD.is_file():
               f"but the catalog in CREATOR-SEAT-BOOTSTRAP.md defines "
               f"{len(numbered)} (13a keeps the .html twin in step with the .md)")
 
+    # 14b/14c. The SAME registry sentence also claims the RULE count ("eleven
+    # rules, since two numbers carry an a/b split") and then NAMES every rule.
+    # The 2026-08 currency review (F-31) found the gap: the nine-figure was
+    # gated while the eleven-figure, the a/b claim, and the names themselves
+    # were not — and a name drifted ("End-of-turn guard" vs "end-of-turn
+    # honesty guard") under a green gate. Same FAIL-CLOSED posture as 14: if
+    # the sentence shape stops matching, that is a finding, never a silent skip.
+    rows = re.findall(r"^\|\s*(\d+)([a-z]?)\s*\|\s*\*\*(.+?)\*\*",
+                      mask_code(text(BOOT_MD)), re.M)
+    reg_txt = text(REGISTRY)
+    m2 = re.search(r"(\w+) rules, since\s+(\w+)\s+numbers carry\s+an a/b split",
+                   reg_txt)
+    if m2 is None:
+        findings.append(
+            "count gate (14b): SOP-REGISTRY.md no longer states its rule count "
+            "as '<word> rules, since <word> numbers carry an a/b split' — the "
+            "eleven-figure and the split claim are no longer machine-checkable "
+            "(reword back, or update the gate). Not a silent skip.")
+    else:
+        rules_claim = WORDS.get(m2.group(1).lower())
+        split_claim = WORDS.get(m2.group(2).lower())
+        check(rules_claim == len(rows),
+              f"count drift: SOP-REGISTRY.md advertises {m2.group(1)} rules but "
+              f"the catalog in CREATOR-SEAT-BOOTSTRAP.md defines {len(rows)} "
+              "rows (a/b split rows count as separate rules)")
+        lettered = {n for n, letter, _ in rows if letter}
+        check(split_claim == len(lettered),
+              f"count drift: SOP-REGISTRY.md says {m2.group(2)} numbers carry "
+              f"an a/b split but the catalog splits {len(lettered)}")
+    m3 = re.search(r"Part 5:\s*(.+?)\.\s*Adopt", reg_txt, re.S)
+    if m3 is None:
+        findings.append(
+            "count gate (14c): SOP-REGISTRY.md no longer lists the catalog "
+            "names between 'Part 5:' and 'Adopt' — name equality is no longer "
+            "machine-checkable (reword back, or update the gate). Not a "
+            "silent skip.")
+    else:
+        def _sop_name(s: str) -> str:
+            # case-, hyphen- and slash-insensitive: the roster hyphenates
+            # ("convergence-before-decisions") where the catalog spaces, and
+            # the catalog writes "No-idle / continuous forward progress".
+            s = re.sub(r"[/\-‐-―]", " ", s.lower())
+            return re.sub(r"\s+", " ", s).strip()
+        reg_names = [_sop_name(n)
+                     for n in m3.group(1).replace("\n", " ").split(",")]
+        cat_names = [_sop_name(n) for _, _, n in rows]
+        for miss in [n for n in cat_names if n not in reg_names]:
+            findings.append(
+                f"name drift: catalog rule '{miss}' "
+                "(CREATOR-SEAT-BOOTSTRAP.md) is absent from SOP-REGISTRY.md's "
+                "roster sentence")
+        for extra in [n for n in reg_names if n not in cat_names]:
+            findings.append(
+                f"name drift: SOP-REGISTRY.md's roster names '{extra}' which "
+                "the CREATOR-SEAT-BOOTSTRAP.md catalog does not define")
+        if not (set(reg_names) ^ set(cat_names)) and reg_names != cat_names:
+            findings.append(
+                "name drift: SOP-REGISTRY.md's roster and the "
+                "CREATOR-SEAT-BOOTSTRAP.md catalog carry the same names in a "
+                "DIFFERENT ORDER — the roster mirrors the catalog order")
+
 # Relaxations are printed on EVERY run, green or red, before the verdict. A gate
 # that quietly runs a reduced set still prints the word "green", and that word is
 # then a lie by omission — the reader has no way to tell full coverage from

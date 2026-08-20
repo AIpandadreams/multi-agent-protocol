@@ -77,7 +77,7 @@ wrong, but never that the rendered twin beside it still shows last week's
 numbers. And the fingerprint digests the SET rather than the diff — an unchanged
 member emits no diff bytes, so a diff digest cannot pin it.
 
-The reviewer (Codex, via the poller) answers in
+The reviewer (a Codex-class second-vendor CLI, via the poller) answers in
 `channel/verdict_builder_r03.md`:
 
 ```

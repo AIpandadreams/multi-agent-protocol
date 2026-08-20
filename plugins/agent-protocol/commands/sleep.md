@@ -20,7 +20,7 @@ Optional note from the principal to weave into the handover: $ARGUMENTS
    (a directory with `BINDINGS.md` and `memory/<role>/`).
 
 2. **Checkpoint memory** (`memory/<role>/MEMORY.md`), per the memory
-   discipline (`agent-core/references/memory-discipline.md`). Your role here
+   discipline (`plugins/agent-protocol/skills/agent-core/references/memory-discipline.md`). Your role here
    is the CANONICAL role (owner / builder / orchestrator) even if the
    workspace binds a different display name for your side — the
    `memory/<role>/` path and your commit identity always use the canonical

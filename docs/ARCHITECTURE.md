@@ -136,7 +136,8 @@ mechanisms and the "how much rope" dial are in [AUTONOMY.md](AUTONOMY.md).
 The same review discipline that gates work also gates changes to the
 protocol. An agent that finds a rough edge drafts an amendment; it rides a
 reviewed PR to a human merge and a version bump
-(`agent-core/references/self-improvement-protocol.md`). Agents propose; only
+(`plugins/agent-protocol/skills/agent-core/references/self-improvement-protocol.md`).
+Agents propose; only
 the principal adopts; and the authorization/gate rules are principal-locked
 so no agent can amend the constraints that bind it. `tools/mirror_check.py`
 guards the growing ruleset against structural drift (dedup, banned vocab,
