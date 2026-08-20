@@ -11,9 +11,12 @@ under that same discipline — an adversarial reviewer (a non-Claude model)
 reviews the changed artifact sets across successive rounds until it returns
 a convergence declaration in its own words.
 
-This file is the transparency artifact: each release's review series is
-summarized here so an adopter can see the evidence trail rather than take
-"reviewed" on faith. The most recent series is first.
+This file is the transparency artifact — with an honest coverage bound:
+**the series recorded here run through v1.2.7.** Later releases (1.3.0
+onward) were reviewed under the same discipline, but their evidence lives in
+their CHANGELOG entries and the PRs that landed them, not in per-release
+series summaries here. Within what this file covers, the most recent series
+is first.
 
 ## What "convergence" means here
 

@@ -157,7 +157,7 @@ for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 - [ADVANCED](docs/ADVANCED.md) — proxy authorization, integrity CI, reviewer bridge, model presets
 - [CLOUD](docs/CLOUD.md) — running peers on separate machines over a git remote (the git-sync transport)
 - [DESIGN](docs/DESIGN.md) — what's proven, what's deliberately simplified, what's roadmap
-- [REVIEW_CONVERGENCE](docs/REVIEW_CONVERGENCE.md) — the independent-review evidence trail behind this release
+- [REVIEW_CONVERGENCE](docs/REVIEW_CONVERGENCE.md) — the independent-review evidence trail behind the early releases (through v1.2.7; later releases' evidence lives in the CHANGELOG entries and their PRs)
 - [CREATOR-SEAT-BOOTSTRAP](docs/CREATOR-SEAT-BOOTSTRAP.md) — a single-file handoff that turns a fresh Claude session into a protocol creator: design interview, SOP catalog, runbook library, incident case studies
 - [CREATOR-SEAT-CHARTER](docs/CREATOR-SEAT-CHARTER.md) — the durable charter for a "chartered external seat": what a standing, repo-isolated, orchestrator-fronted stewardship session is, its mandate and boundaries
 - [SOP-REGISTRY](docs/SOP-REGISTRY.md) — principal-ruled standing orders over the protocol, and the cross-team registry pattern
