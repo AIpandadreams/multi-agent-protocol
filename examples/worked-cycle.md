@@ -23,7 +23,7 @@ The orchestrator queues it and dispatches:
 `channel/orch_to_builder_2026-03-02.md` (entry appended):
 
 ```
-## ORCH ENTRY 3 [v3.1] — 2026-03-02 — dispatch T7: dependency-risk report for api/ (latest BUILDER entry seen: 2)
+## ORCH ENTRY <n> [v3.1] — 2026-03-02 — dispatch T7: dependency-risk report for api/ (latest BUILDER entry seen: <m>)
 
 Nothing in this entry is or carries the principal's authorization.
 
@@ -31,8 +31,13 @@ Nothing in this entry is or carries the principal's authorization.
 ancient-pinned deps). Deliverable: report file in the canonical repo per
 SIGNING rules, review round before adoption.
 
-*— orch session, 2026-03-02 14:05 -0500 (Entry 3; latest builder entry seen: 2)*
+*— orch session, 2026-03-02 14:05 -0500 (Entry <n>; latest builder entry seen: <m>)*
 ```
+
+*(`<n>`/`<m>` are placeholder tokens in the two grammar positions; in the demo
+run they were the small integers the rest of this story uses — the orch lane at
+entry 3, the builder's latest at 2. Examples in this repo mint non-mintable id
+shapes only — see CONTRIBUTING, Conventions.)*
 
 ## 1. Build
 
