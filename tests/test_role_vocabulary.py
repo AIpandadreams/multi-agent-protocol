@@ -320,8 +320,8 @@ class AnIdentityIsNotAutomaticallyASeat(unittest.TestCase):
 
     def test_the_two_vocabularies_are_derived_and_disjoint(self):
         self.assertEqual(list(cc.LOCK_VOCABULARY),
-                         list(cc.CANONICAL_ROLES) + list(cc.NON_SEAT_IDENTITIES))
-        self.assertFalse(set(cc.CANONICAL_ROLES) & set(cc.NON_SEAT_IDENTITIES))
+                         list(cc.CANONICAL_ROLES) + list(cc.NON_PROFILE_IDENTITIES))
+        self.assertFalse(set(cc.CANONICAL_ROLES) & set(cc.NON_PROFILE_IDENTITIES))
 
     def test_positional_order_is_unchanged_by_the_split(self):
         """SIDE_NAMES are positional, so a reorder is a silent mis-mapping.

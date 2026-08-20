@@ -63,7 +63,12 @@ On session start, resolve every slot from project memory before doing anything
 else. If a slot is unbound on a new project, ask the principal once and record
 the answer in memory.
 
-## The four parties and what each may do
+## The four authority parties and what each may do
+
+(In a 3-agent deployment a fifth participant exists — the orchestrator — but
+it is an interface, not an authority: it carries bytes, never permission. The
+vocabulary of record is the seat & identity table in
+`agent-core/references/binding-slots.md`.)
 
 | party | owns | may never |
 |---|---|---|
@@ -168,7 +173,7 @@ The orchestrator's binding families do NOT attach to you in this mode:
 FLAVOR, TASKQUEUE / DUTIES / TICKS, and PROXY_AUTH are orchestrator slots.
 In particular PROXY_AUTH stays **off by construction** — no relay lane
 exists without an orchestrator, so every gate is opened first-hand in the
-session that acts, exactly as in the four-party spine above. When the
+session that acts, exactly as in the four-authority-party spine above. When the
 orchestrator duties are split back out into their own session (the default
 3-agent shape), nothing in this contract changes — see
 `../orchestrator-agent/SKILL.md` for that role.

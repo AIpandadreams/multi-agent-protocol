@@ -4,7 +4,7 @@
 > in ONE place: `../../agent-core/references/review-core.md` — read it before
 > your first round of a session. This file adds the builder's round mechanics,
 > round types, and honesty disciplines. The multi-round convergence cycle —
-> four seats, round budget, adjudicating reviewer disagreement, anti-anchoring
+> the four review stages, round budget, adjudicating reviewer disagreement, anti-anchoring
 > — lives in `../../agent-core/references/review-convergence.md`. Conflicts with
 > review-core are bugs to report, and review-core wins.
 

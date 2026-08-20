@@ -141,7 +141,7 @@ DEFAULT_SIDE = {role: side for role, side in ROLE_VOCABULARY}
 # that `wake.md` resolves no such name at tier 1 — grounds that no longer hold:
 # tier 1 now self-resolves `creator`, though only in a workspace that provisions
 # `memory/creator/`. The conclusion survives on a measured ground instead: the
-# identity check reads `name in NON_SEAT_IDENTITIES and name in roles`, and
+# identity check reads `name in NON_PROFILE_IDENTITIES and name in roles`, and
 # `roles` is `infer_roles()` — the `memory/<role>/` directory names. Those are
 # the SAME condition, so the block already fires exactly where a collision is
 # possible, at every seat position, and stays silent where it is not.
@@ -151,11 +151,16 @@ DEFAULT_SIDE = {role: side for role, side in ROLE_VOCABULARY}
 # artifacts (ROLE_LOCK, `memory/<role>/`, `start/START_SESSION.<role>.md`) are
 # about IDENTITIES. A lock line may name any identity; only a seat gets a
 # positional slot.
-NON_SEAT_IDENTITIES = ("creator",)
-LOCK_VOCABULARY = tuple(CANONICAL_ROLES) + NON_SEAT_IDENTITIES
-assert not set(CANONICAL_ROLES) & set(NON_SEAT_IDENTITIES), (
+# Named NON_PROFILE_IDENTITIES (was NON_SEAT_IDENTITIES): under the ledger's
+# own definition of "seat" (a named position with its own directory and
+# record), a provisioned `memory/creator/` IS a seat — what this constant
+# actually encodes is narrower: identities that never occupy a PROFILE seat
+# position (SIDE_NAMES slot). Rename only; the behavior is unchanged.
+NON_PROFILE_IDENTITIES = ("creator",)
+LOCK_VOCABULARY = tuple(CANONICAL_ROLES) + NON_PROFILE_IDENTITIES
+assert not set(CANONICAL_ROLES) & set(NON_PROFILE_IDENTITIES), (
     "an identity may be a seat or a non-seat, never both: %r"
-    % sorted(set(CANONICAL_ROLES) & set(NON_SEAT_IDENTITIES)))
+    % sorted(set(CANONICAL_ROLES) & set(NON_PROFILE_IDENTITIES)))
 # Filename-grammar charset for a side name — underscore is FORBIDDEN because it
 # is the `<from>_to_<to>_<date>` channel-filename separator.
 SIDE_CHARSET_RE = re.compile(r"^[A-Za-z0-9-]+$")
@@ -415,14 +420,14 @@ def check_bindings(ws: Path, slots, roles, pinned, f: Findings):
         # The guard stays on `roles`, NOT on `seats`: a workspace holding
         # ONLY non-seat identities has no seats, and must fail LOUDLY rather
         # than skip the comparison for having nothing to compare.
-        seats = roles - set(NON_SEAT_IDENTITIES)
+        seats = roles - set(NON_PROFILE_IDENTITIES)
         if roles and seats != expected:
-            set_aside = sorted(roles & set(NON_SEAT_IDENTITIES))
+            set_aside = sorted(roles & set(NON_PROFILE_IDENTITIES))
             # Name what was set aside. A message reporting only the seats
             # would read as though memory/ held nothing else.
             #
             # The remainder is listed with NO noun, deliberately. `seats` is
-            # `roles - NON_SEAT_IDENTITIES` -- identities not KNOWN to be
+            # `roles - NON_PROFILE_IDENTITIES` -- identities not KNOWN to be
             # non-seats -- so it still contains any unrecognised directory,
             # which is precisely not a seat. Calling the list "seats" states
             # something false about exactly the directory the operator most
@@ -668,7 +673,7 @@ def check_side_names(slots, roles, f: Findings):
     # unknown one, and collapsing the two would be the silent drop again wearing
     # a blocker's clothes: it gets no SIDE_NAMES slot by design, so the count
     # mismatch warning below would otherwise fire and read as a profile defect.
-    non_seat = sorted(set(roles) & set(NON_SEAT_IDENTITIES))
+    non_seat = sorted(set(roles) & set(NON_PROFILE_IDENTITIES))
     if non_seat:
         f.warn(f"memory/ holds {non_seat}, which this checker knows as an "
                "identity but not as a positional seat — it takes no SIDE_NAMES "
@@ -728,7 +733,7 @@ def check_side_names(slots, roles, f: Findings):
         # by a different route. What is refused is narrower and is a statement
         # about THIS workspace: it carries the identity AND hands it a seat, so
         # the profile asserts a seat that does not exist.
-        if name in NON_SEAT_IDENTITIES and name in roles:
+        if name in NON_PROFILE_IDENTITIES and name in roles:
             f.blocker(f"SIDE_NAMES entry '{name}' is an identity this workspace "
                       "carries, not a seat it has — SIDE_NAMES positions map "
                       "onto seats in order, so this entry claims a seat that "

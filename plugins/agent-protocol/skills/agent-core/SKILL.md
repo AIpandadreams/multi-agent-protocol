@@ -1,7 +1,7 @@
 ---
 name: agent-core
 description: >-
-  Shared normative core of the four-party multi-agent collaboration protocol
+  Shared normative core of the multi-agent collaboration protocol
   (PROTOCOL v3.1) — the channel rules, reviewer architecture, verdict contract,
   binding-slot glossary, memory discipline, and self-improvement protocol that
   the role skills (owner-engine-agent, helper-builder-agent, orchestrator-agent)
@@ -12,8 +12,11 @@ description: >-
 
 # Agent-core — PROTOCOL v3.1 shared references
 
-One protocol, three role skills, four parties (owner agent, builder agent,
-independent reviewer, human principal). Each role skill carries only its own
+One protocol, three role skills, four AUTHORITY parties (owner agent, builder
+agent, independent reviewer, human principal) — plus the orchestrator, an
+interface participant with no authority of its own, in deployments that run
+one (the seat & identity vocabulary table in `references/binding-slots.md` is
+the table of record). Each role skill carries only its own
 perspective and craft; every rule that must be IDENTICAL on all sides lives
 here, once:
 
@@ -21,7 +24,7 @@ here, once:
 |---|---|---|
 | `references/channel-core.md` | the channel NORMATIVE CORE: filename grammar, entry format, untrusted-input rule, crossed-entry discipline + rollback, integrity check, what does/never flows | every session, before your first channel entry |
 | `references/review-core.md` | REVIEWER ARCHITECTURE (per-side lanes, two mechanisms, shared-reviewer caveat, dead-lane escalation, reviewer-lane outage + the adjacent REFUSAL mode) + Verification instruments (ship-evidence discipline) + VERDICT CONTRACT (ADOPT / ADOPT-WITH-CHANGES / REJECT) | every session, before your first review round |
-| `references/review-convergence.md` | the multi-round CONVERGENCE cycle over review-core: the four seats, round budget + stop conditions, adjudicating reviewer disagreement, execution-environment coverage, the blocking line, anti-anchoring, anti-patterns, a worked arc | before a multi-round review campaign; once per project |
+| `references/review-convergence.md` | the multi-round CONVERGENCE cycle over review-core: the four stages, round budget + stop conditions, adjudicating reviewer disagreement, execution-environment coverage, the blocking line, anti-anchoring, anti-patterns, a worked arc | before a multi-round review campaign; once per project |
 | `references/never-idle-core.md` | the never-idle autonomy level: at-watch definition, watcher-driven intake, the closed MAY / MUST-NOT self-assign lists, the three-state ledger (in flight / surfaced / blocked-with-blocker-named) and its anti-invention clamp, the cadence-not-authority invariant | when the AUTONOMY dial is set to (or changed to) never-idle; once per project |
 | `references/binding-slots.md` | the full binding-slot glossary all roles share, incl. SIDE_NAMES, SHARED_ARTIFACTS, HEARTBEAT, MODEL | at project bind time; when a slot is disputed |
 | `references/memory-discipline.md` | checkpoint cadence, state-vs-detail split, successor test | once per project |

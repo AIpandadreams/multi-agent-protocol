@@ -6,7 +6,9 @@ themselves, [DESIGN.md](DESIGN.md) for the evidence behind them.
 
 ## 1. The model
 
-A **four-party collaboration protocol**:
+A collaboration protocol of **five default participants** — **four authority
+parties** (principal, owner, builder, reviewer) plus the **orchestrator
+interface**, which carries bytes, never permission:
 
 ```
                       ┌─────────────┐
@@ -42,6 +44,13 @@ A **four-party collaboration protocol**:
   every unit of consequence before it lands. Independence is structural:
   never the author's own model instance, verdicts pinned to byte-exact
   fingerprints.
+- A sixth identity exists outside this diagram: **creator**, a chartered
+  external stewardship identity that lives outside every workspace, may own
+  plans, and may be woken by name in a workspace that provisions
+  `memory/creator/` — mandate and boundaries in
+  [CREATOR-SEAT-CHARTER.md](CREATOR-SEAT-CHARTER.md); how it relates to the
+  three positional seats is stated in the seat & identity vocabulary table
+  (`binding-slots.md`).
 
 ## 2. Two repos per project, always
 

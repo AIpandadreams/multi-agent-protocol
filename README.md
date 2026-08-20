@@ -1,7 +1,9 @@
 # multi-agent-protocol
 
-**A four-party collaboration protocol for running AI agent teams on real
+**A multi-agent collaboration protocol for running AI agent teams on real
 work — without losing control of authorization, history, or quality.**
+Five default participants; four of them hold authority (principal, owner,
+builder, reviewer) — the orchestrator is an interface, never an authority.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml/badge.svg)](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml)

@@ -23,6 +23,10 @@ ordinary one. ⛔ **Reading them loosely is the fastest way to misread all three
   purely a statement of where the file lives.)
 - **seat** — a named position a participant occupies, with its own directory and record.
   (Not a person, and not a running process.)
+- **creator** — a chartered external identity that may OWN plans (a valid step `owner`
+  value) without holding any positional seat in a stamped profile. The vocabulary of
+  record for how it relates to the three positional seats is the seat & identity table
+  in `plugins/agent-protocol/skills/agent-core/references/binding-slots.md`.
 
 ---
 

@@ -354,7 +354,7 @@ class NonSeatIdentityProfileTest(unittest.TestCase):
     at that seat could clear.
 
     That defect was cured in halves. The vocabulary half landed with
-    `NON_SEAT_IDENTITIES` / `LOCK_VOCABULARY`; the profile comparison kept
+    `NON_PROFILE_IDENTITIES` / `LOCK_VOCABULARY`; the profile comparison kept
     reading the identity set, so the blocker was RELOCATED, not removed. These
     cases pin the second half.
 
@@ -373,7 +373,7 @@ class NonSeatIdentityProfileTest(unittest.TestCase):
 
     def test_a_non_seat_identity_does_not_fail_a_profile_it_satisfies(self):
         """R1's purpose. This is the case that fails without the subtraction."""
-        for non_seat in cc.NON_SEAT_IDENTITIES:
+        for non_seat in cc.NON_PROFILE_IDENTITIES:
             with self.subTest(non_seat=non_seat):
                 self.assertEqual(
                     _profile_blockers(self.PROFILE, self.SEATS | {non_seat}), [],
@@ -420,7 +420,7 @@ class NonSeatIdentityProfileTest(unittest.TestCase):
         by a test so it cannot quietly widen.
         """
         extra = "heartbeats"
-        self.assertNotIn(extra, cc.NON_SEAT_IDENTITIES)
+        self.assertNotIn(extra, cc.NON_PROFILE_IDENTITIES)
         got = _profile_blockers(self.PROFILE, self.SEATS | {extra})
         self.assertEqual(len(got), 1, got)
         self.assertNotIn("non-seat identities", got[0])
@@ -482,7 +482,7 @@ def _refused_context(*names):
 
 CANONICAL_REFUSED = _refused("builder")
 # A NON-SEAT identity is refused on the same footing as a canonical role: the
-# guard keys on LOCK_VOCABULARY, which is CANONICAL_ROLES + NON_SEAT_IDENTITIES.
+# guard keys on LOCK_VOCABULARY, which is CANONICAL_ROLES + NON_PROFILE_IDENTITIES.
 NON_SEAT_REFUSED = _refused("creator")
 
 
@@ -588,7 +588,7 @@ class NonRoleDirsTest(unittest.TestCase):
         The exemption must not be reachable from a binding slot at all.
         """
         self.assertNotIn("creator", cc.CANONICAL_ROLES)      # not a role …
-        self.assertIn("creator", cc.NON_SEAT_IDENTITIES)     # … but an identity
+        self.assertIn("creator", cc.NON_PROFILE_IDENTITIES)     # … but an identity
         self.assertIn("creator", cc.LOCK_VOCABULARY)         # … the vocabulary defines
         # Not excluded, and the refusal names ITS OWN name, not some other member.
         self.assertEqual(set(), cc.effective_exclusions({"creator"}))
@@ -700,7 +700,7 @@ class PositionalGuardTest(unittest.TestCase):
     def setUp(self):
         self.roles = list(cc.CANONICAL_ROLES)
         self.defaults = [cc.DEFAULT_SIDE[r] for r in self.roles]
-        self.non_seat = sorted(cc.NON_SEAT_IDENTITIES)[0]
+        self.non_seat = sorted(cc.NON_PROFILE_IDENTITIES)[0]
         # A canonical ROLE name that is NOT already a default side name. Without
         # this the duplicate check — which runs at every position, outside the
         # guard — fires instead, and its BLOCKER makes the escape look closed.

@@ -17,10 +17,13 @@ modes of a SERIES — anchoring on a stale verdict, averaging disagreeing
 reviewers into a vote, the author quietly declaring victory — are different
 from the failure modes of a single round, and each was a real defect.
 
-## The four seats
+## The four stages
 
-A converging review moves through up to four seats. They are seats, not
-necessarily four different sessions — but the model-difference floor is real:
+A converging review moves through up to four stages. (Earlier protocol text
+called these "seats" — renamed: they are stages of one review cycle, not agent
+seats, and the old word collided with the workspace-seat vocabulary.) They are
+stages, not necessarily four different sessions — but the model-difference
+floor is real:
 
 1. **Author** — the session that produced the artifact. Its own decisions are
    the highest-risk content in it (review-core).
@@ -30,7 +33,7 @@ necessarily four different sessions — but the model-difference floor is real:
 3. **Cross-vendor reviewer** — a different *provider*, not merely a different
    instance. This is the recommended REVIEWER binding, because self-preference
    bias is provider-shaped: a model rates text in its own house style higher
-   (arXiv:2410.21819). The cross-vendor seat is where the strongest catches
+   (arXiv:2410.21819). The cross-vendor stage is where the strongest catches
    land.
 4. **Author-as-verifier-of-the-verdict** — a NAMED stage, not an afterthought.
    Every finding a reviewer returns is either ADOPTED or REFUTED with cited
@@ -39,9 +42,9 @@ necessarily four different sessions — but the model-difference floor is real:
    with a required change is allowed — silently skipping it is not"). A verdict
    you did not verify is a verdict you did not read.
 
-A minimal converging series uses seats 1, 2/3, and 4. Seat 2 is the floor; seat
-3 is the recommendation. Adding seats never substitutes for the author doing
-seat 4.
+A minimal converging series uses stages 1, 2/3, and 4. Stage 2 is the floor;
+stage 3 is the recommendation. Adding stages never substitutes for the author
+doing stage 4.
 
 ## Round budget and stop conditions
 

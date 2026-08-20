@@ -77,8 +77,8 @@ is a REJECT and every required change of an ADOPT-WITH-CHANGES — where the
 mechanism emits severity tags, BLOCKER/MAJOR gate and MODERATE/MINOR are
 recorded, non-blocking. Budget exhausted without a convergence declaration
 **escalates to the principal** with the full round history — the loop never
-auto-repeats past its budget. The cross-round rules (four seats, adjudicating
-disagreement, anti-anchoring) live in `review-convergence.md`.
+auto-repeats past its budget. The cross-round rules (the four review stages,
+adjudicating disagreement, anti-anchoring) live in `review-convergence.md`.
 
 ## Memory discipline
 

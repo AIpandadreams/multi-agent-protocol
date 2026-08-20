@@ -61,7 +61,12 @@ On session start, resolve every slot from the instantiated file before doing
 anything else; if a slot is unbound on a new project, ask the principal once
 and record the answer.
 
-## The four parties and what each may do
+## The four authority parties and what each may do
+
+(In a 3-agent deployment a fifth participant exists — the orchestrator — but
+it is an interface, not an authority: it carries bytes, never permission. The
+vocabulary of record is the seat & identity table in
+`agent-core/references/binding-slots.md`.)
 
 | party | owns | may never |
 |---|---|---|
@@ -192,6 +197,6 @@ bindings (including ROLE_LOCK and the SIDE_NAMES pair agreed with the owner);
 filename grammar; (3) agree the gate list and embargoes with the principal;
 (4) start your review-round series at r01 with side-prefixed filenames. The
 owner agent runs its own mirror-image skill from its own perspective; neither
-skill governs the other side's session. The four-party authority split, the
+skill governs the other side's session. The four-authority-party split, the
 non-negotiables, the freeze→execute→results loop, and
 reconciliation-before-verdict are the transferable core — keep them unchanged.

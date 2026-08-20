@@ -5,6 +5,29 @@
 > carries the role-relevant subset. Bindings live in the project's persistent
 > memory / instantiated start file — never hard-coded in skills.
 
+## Seat & identity vocabulary — the table of record
+
+One vocabulary, stated once. Every role skill, command, and tool uses these
+words with exactly these meanings; where another surface appears to disagree,
+this table governs and the other surface is the defect to fix:
+
+| term | members | meaning |
+|---|---|---|
+| **positional workspace seats** | `owner` · `builder` · `orchestrator` | the seats a stamped profile provisions: each holds a SIDE_NAMES position, a `memory/<role>/` directory, and a START_SESSION file, and may be role-locked |
+| **creator** | `creator` | a chartered EXTERNAL identity (`docs/CREATOR-SEAT-CHARTER.md`): it lives outside every workspace and holds NO SIDE_NAMES position in any shipped profile, but it MAY own plans and MAY be woken by name (`/wake creator`) in a workspace that provisions `memory/creator/`. The conformance checker treats it as a checked identity that must never occupy a seat position (its `NON_PROFILE_IDENTITIES` constant) |
+| **plan-owner tokens** | `owner` · `builder` · `orchestrator` · `creator` | the four canonical values a plan step's `owner` may normalize to |
+| **aliases** | `engine`→`owner` · `helper`→`builder` · `orch`→`orchestrator` | built-in legacy aliases; a workspace's ROLE_ALIASES row may bind its own. Aliases affect ADDRESSING and display only — identity artifacts always use the canonical name |
+| **accepted wake tokens** | `owner` · `builder` · `orchestrator` · `creator` · `engine` · `helper` (· `orch`) | what `/wake` resolves, in tiers: canonical names self-resolve, the workspace's ROLE_ALIASES next, built-in aliases last — one normalization contract with the wake step-6b digest |
+| **participants** | principal · orchestrator · owner · builder · reviewer | the five default participants of a full (3-agent) deployment |
+| **authority parties** | principal · owner · builder · reviewer | the four participants that hold authority of some kind. The orchestrator is deliberately NOT in this set — it is an INTERFACE that carries bytes, never permission |
+| **review stages** | author · peer reviewer · cross-vendor reviewer · author-as-verifier | the four STAGES of a converging review (`review-convergence.md`) — stages of one review cycle, NOT agent seats. Earlier protocol text called these "seats"; that collision is retired in favor of "stages" |
+
+Stated deferral: `/sleep` supports the three positional seats only. A
+creator-bound session checkpoints per its charter's own procedure
+(`docs/CREATOR-SEAT-CHARTER.md`); first-class `/sleep creator` support — or
+the withdrawal of `/wake creator` — is an open decision recorded here rather
+than a silent gap.
+
 | slot | what it binds | notes |
 |---|---|---|
 | ROLE_LOCK | this session's role on this project (owner / builder / orchestrator) | recorded at first bind; a session finding a different role locked must stop and ask the principal |
