@@ -78,7 +78,26 @@ the `artifact set` field exists to add.
 - Keep the mirror invariants: role skills are thin deltas over
   `agent-core`; don't duplicate core rule blocks into role files
   (`mirror_check.py` will fail you).
-- Every protocol file carries a `[PROTOCOL vX.Y]` stamp; new files too.
+- Every protocol file carries a `[PROTOCOL vX.Y]` stamp; new files too. The
+  scope of "protocol file", stated once: **anything under
+  `plugins/agent-protocol/` and `transports/`** (this is what
+  `mirror_check.py`'s stamp gate enforces). Files under `docs/` and `tools/`
+  carry a stamp only where they restate normative text or, for tools, as a
+  **verification vintage** — the protocol version the tool was authored or
+  last verified against, NOT a currency claim (which is why the `tools/`
+  stamps are legitimately heterogeneous). Profile templates
+  (`profiles/MODELS.md`, `profiles/README.md`) are exempt. An unstamped doc
+  makes no currency claim either way. And the rule's bite: **a restamp only
+  ever FOLLOWS re-verification against the new version, never precedes it** —
+  bumping a stamp to "make the tree consistent" asserts a verification nobody
+  performed.
+- Examples and scaffolds mint **non-mintable id shapes only**: an
+  authorization-grant id, record id, or auth-log event id appearing in an
+  example, template, or stamped scaffold must be a shape no live deployment
+  could mint as real (placeholder tokens, reserved prefixes) — a concrete
+  grant-shaped id in a scaffold reads as a real grant to the session that
+  ingests it (the 1.9.1-era scaffold fix that motivated this line is
+  PR #19).
 - Write like the docs write: complete sentences, evidence over adjectives,
   and when a rule exists because something broke, say what broke.
 - No personal data, no real paths from your machine, no secrets. CI catches a few

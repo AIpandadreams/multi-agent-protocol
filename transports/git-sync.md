@@ -43,6 +43,10 @@ Mixing the two in one push is a bug: reservation commits publish alone. Put
 plainly, and to match proxy-auth-core.md verbatim: the generic PUBLISH verb
 with its pull-rebase retry loop **must never carry a consume commit**.
 
+Reference implementation: `tools/git_sync.py` — a stdlib-only executable
+statement of exactly the PUBLISH and push-ordering rules above (its stamp is
+a verification vintage per CONTRIBUTING's stamp rule, not a currency claim).
+
 ## Host classes (bind per machine, in the host profile)
 
 git-sync runs on two shapes of host, and they publish differently:
