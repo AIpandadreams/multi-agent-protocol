@@ -164,8 +164,14 @@ for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 
 ## Trust properties
 
-- **No telemetry, no network calls** beyond the git remotes *you* configure.
-  Everything is markdown, python, and your own repos.
+- **No telemetry, and no network client in this repository.** Everything is
+  markdown, python, and your own repos. Be precise about what that does and
+  does not cover — the egress paths that exist are the ones *you* configure:
+  your git remotes; the agent platform each seat runs on (e.g. Claude Code
+  and its plugin services); any reviewer CLI you wire in and the API behind
+  it (`tools/reviewer_poller.py` passes the complete review request to the
+  reviewer command you configure); and any platform connectors you enable.
+  This repo adds no egress of its own on top of those.
 - **Nothing here grants an agent permission to do anything.** The protocol
   is a discipline for how agents coordinate under YOUR gates; the gates
   themselves are always yours.

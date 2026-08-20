@@ -48,9 +48,15 @@ PROXY_AUTH / gates / embargoes / the protocol) are first-hand-only in every
 configuration.
 
 **Does this send my data anywhere?**
-No. No telemetry, no network calls beyond the git remotes you configure.
-The tools are plain Python; the "protocol" is markdown files your agents
-read.
+This repository itself sends nothing: no telemetry, and no network client
+in any of its tools. The tools are plain Python; the "protocol" is markdown
+files your agents read. What DOES move data is the stack you configure
+around it: your git remotes, the agent platform each seat runs on (e.g.
+Claude Code and its plugin services), any reviewer CLI you wire in and the
+API behind it (`tools/reviewer_poller.py` hands the complete review request
+to the reviewer command you configure), and any connectors you enable.
+Those paths are yours to choose and audit — the repo adds no egress of its
+own on top of them.
 
 **Which models should I use?**
 Whatever your budget likes — `MODELS.md` in each workspace has five
