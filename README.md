@@ -13,6 +13,10 @@ builder, reviewer) — the orchestrator is an interface, never an authority.
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A2BE2)](docs/QUICKSTART.md#1-install-the-plugin)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen)](#trust-properties)
 
+(The release number and the `PROTOCOL vX.Y` stamp in the badges above are
+**different counters** that move independently — see
+[PROTOCOL.md § Version spaces](docs/PROTOCOL.md#version-spaces).)
+
 Most multi-agent setups fail the same three ways: an agent quietly does
 something it was never authorized to do, a session dies and takes its state
 with it, or agents review their own work and call it done. This protocol is

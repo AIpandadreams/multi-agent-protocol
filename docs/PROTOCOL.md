@@ -128,6 +128,29 @@ no session runs "local amendments" ahead of a merged version bump.
 Authorization/gate rules and the hard-rails section are principal-locked:
 agents may not author changes to them at all.
 
+## Version spaces
+
+Several version numbers coexist around this protocol, and they are
+**different counters**, not one number written in different places:
+
+| # | space | form | defined | surfaces |
+|---|---|---|---|---|
+| 1 | **repo release** | SemVer, e.g. `1.9.1` | `CHANGELOG.md` header table | git tags, both plugin manifests, the GitHub Release, README's release badge |
+| 2 | **protocol stamp** | `PROTOCOL vX.Y` | `CHANGELOG.md` header + this file | the `[PROTOCOL vX.Y]` stamp per protocol file, README's protocol badge, the plugin description |
+| 3 | **workspace pin** | `PROTOCOL_VERSION` in a deployment's BINDINGS.md | `binding-slots.md` | the conformance gate's `SUPPORTED_VERSIONS`; `migrate_workspace.py`'s hop table |
+| 4 | **channel-entry stamp** | `[v3.1]` in every entry header | `channel-core.md` | every posted channel entry |
+| 5 | **vendored-checker provenance stamp** | derived (`SUPPORTED_VERSIONS` + sha256 over stamp-free text) | `tools/reconcile_vendored.py` | each workspace's vendored `conformance_check.py` banner |
+
+Three relationships to hold on to: **(a)** the repo release and the protocol
+stamp move **independently** — a release can ship with no protocol change and
+a protocol version can span several releases; `CHANGELOG.md`'s header table is
+their map of record. **(b)** A workspace pin may legitimately **lag** the
+repo's protocol stamp — conformance is pin-aware precisely so workspaces
+migrate independently, each at its own freeze boundary; **a lagging pin is
+green, not a defect** (`migrate_workspace.py` walks it up when the deployment
+chooses to). **(c)** GitHub Release titles bind spaces 1 and 2 in one string
+by convention: `PROTOCOL vX.Y (M.m.p)`.
+
 ## Version stamps
 
 Every protocol file carries `[PROTOCOL vX.Y]`; every workspace pins the

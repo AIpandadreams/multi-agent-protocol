@@ -80,6 +80,11 @@ python tools/new_project.py --name myproject --dest path/to/myproject-ws \
 Profiles: `3agent.local` (orchestrator + owner + builder — the default; you
 talk only to the orchestrator) or `2agent.local` (compact: dual-role owner —
 the owner absorbs the orchestrator duties and you talk to it directly).
+
+`new_project.py` stamps fresh workspaces at the current protocol version,
+**v3.1** (the workspace's `PROTOCOL_VERSION` pin — a different counter from
+the repo's release number; see
+[PROTOCOL.md § Version spaces](PROTOCOL.md#version-spaces)).
 Choosing: [CONFIGURATIONS.md](CONFIGURATIONS.md).
 
 Prefer to be walked through it? Add `--wizard` for an interactive **pre-stamp**
@@ -211,7 +216,17 @@ distinct WARN for any `{{DEFERRED}}` you postponed); once every slot is
 resolved, `--strict` should come back clean. A **BLOCKER** — a missing file, an
 unsupported protocol pin, a weakened PROXY_AUTH guard, a broken auth-log chain,
 or two roles colliding on one identity — means the deployment is unsound; fix it
-before waking.
+before waking. On the protocol pin: **an older pin is not a defect** — v2.5
+through v3.1 are all supported, and a workspace may lag the checkout's
+protocol version legitimately; "unsupported" means outside that range. To
+walk an existing workspace up:
+`python tools/migrate_workspace.py --workspace path/to/ws` (one run does
+every hop). **Existing workspace, upgrading?** Order matters: inventory any
+local checker additions → reconcile the declarations → re-vendor
+(`python tools/reconcile_vendored.py --fix`) → migrate the pin → run trusted
+conformance → wake. `docs/MIGRATION.md` carries the full ordering and why.
+Note that a plugin update alone migrates nothing: an existing workspace's
+pin and vendored checker stay where they are until you run the tools above.
 
 The stamp also drops a **copy of the checker inside the workspace**
 (`<ws>/tools/conformance_check.py`). Running that copy prints a `SELF-CHECK

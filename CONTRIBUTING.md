@@ -19,6 +19,11 @@ the protocol prescribes.**
    disabled on this repository on purpose: a landing here is approved against
    one specific reviewed commit, and a squash would land a new commit that
    nobody reviewed.
+6. Releases follow the five-surface enumeration (main commit · signed tag ·
+   plugin manifest · marketplace manifest · Release object) and title the
+   Release **`PROTOCOL vX.Y (M.m.p)`** — the protocol stamp and the repo
+   release are different counters, bound in that one string by convention
+   (see [PROTOCOL.md § Version spaces](docs/PROTOCOL.md#version-spaces)).
 
 A green scrub in step 2 covers less than it looks like it covers — read
 [What a green scrub does not prove](#what-a-green-scrub-does-not-prove) before
