@@ -39,8 +39,15 @@ with its operator-facing README. Every part below carries its own status:
 | 1. The ledger file format | **specified here** — `plans/README.md` (operator seed) ships as of 1.9.1; no schema file and no example plan file ship |
 | 2. The memory failsafe (compaction hook) | **ships as of 1.9.1** — `tools/compaction_inject.py` + `tools/plan_common.py` |
 | 3. The enforcement check | **specified here, deferred** — its source and test suite are not ported |
-| 4. The clock sweep | **specified here, deferred** |
-| 5. Wake integration | **specified here, deferred** |
+| 4. The clock sweep | **specified here, deferred** — ⚠ until it ships, `/wake` runs its daemon-liveness check (step 6a) only in a workspace that binds a `CLOCK_DAEMON` row in BINDINGS.md (a deployment-supplied daemon); without that binding the wake report says `no clock daemon bound` rather than leading every wake with a `⛔ CLOCK DAEMON DOWN` alarm nothing could ever clear |
+| 5. Wake integration | **ships as of 1.9.0** — `/wake` step 6 runs on every wake: daemon liveness (6a, gated as row 4 states), the open-ledger digest rendered into the report's mandatory `Ledger:` line (6b), and the stale-head cross-check (6c) |
+
+⚠ **Deferral-coupling note (parts 3–5):** the deferred parts are not vapor — reference
+implementations exist and run in the steward's private deployment, and their public
+landing here is a gated port wave on the steward's side. That event is exactly what
+invalidates the "deferred" rows above: re-verify this table whenever a ported part
+lands (the same pass should re-check `/wake`'s renderer deferral, which lives on the
+same private side).
 
 So the design below is written in the present tense of a **specification**: for parts
 3–5 it describes what those parts do *when built*, and you should not expect to find,

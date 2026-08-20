@@ -114,7 +114,17 @@ Requested role: $ARGUMENTS
    6a/6b (the report's `Ledger:` line says `no plans/ ledger adopted`) but
    ALWAYS run 6c — the stale-head hazard predates the ledger.
 
-   a. **Daemon liveness (F4).** Read `plans/.daemon_heartbeat` (ISO-8601
+   a. **Daemon liveness (F4).** ⚠ **Scope rule first: the clock-sweep
+      daemon does not ship in this release** (`docs/PLAN-LEDGER.md`, part-4
+      status), so this check runs only in a workspace whose BINDINGS.md
+      binds a `CLOCK_DAEMON` row (the deployment supplies its own daemon).
+      A workspace with no `CLOCK_DAEMON` binding skips 6a and its report's
+      `Ledger:` block opens with `no clock daemon bound — clocks[] rows are
+      unswept by machinery; the digest below is their only surfacing` —
+      an unconditional DOWN line in every adopting workspace would fire
+      forever and train operators past a real alarm (the exact anti-pattern
+      CONTRIBUTING.md records). Where a daemon IS bound, read
+      `plans/.daemon_heartbeat` (ISO-8601
       stamp of the clock daemon's last completed sweep). Four DOWN states,
       each with its own verbatim lead line — the report LEADS with it as
       its first line. "Older than 15 minutes" is compared in SECONDS

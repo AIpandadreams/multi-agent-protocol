@@ -52,7 +52,9 @@ Its injection markers are the `plans/.last_injection.*` and
 
 Prerequisite: **PyYAML** (`pip install pyyaml`) — the one non-stdlib dependency.
 Without it the hook does not crash the session: it reports the ledger as unreadable
-and, per its declared fail direction, gated classes stay closed. After each injection
+and, per its declared fail direction, gated classes are treated as closed **by
+convention, unenforced** — the enforcement gate (part 3) that would hold them closed
+mechanically is deferred, so nothing in this release enforces it. After each injection
 the hook names an `--ack` step: that command ships with the enforcement gate (part 3,
 deferred), so until part 3 lands the ack is informational and the injection receipt
 simply records that the digest was emitted.
@@ -60,9 +62,12 @@ simply records that the digest was emitted.
 ### 3–5. The enforcement gate, the clock sweep, the wake integration
 
 Specified in [`docs/PLAN-LEDGER.md`](../docs/PLAN-LEDGER.md) with a per-part
-shipped/deferred status table — the gate's source and test suite, the clock-sweep
-daemon, and the wake-side ledger verification are **deferred to their own reviewed
-release**; the specification is normative in the meantime. A deferral that is stated
+shipped/deferred status table. The gate's source and test suite (part 3) and the
+clock-sweep daemon (part 4) are **deferred to their own reviewed release**; the
+specification is normative in the meantime. **Wake integration (part 5) ships** —
+`/wake` step 6 reads this directory on every wake and renders the open-ledger digest
+into its report's `Ledger:` line (its daemon-liveness check runs only where a
+`CLOCK_DAEMON` binding exists, per the status table). A deferral that is stated
 is a scope decision; a deferral that is silent is a broken promise.
 
 ## The lesson this directory records
