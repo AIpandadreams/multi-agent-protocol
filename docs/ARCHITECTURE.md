@@ -79,6 +79,9 @@ CHANNEL_STATE.json       OPTIONAL per-side counter file; if a deployment adds
 memory/<role>/MEMORY.md  the role's persistent memory index, headed by the
                          ⚡ working-state block (the cold-successor interface)
 memory/<role>/auth-log.md  append-only authorization event log (see PROTOCOL)
+plans/                   OPTIONAL: the plan ledger — typed obligations that
+                         survive compaction and session death (adoption is
+                         manual; see plans/README.md + docs/PLAN-LEDGER.md)
 TASKQUEUE.md             orchestrator's queue (3-agent profiles)
 MODELS.md                live model matrix: presets + per-role overrides
 start/START_SESSION.<role>.md   the contract each session runs at every

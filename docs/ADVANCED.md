@@ -225,6 +225,38 @@ never a skipped step). That also makes it
 a natural CI gate: check the workspace out next to a protocol checkout and run
 `--strict` once every slot should be resolved.
 
+## The plan-ledger compaction hook
+
+The memory failsafe from [PLAN-LEDGER.md](PLAN-LEDGER.md) part 2 ships as
+`tools/compaction_inject.py` (with its shared ledger-access module
+`tools/plan_common.py`). It renders every **open** plan in the workspace's
+`plans/` directory into a typed digest and injects it into the fresh context
+after a compaction, so a summarized session is still handed its obligations.
+
+Prerequisite: **PyYAML** (`pip install pyyaml`) — the one non-stdlib
+dependency. Wire it as two hooks in the workspace's `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreCompact": [
+      {"hooks": [{"type": "command",
+        "command": "python tools/compaction_inject.py --mark"}]}
+    ],
+    "SessionStart": [
+      {"matcher": "compact",
+       "hooks": [{"type": "command",
+        "command": "python tools/compaction_inject.py --inject"}]}
+    ]
+  }
+}
+```
+
+`--mark` records that a compaction boundary is coming; `--inject` (matcher
+`"compact"`, so it fires only on post-compaction starts) emits the digest.
+Adoption of the `plans/` directory itself is manual — see
+`plans/README.md` §"Adopting the ledger in a workspace".
+
 ## Renaming a side (display names)
 
 A side's *display* name — what shows in channel filenames, entry headers, and

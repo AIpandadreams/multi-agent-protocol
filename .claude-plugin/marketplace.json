@@ -4,14 +4,14 @@
     "name": "AIpandadreams"
   },
   "metadata": {
-    "description": "A four-party collaboration protocol for running AI agents on real work: owner/builder/orchestrator role skills, an independent cross-vendor reviewer gating every round, and a human principal holding all authorization gates.",
+    "description": "A multi-agent collaboration protocol for running AI agents on real work: owner/builder/orchestrator role skills, an independent cross-vendor reviewer gating every round, and a human principal holding all authorization gates (four authority parties; the orchestrator is an interface).",
     "version": "1.9.1"
   },
   "plugins": [
     {
       "name": "agent-protocol",
       "source": "./plugins/agent-protocol",
-      "description": "Role skills for the multi-agent collaboration protocol: agent-core (shared normative references), owner-engine-agent, helper-builder-agent, orchestrator-agent, plus /sleep and /wake lifecycle commands"
+      "description": "Role skills for the multi-agent collaboration protocol: agent-core (shared normative references), owner-engine-agent, helper-builder-agent, orchestrator-agent, plus /sleep, /wake and /converge lifecycle commands"
     }
   ]
 }

@@ -13,6 +13,7 @@ a reference file ever disagree, the reference file wins.
 | memory | `memory-discipline.md` |
 | proxy authorization | `proxy-auth-core.md` |
 | binding slots | `binding-slots.md` |
+| plan ledger (typed obligations, memory failsafe) | `docs/PLAN-LEDGER.md` (specification of record) + `plans/README.md` (operator seed) |
 | protocol changes | `self-improvement-protocol.md` |
 
 ## The channel

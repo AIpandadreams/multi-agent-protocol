@@ -89,7 +89,7 @@ Everything else in the protocol derives from these:
 ```bash
 # 1. Stamp a dedicated workspace for your project
 python tools/new_project.py --name myproject --dest path/to/myproject-ws \
-    --profile 3agent.local
+    --profile 3agent.local --principal "Your Name"
 
 # 2. Fill the {{FILL}} slots in BINDINGS.md (one contract file)
 
@@ -116,18 +116,21 @@ Details and live-tested trade-offs: [docs/CONFIGURATIONS.md](docs/CONFIGURATIONS
 
 ```
 plugins/agent-protocol/
-  commands/            /sleep and /wake session-lifecycle commands
+  commands/            /sleep, /wake and /converge session-lifecycle commands
   skills/
     agent-core/        shared normative core (channel, review, memory, auth rules)
     owner-engine-agent/     role skill (thin delta over agent-core)
     helper-builder-agent/   role skill
     orchestrator-agent/     role skill (the principal's interface)
+.claude-plugin/marketplace.json  plugin marketplace manifest
 transports/local-fs.md      how channel verbs map to a shared filesystem
+transports/git-sync.md      the same verbs over a git remote (separate machines)
 profiles/                   configuration matrix + MODELS.md (model presets)
+plans/                      the plan ledger: format README (workspaces hold the files)
 tools/
   new_project.py            stamps a dedicated agent workspace
   mirror_check.py           consistency CI over the skill tree
-  reviewer_poller.py        optional bridge to a local Codex reviewer
+  reviewer_poller.py        optional bridge to a local reviewer CLI
   wave_coverage_check.py    coverage checker for builder read-waves
   conformance_check.py      point-in-time workspace readiness check
   validate_auth_log.py      auth-log chain validator (also stamped per workspace)
@@ -135,8 +138,15 @@ tools/
   scale_workspace.py        upgrade a 2-agent workspace to 3-agent
   adopt_project.py          adopt an ad-hoc collaboration into a workspace
   migrate_workspace.py      migrate a stamped v2.5–v3.0 workspace up to v3.1
+  reconcile_vendored.py     re-vendor / drift-check each workspace's vendored checker
+  compaction_inject.py      the plan-ledger memory failsafe (PreCompact/SessionStart hook)
+  plan_common.py            shared ledger-access module the hook imports
+  git_sync.py               reference implementation of the git-sync push ordering
+  release_scrub.py          pre-publication content scan (wiring check, not a leak gate)
+tests/                      unit suite for the tools
+.github/                    CI workflows (mirror check et al.)
 docs/                       quickstart · architecture · configurations ·
-                            protocol · advanced · design · FAQ
+                            protocol · plan ledger · advanced · design · FAQ
 examples/                   a worked end-to-end cycle you can read like a story
 ```
 
@@ -145,7 +155,8 @@ examples/                   a worked end-to-end cycle you can read like a story
 **Reading order.** New here? Read in this order: **QUICKSTART** (stand one up) →
 **ARCHITECTURE** (what the pieces are) → **CONFIGURATIONS** (pick 2- vs 3-agent)
 → **PROTOCOL** (the rules the agents follow). Then, as you need them:
-**AUTONOMY** and **ADVANCED** for unattended operation + proxy-auth, **CLOUD**
+**AUTONOMY** and **ADVANCED** for unattended operation + proxy-auth,
+**PLAN-LEDGER** for obligations that survive a memory loss, **CLOUD**
 for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 **DESIGN**/**REVIEW_CONVERGENCE** for the evidence trail. **FAQ** anytime.
 
@@ -153,6 +164,7 @@ for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 - [ARCHITECTURE](docs/ARCHITECTURE.md) — the model, the workspace anatomy, why each piece exists
 - [AUTONOMY](docs/AUTONOMY.md) — unattended operation + self-improvement, the two core platform properties
 - [CONFIGURATIONS](docs/CONFIGURATIONS.md) — 2-agent vs 3-agent vs combined, from live deployments
+- [PLAN-LEDGER](docs/PLAN-LEDGER.md) — typed obligations that survive compaction and session death (the memory failsafe ships; see `plans/README.md` for adoption)
 - [MIGRATION](docs/MIGRATION.md) — moving a live channel's lanes safely (the stayed-lane rule)
 - [FEDERATION](docs/FEDERATION.md) — many separate teams under one principal, isolated by construction
 - [PROTOCOL](docs/PROTOCOL.md) — channel rules, review rounds, verdicts, memory discipline
@@ -164,6 +176,11 @@ for peers on separate machines, **MIGRATION**/**FEDERATION** for scaling, and
 - [CREATOR-SEAT-CHARTER](docs/CREATOR-SEAT-CHARTER.md) — the durable charter for a "chartered external seat": what a standing, repo-isolated, orchestrator-fronted stewardship session is, its mandate and boundaries
 - [SOP-REGISTRY](docs/SOP-REGISTRY.md) — principal-ruled standing orders over the protocol, and the cross-team registry pattern
 - [FAQ](docs/FAQ.md)
+
+Repository meta-docs, linked here so they are reachable from the front page:
+[CONTRIBUTING](CONTRIBUTING.md) (the three gates, stamp rules, release flow) ·
+[SECURITY](SECURITY.md) · [CHANGELOG](CHANGELOG.md) (the release ↔ protocol
+version map of record).
 
 ## Trust properties
 

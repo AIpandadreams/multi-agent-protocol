@@ -70,6 +70,41 @@ into its report's `Ledger:` line (its daemon-liveness check runs only where a
 `CLOCK_DAEMON` binding exists, per the status table). A deferral that is stated
 is a scope decision; a deferral that is silent is a broken promise.
 
+## Adopting the ledger in a workspace
+
+Adoption is **manual in this release** — `new_project.py` does not stamp a
+`plans/` directory and `migrate_workspace.py` has no hop for it. To turn the
+shipped failsafe on in a workspace:
+
+1. **Create the directory:** `mkdir plans` at the workspace root (this README
+   may be copied in as its seed; plan files are `plans/<name>.plan.yaml`).
+2. **Install the prerequisite:** `pip install pyyaml`.
+3. **Wire the two hooks** in the workspace's `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreCompact": [
+      {"hooks": [{"type": "command",
+        "command": "python tools/compaction_inject.py --mark"}]}
+    ],
+    "SessionStart": [
+      {"matcher": "compact",
+       "hooks": [{"type": "command",
+        "command": "python tools/compaction_inject.py --inject"}]}
+    ]
+  }
+}
+```
+
+(paths relative to where the tool lives for your deployment — a vendored copy
+in the workspace, or the protocol checkout).
+
+Once `plans/` exists, `/wake` treats the workspace as ledger-adopted: its
+step 6 renders the open-plan digest into every wake report's `Ledger:` line.
+A workspace with no `plans/` directory is pre-adoption — `/wake` says so and
+skips the ledger read.
+
 ## The lesson this directory records
 
 This system first ran documented only in its own source code — invisible to the

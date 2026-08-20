@@ -21,7 +21,12 @@ looks healthy. The protocol guarantees all three:
 - **State can't be lost.** Every shipped unit is checkpointed to the ⚡
   working-state block in the workspace repo before it counts. A session that
   dies mid-unit loses at most that unit; the next wake resumes from the
-  committed state. (Tested — see [DESIGN.md](DESIGN.md).)
+  committed state. (Tested — see [DESIGN.md](DESIGN.md).) Session death is
+  not the only loss channel: **context compaction** silently summarizes a
+  live session, and a summary is lossy — the plan ledger
+  ([PLAN-LEDGER.md](PLAN-LEDGER.md)) is the shipped failsafe for exactly
+  that channel, re-injecting every open typed obligation into the fresh
+  context.
 - **Authority can't be exceeded.** Authorization never rides the channel and
   is never implied by a memory note or a peer's say-so. The irreversible/outward
   super-classes (outward-facing/publish actions, email SEND,
@@ -51,6 +56,7 @@ looks healthy. The protocol guarantees all three:
 | **Heartbeat ticks** | a scheduled headless run per role that drains the queue between your sittings (fail-closed; see [ADVANCED.md](ADVANCED.md#heartbeats-unattended-operation)). |
 | **Orchestrator duties** | standing, scheduled work the orchestrator does unprompted: morning/EOD briefings, queue triage, cost-ledger rollups (bound in DUTIES + TICKS). |
 | **Cost governor** | keeps unattended spend inside your bound budget, reporting any preset drop rather than surprising you. |
+| **Compaction hook** (plan ledger) | `tools/compaction_inject.py` re-injects every open typed obligation into the post-compaction context, so a compacted session is still handed its commitments — wiring in [ADVANCED.md](ADVANCED.md#the-plan-ledger-compaction-hook); spec in [PLAN-LEDGER.md](PLAN-LEDGER.md). |
 
 Because sessions are disposable, autonomy scales the obvious way: run a tick
 every hour, every morning, or on demand — the protocol behaves identically

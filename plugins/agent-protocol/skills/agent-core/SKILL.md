@@ -28,6 +28,7 @@ here, once:
 | `references/never-idle-core.md` | the never-idle autonomy level: at-watch definition, watcher-driven intake, the closed MAY / MUST-NOT self-assign lists, the three-state ledger (in flight / surfaced / blocked-with-blocker-named) and its anti-invention clamp, the cadence-not-authority invariant | when the AUTONOMY dial is set to (or changed to) never-idle; once per project |
 | `references/binding-slots.md` | the full binding-slot glossary all roles share, incl. SIDE_NAMES, SHARED_ARTIFACTS, HEARTBEAT, MODEL | at project bind time; when a slot is disputed |
 | `references/memory-discipline.md` | checkpoint cadence, state-vs-detail split, successor test | once per project |
+| `references/proxy-auth-core.md` | the authorization-relay normative core: the auth-log lane, grant/RECEIVED/CONSUMED records, writer provenance, the never-listable super-classes | when PROXY_AUTH is on, or when authoring/validating an auth-log event |
 | `references/self-improvement-protocol.md` | how agents propose amendments to their own skills — review-gated, never self-authorizing | when proposing or intaking a protocol amendment |
 
 **Amendment rule:** changes to these files change the protocol for every role.
