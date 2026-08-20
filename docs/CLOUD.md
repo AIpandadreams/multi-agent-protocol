@@ -82,6 +82,13 @@ What makes this safe, in order:
 3. **Idempotent resume.** Before redoing the in-flight unit, the wake checks
    whether it is **already shipped** (its durable id already in the fetched
    history) — a scheduler that double-fires never double-ships.
+   3b. **Ledger verification (wake step 6).** In a workspace that has adopted
+   the plan ledger (`plans/`), the wake renders the open-plan digest into its
+   report's mandatory `Ledger:` line and runs the stale-head cross-check —
+   so a cold successor is handed its typed obligations, not just its prose
+   memory. (Daemon liveness, 6a, runs only where a `CLOCK_DAEMON` binding
+   exists — a headless wake in an unbound workspace reports `no clock daemon
+   bound`, not a permanent alarm.)
 4. **Pre-approved git surface.** The stamped `.claude/settings.json` already
    allow-lists the git/gh commands the channel loop needs, so an unattended wake
    doesn't stall on a permission prompt it cannot answer.
@@ -143,6 +150,12 @@ Hardening recipe for the PR-automerge path:
    over newer history. Combined with the **required force-push and
    branch-deletion protection** git-sync mandates, the append-only history the
    auth-record SHAs depend on is preserved.
+4. **Protected paths** (in the stamped `integrity.yml`): a state-branch PR may
+   not touch governance files — `BINDINGS.md`, `MODELS.md`,
+   `.auth-provenance.json`, `.github/workflows/`, `tools/validate_auth_log.py`.
+   This is the load-bearing control behind "a hosted session cannot push the
+   default branch": without it, the PR the automerge lands could edit the very
+   rules and checks that constrain it.
 
 Enabling the platform-side automerge switch itself (the API call that turns
 auto-merge on for a repo) is **principal housekeeping**, not something a role
@@ -169,6 +182,12 @@ battery; each item is a real failure the protocol is supposed to survive:
 6. **A real fired-and-delivered scheduled run.** The deployment is live **only**
    once an actually-scheduled tick has fired and delivered on its own — a manual
    `claude -p "/wake"` proves the prompt, not the scheduler.
+   6b. **Ledger line present and honest** (ledger-adopting workspaces): the
+   scheduled wake's report carries its `Ledger:` line — the open-plan digest,
+   or `no plans/ ledger adopted`, or `no clock daemon bound` where no
+   `CLOCK_DAEMON` binding exists — and any `⛔ CLOCK DAEMON DOWN` lead line
+   corresponds to a daemon that is actually expected and actually down, not a
+   permanent alarm nobody can clear.
 7. **Hosted wake handshake (marker + nonce).** Before any hosted session
    carries real work, prove it can see pushed state and publish over the real
    hosted auth path — without touching a live lane:

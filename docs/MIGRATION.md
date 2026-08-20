@@ -248,7 +248,9 @@ could run for months.** Loud breakage is the cheap kind.
    stated reason**. ⛔ Neither is "it disappeared during an upgrade."
 3. **Fix the declaration row**, in the workspaces that carry one, and verify in a scratch
    copy before touching a live workspace.
-4. **Then re-vendor**, and re-run conformance.
+4. **Then re-vendor** (`python tools/reconcile_vendored.py --fix` — `--check`
+   first reports OK / DRIFT / MISSING per workspace without writing), and
+   re-run conformance.
 5. **Verify the guards still exist** after the re-vendor — by name, not by a green run.
    ⭐ A guard's absence is not something a passing check reports.
 

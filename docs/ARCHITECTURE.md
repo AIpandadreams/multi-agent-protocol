@@ -159,6 +159,11 @@ Every stamped workspace ships `.github/workflows/integrity.yml`:
 - **channel append-only + CHANNEL_STATE monotonic** — counters never go
   backward, keys are never removed.
 - **secret scan** — key/token patterns anywhere in the tree fail the build.
+- **protected paths** — a state-branch PR (`state/<role>/<unit>`) may not
+  touch governance files (`BINDINGS.md`, `MODELS.md`,
+  `.auth-provenance.json`, `.github/workflows/`,
+  `tools/validate_auth_log.py`): the privilege-escalation stop that keeps a
+  hosted session's PR from editing the rules that constrain it.
 
 ## 7. Boundaries of the design
 

@@ -102,7 +102,7 @@ Clone `multi-agent-protocol` and you get:
 
 ```
 plugins/agent-protocol/
-  commands/            /wake and /sleep lifecycle commands
+  commands/            /wake, /sleep, and /converge lifecycle commands
   skills/
     agent-core/        SHARED normative references (all roles read these):
       binding-slots.md       every BINDINGS slot defined
@@ -113,18 +113,34 @@ plugins/agent-protocol/
       review-core.md         round mechanics, dead-lane + refusal handling
       review-convergence.md  multi-model convergence reviews
       self-improvement-protocol.md  how the protocol amends itself
-    owner-engine-agent/     role skill + START_SESSION + session-card +
-                            ground-rules + ops-gotchas + review-protocol
-    helper-builder-agent/   same, plus wave-census-protocol (subagent fleets)
-    orchestrator-agent/     same, plus authorization-relay, orchestration-
-                            protocol, models-and-cost, duties
-tools/
-  new_project.py           stamps a fresh workspace from the templates
-  conformance_check.py     verifies a workspace matches its protocol version
-  validate_auth_log.py     verifies the proxy-auth log's integrity rules
-  migrate_workspace.py     migrates a live workspace between protocol versions
-docs/                      protocol book: AUTONOMY dial, transports, QUICKSTART
+    owner-engine-agent/     role SKILL + START_SESSION, session-card,
+                            channel-protocol, ground-rules, ops-gotchas,
+                            review-protocol
+    helper-builder-agent/   same set (its review file is named
+                            review-loop-protocol), plus wave-census-protocol
+                            (subagent fleets)
+    orchestrator-agent/     role SKILL + START_SESSION, session-card,
+                            channel-protocol, authorization-relay,
+                            orchestration-protocol, models-and-cost, pa-duties
+tools/                     fifteen utilities: stampers (new_project,
+                           adopt_project, scale_workspace), verifiers
+                           (conformance_check, validate_auth_log, mirror_check,
+                           release_scrub, reconcile_vendored,
+                           wave_coverage_check), lifecycle (migrate_workspace,
+                           git_sync, watcher, reviewer_poller), plan ledger
+                           (plan_common, compaction_inject)
+transports/                the transport contracts (local-fs, git-sync) —
+                           top-level, not under docs/
+plans/                     plan-ledger adoption scaffold (plans/README.md)
+profiles/                  deployment profile matrix + MODELS presets
+tests/                     unit suite covering the tools and doc guards
+docs/                      protocol book: AUTONOMY dial, QUICKSTART, CLOUD,
+                           PLAN-LEDGER, MIGRATION, and the rest
 ```
+
+> *Maintenance: this inventory is summarized from `git ls-files` at repo
+> release 1.9.1. When the tree changes, regenerate this block (and its twin —
+> the two files fail review as a pair) from `git ls-files`, not from memory.*
 
 **Key design decisions you should preserve in any custom build:**
 

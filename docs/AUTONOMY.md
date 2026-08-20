@@ -52,7 +52,7 @@ looks healthy. The protocol guarantees all three:
 | mechanism | what it buys you |
 |---|---|
 | **`/sleep`** | end a session deliberately: checkpoint memory with an exact `## Next Step`, commit + push, hand off. Safe to close the window. |
-| **`/wake <role>`** | resume cold in a fresh session: bind, verify integrity, read the ⚡ block, report the resume point — no context pasting, no recap. |
+| **`/wake <role>`** | resume cold in a fresh session: bind, verify integrity, read the ⚡ block, verify against the plan ledger where one is adopted (step 6: the open-plan digest renders into the report's `Ledger:` line, plus the stale-head cross-check), report the resume point — no context pasting, no recap. |
 | **Heartbeat ticks** | a scheduled headless run per role that drains the queue between your sittings (fail-closed; see [ADVANCED.md](ADVANCED.md#heartbeats-unattended-operation)). |
 | **Orchestrator duties** | standing, scheduled work the orchestrator does unprompted: morning/EOD briefings, queue triage, cost-ledger rollups (bound in DUTIES + TICKS). |
 | **Cost governor** | keeps unattended spend inside your bound budget, reporting any preset drop rather than surprising you. |

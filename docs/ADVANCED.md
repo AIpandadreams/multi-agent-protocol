@@ -122,6 +122,7 @@ Stamped into every workspace (`.github/workflows/integrity.yml`):
 | channel append-only | no removed/edited lines in `channel/*.md` |
 | CHANNEL_STATE monotonic | counters never backward, keys never removed, no type resets |
 | secret scan | private-key/token patterns anywhere fail the build |
+| protected paths | no state-branch PR (`state/<role>/<unit>`) may touch governance files — `BINDINGS.md`, `MODELS.md`, `.auth-provenance.json`, `.github/workflows/`, `tools/validate_auth_log.py` — the privilege-escalation stop behind the PR-automerge path |
 
 These are *state* checks — they protect the coordination record. Your work
 repo keeps its own CI; the protocol deliberately doesn't touch it.
