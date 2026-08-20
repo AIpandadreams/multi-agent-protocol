@@ -148,7 +148,8 @@ python tools/conformance_check.py                                  # check cwd (
 It verifies, profile-aware:
 
 - every required file for the profile exists (orchestrator-only files are
-  required only for `3agent.local`);
+  required whenever the profile's role set includes the orchestrator —
+  `3agent.local` **and** `3agent.git-sync`);
 - `PROTOCOL_VERSION` is one of the supported versions (v2.5, v2.6, v2.7, v2.8, v2.9, v3.0 or v3.1) and the
   profile's role set matches the `memory/` tree — minus any directory the
   optional `NON_ROLE_DIRS` slot declares (see below);

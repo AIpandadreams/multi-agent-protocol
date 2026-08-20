@@ -99,11 +99,24 @@ for different projects.
   templates a fresh stamp uses and prints the exact BINDINGS rows to add by
   hand (it never edits the principal-owned BINDINGS.md itself).
 
+## Separate machines: the `.git-sync` variants
+
+Both shapes above also come in a git-sync flavor — **`2agent.git-sync`** and
+**`3agent.git-sync`**: same seats, same files, but the rendezvous is a git
+remote instead of a shared filesystem, for sessions on **different machines**
+(including hosted/cloud sessions). Stamp them the same way
+(`--profile 3agent.git-sync`); the profile selects the transport at stamp
+time. The operational half — remote bindings, sync discipline, hosted-session
+hardening — lives in [CLOUD.md](CLOUD.md) and
+[transports/git-sync.md](../transports/git-sync.md); the full profile matrix
+is [profiles/README.md](../profiles/README.md).
+
 ## Choosing, concretely
 
 | signal | choose |
 |---|---|
 | you keep forgetting what the agents are doing between sessions | 3-agent (the default — briefings + queue are the fix) |
+| peers on **separate machines**, or hosted/cloud sessions in the loop | the same shape's `.git-sync` profile (`2agent.git-sync` / `3agent.git-sync`) + [CLOUD.md](CLOUD.md) |
 | several concurrent projects, one brain to rule them | 3-agent global flavor |
 | one project, you enjoy reviewing the work directly and prefer talking to the owner | 2-agent (dual-role owner) |
 | you want approvals relayed while you're away from the worker sessions | 3-agent + PROXY_AUTH (advanced — read [ADVANCED.md](ADVANCED.md) first) |

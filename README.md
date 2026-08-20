@@ -106,6 +106,7 @@ walkthrough: [docs/QUICKSTART.md](docs/QUICKSTART.md).
 | one point of contact running everything for you | **3-agent** (`3agent.local`) **(default)** | you talk ONLY to the orchestrator; workers spawn on demand |
 | one assistant fronting several projects at once | **3-agent, global flavor** | the same orchestrator, bound as `global-pa`, registers multiple worker pairs |
 | agents on one project, you talk to the lead agent directly | **2-agent** (`2agent.local`) | the owner runs dual-role as your interface; builder works alongside |
+| the same shapes with sessions on **different machines** | **git-sync variants** (`2agent.git-sync` / `3agent.git-sync`) | same seats; the workspace repo's remote is the rendezvous — see [docs/CLOUD.md](docs/CLOUD.md) |
 
 Details and live-tested trade-offs: [docs/CONFIGURATIONS.md](docs/CONFIGURATIONS.md).
 
