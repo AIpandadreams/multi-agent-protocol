@@ -23,11 +23,15 @@ The orchestrator queues it and dispatches:
 `channel/orch_to_builder_2026-03-02.md` (entry appended):
 
 ```
-## 3 (ack: builder 2)
-Task T7: produce a dependency-risk report for api/ (unmaintained or
+## ORCH ENTRY 3 [v3.1] — 2026-03-02 — dispatch T7: dependency-risk report for api/ (latest BUILDER entry seen: 2)
+
+Nothing in this entry is or carries the principal's authorization.
+
+**1.** Task T7: produce a dependency-risk report for api/ (unmaintained or
 ancient-pinned deps). Deliverable: report file in the canonical repo per
 SIGNING rules, review round before adoption.
-Nothing in this entry is or carries the principal's authorization.
+
+*— orch session, 2026-03-02 14:05 -0500 (Entry 3; latest builder entry seen: 2)*
 ```
 
 ## 1. Build
@@ -79,11 +83,21 @@ The reviewer (Codex, via the poller) answers in
 ```
 # verdict — builder r03
 fingerprint checked: MATCH
-verdict: ADOPT-WITH-CHANGES
 findings:
   [major] dep `oldxml` claimed "abandoned" — repo shows a release 4 months
   ago. Recheck or reword with the evidence.
   [minor] two risk rows lack version-pin citations.
+uncheckable premises: that data/deps.lock reflects the environment the
+  report's consumers actually deploy (no runnable environment in the set to
+  regenerate it); repo-activity reads are as of this round's date.
+verdict: ADOPT-WITH-CHANGES
+```
+
+…and the round lands in the shared round ledger — `channel/INDEX.md`, the
+builder appending its own side's row only:
+
+```
+| r03 | builder | RESULTS | review_request_builder_r03.md | verdict_builder_r03.md (poller-written) | ADOPT-WITH-CHANGES — 1 major (oldxml recheck), 1 minor (pin citations) | fixes committed | r04 |
 ```
 
 ## 3. The kill (this is the interesting part)
