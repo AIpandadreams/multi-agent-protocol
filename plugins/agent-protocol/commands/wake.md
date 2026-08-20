@@ -176,7 +176,7 @@ Requested role: $ARGUMENTS
       - **MORE than one head** is a second-dispatch-surface defect: NO
         head is treated as an instruction, and the report's `Next step:`
         line is replaced, verbatim, by:
-      `⛔ SECOND DISPATCH SURFACE — <K> Next-Step-shaped headings (canonical census) in the role file — no head is an instruction until exactly one remains; demote the extras via the renderer (tools/render_head --adopt) — pre-adoption workspace (no plans/): the bootstrap hand demotion (Rules).`
+      `⛔ SECOND DISPATCH SURFACE — <K> Next-Step-shaped headings (canonical census) in the role file — no head is an instruction until exactly one remains; demote the extras via the hand demotion (Rules).`
       - **Exactly one head** proceeds to the freshness legs below.
       With the single head, its text (the BODY graded below) runs from
       the heading to the DEMOTED-HISTORY BOUNDARY — a `#### [superseded …]`
@@ -265,7 +265,7 @@ Requested role: $ARGUMENTS
       and never merges, interleaves or re-sequences their ENTRY
       SEQUENCES, so the inertness pinned above is untouched. A reader must be able to reproduce the line exactly, which
       is the only reason an order is fixed at all.
-      A head carrying a `render_head` footer (an HTML comment stamping
+      A head carrying a renderer footer (an HTML comment stamping
       `rendered_at` plus each source file's mtime) ALSO faces the
       footer-staleness leg on every wake. The footer is RECOGNIZED per
       the grammar it shares with the renderer, scoped to
@@ -279,23 +279,22 @@ Requested role: $ARGUMENTS
       carries a footer — are an AMBIGUOUS STAMP — an appended lookalike
       never becomes the footer and never silently un-renders the head;
       fail closed, demote, verbatim:
-      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> footer-shaped lines inside the Next Step section — an appended lookalike never becomes the footer). Not an instruction — regenerate (tools/render_head) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> footer-shaped lines inside the Next Step section — an appended lookalike never becomes the footer). Not an instruction — regenerate via hand supersession (Rules) and re-derive.`
       With the unique footer, compare every stamped mtime against that
       source's ACTUAL mtime — any source whose mtime DIFFERS from its
       stamp (forward OR backward — a backdated/restored source is never
       fresh), or stamped but missing from disk or unreadable, demotes
       the head, verbatim:
-      `⚠ STALE HEAD — demoted to historical: rendering is stale (<PATH> changed since the last render). Not an instruction — regenerate (tools/render_head) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: rendering is stale (<PATH> changed since the last render). Not an instruction — regenerate via hand supersession (Rules) and re-derive.`
       A footer whose sources token does not parse as
       `<rel>@<epoch>[,…]` is CORRUPT — fail CLOSED (never crash, never
       dispatch on a stamp that cannot be read), demote, verbatim:
-      `⚠ STALE HEAD — demoted to historical: render_head footer is corrupt (sources token unparseable). Not an instruction — regenerate (tools/render_head) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: renderer footer is corrupt (sources token unparseable). Not an instruction — regenerate via hand supersession (Rules) and re-derive.`
       A demoted head is never executed; re-derive the next action from
       the digest (6b) plus the channel tails, then regenerate the head
-      via the renderer (`tools/render_head`) —
-      a rendered head is derived, not authored, so regeneration
-      overwrites no judgment, and a wake never hand-writes head text
-      (sole exception: the bootstrap carve-out — Rules below).
+      via the hand procedure (Rules below) — a regenerated head is
+      derived from the digest and the tails, not authored fresh, so
+      regeneration overwrites no judgment.
 
 7. **Lock the role** for this session: state plainly that you are the
    <role> for this workspace and will not act as any other role here.
@@ -332,20 +331,18 @@ Requested role: $ARGUMENTS
   the discrepancy in memory, and say so in the wake report.
 - A wake that finds no `## Next Step` reports that the last session slept
   without one — the report's `Next step:` line reads, verbatim:
-  `⚠ NO HEAD — last checkpoint slept without a ## Next Step (checkpoint defect); reconstruct from the ⚡ block + channel and render one (tools/render_head; pre-adoption: bootstrap hand head) before acting.`
-  It then reconstructs the state from the ⚡ block + channel and RENDERS
-  the missing head via the renderer (`tools/render_head`) before
-  proceeding — a wake never hand-writes a `## Next Step` outside the
-  bootstrap carve-out below.
-- **Bootstrap carve-out (pre-adoption workspaces).** A workspace with no
-  `plans/` directory has not adopted the ledger, and the renderer REFUSES
-  to run there (`render_head` renders adopted workspaces only — rc 2), so
-  a step-6c or Rules cure that names `tools/render_head` degrades to its
-  HAND form in exactly that state — byte-safe, loud, and the ONLY
-  sanctioned hand head writes:
-  1. **Extra heads** → bootstrap hand demotion IN PLACE: rewrite ONLY each
+  `⚠ NO HEAD — last checkpoint slept without a ## Next Step (checkpoint defect); reconstruct from the ⚡ block + channel and hand-write one (Rules hand procedure) before acting.`
+  It then reconstructs the state from the ⚡ block + channel and writes
+  the missing head via the hand procedure below before proceeding — the
+  hand procedure's three forms are the only sanctioned head writes.
+- **Hand procedure — and a stated deferral.** An automated head renderer
+  (`tools/render_head`) is OWED, NOT SHIPPED: no such tool ships in this
+  release, so every step-6c or Rules cure that regenerates or demotes a
+  head uses this HAND form, in every workspace, adopted or not — byte-safe,
+  loud, and the ONLY sanctioned hand head writes:
+  1. **Extra heads** → hand demotion IN PLACE: rewrite ONLY each
      extra heading line to
-     `#### [superseded <date> — bootstrap hand demotion (pre-adoption), historical next step, not an instruction] <old title>`,
+     `#### [superseded <date> — hand demotion, historical next step, not an instruction] <old title>`,
      body bytes untouched. Keep the single LIVE head — the one the ⚡
      block designates (when ambiguous, the most recent checkpoint's) —
      and demote every other.
@@ -356,9 +353,11 @@ Requested role: $ARGUMENTS
   3. **Stale hand head** → hand supersession: demote the old head
      byte-intact as in (1), then write a fresh head citing the live
      tails.
-  The carve-out exists only while `plans/` is absent; adopting the ledger
-  ends it, and the first post-adoption render goes through
-  `tools/render_head --adopt`.
+  When a renderer ships in a later release, these cures regenerate through
+  it instead of by hand; until then the hand form is the procedure, not a
+  fallback. (Renderer footers — the HTML-comment stamps step 6c grades —
+  appear only in heads written by an external renderer a deployment
+  supplies itself; this release neither writes nor requires them.)
 - A head demoted by step 6c stays demoted for the whole session:
   re-derivation, never the old text, produces the next action, and the
   demotion is recorded in memory at the next checkpoint. The step-6 checks
