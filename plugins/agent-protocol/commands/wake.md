@@ -77,13 +77,14 @@ Requested role: $ARGUMENTS
 4. **Resolve the role** to a canonical role (`owner` | `builder` |
    `orchestrator` | `creator`), in three tiers — first match wins:
    1. **Canonical name** — `owner`, `builder`, `orchestrator`, `creator`
-      resolve to themselves. (`creator` is canonical because the frozen
-      plan schema's seat enum admits it; it binds only in a workspace that
-      provisions `memory/creator/` — the one-agent-per-role conformance
-      gate still governs. With the tier-3 aliases below, the resolver
-      spans the schema's full six-seat space: `engine`/`helper` normalize,
-      the other four self-resolve — one normalization contract with the
-      step-6b digest and the renderer.)
+      resolve to themselves. (`creator` is canonical alongside the three
+      positional roles; it binds only in a workspace that provisions
+      `memory/creator/` — the one-agent-per-role conformance gate still
+      governs. With the tier-3 aliases below, the resolver spans the full
+      six-token seat space this command accepts — `owner`, `builder`,
+      `orchestrator`, `creator`, `engine`, `helper`: `engine`/`helper`
+      normalize, the other four self-resolve — one normalization contract
+      with the step-6b digest.)
    2. **The workspace's `ROLE_ALIASES` row** in BINDINGS.md — each
       `<display>→<canonical>` maps a bound SIDE_NAME to its canonical role.
       An explicit workspace binding always beats the built-ins below.
@@ -134,21 +135,25 @@ Requested role: $ARGUMENTS
       while the sweeper is down.
 
    b. **Open-ledger digest (M4).** Load every `plans/*.plan.yaml` with
-      `state: open` and render a typed digest for the bound seat. Seat
+      `state: open` and render a typed digest for the bound seat. The
+      three plan-file rules this digest relies on are stated INLINE here
+      and are normative in this file — no separate schema file ships
+      (`docs/PLAN-LEDGER.md` records that status). Seat
       names compare NORMALIZED through the wake aliases (`engine`→`owner`,
       `helper`→`builder`; `orchestrator`, `owner`, `builder`, `creator`
-      map to themselves) — the frozen schema admits all six seats and the
+      map to themselves) — all six seat tokens are admitted and the
       digest must not go blind on an alias:
-      - every step whose `owner` (REQUIRED by the frozen schema — there
+      - every step whose `owner` (REQUIRED on every step — there
         is NO fallback to the plan's `owner_seat`; a step with no `owner`
-        is a schema defect and renders as a `DEFECT` line in EVERY
+        is a plan defect and renders as a `DEFECT` line in EVERY
         seat's digest — surfaced loudly, never guessed, never dropped)
         normalizes to this seat and whose status is `pending`,
         `in-progress`, or `blocked`;
       - every gate with `ruled: null` on a plan this seat owns, plus any
         gate that `unblocks` a step this seat owns;
       - every UNFIRED clock (`fired` null or absent — a non-null `fired`
-        stamp excludes the clock from the digest, per schema FD-2) on a
+        stamp excludes the clock from the digest: a fired clock is a
+        discharged obligation, not a pending one) on a
         plan this seat owns — future AND overdue (mark overdue rows
         `OVERDUE`; the daemon may be down);
       - every live constraint on a plan this seat owns (`until` timestamp
