@@ -143,7 +143,7 @@ docs/                      protocol book: AUTONOMY dial, QUICKSTART, CLOUD,
 ```
 
 > *Maintenance: this inventory is summarized from `git ls-files` at repo
-> release 1.9.1. When the tree changes, regenerate this block (and its twin —
+> release 1.10.0. When the tree changes, regenerate this block (and its twin —
 > the two files fail review as a pair) from `git ls-files`, not from memory.*
 
 **Key design decisions you should preserve in any custom build:**

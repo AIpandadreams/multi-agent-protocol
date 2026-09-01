@@ -30,12 +30,13 @@ changes only through the
 
 ## [1.10.0] — 2026-09-01
 
-**The head renderer ships.** `docs/PLAN-LEDGER.md` has carried the automated head
-renderer as specified-and-deferred since the ledger was first written, and earlier
-in this same development line the deferral was restated in the tree as "an
-automated head renderer (`tools/render_head`) is **OWED, NOT SHIPPED**". That
-sentence was true when it was written and is false of this tree: the renderer
-landed eleven commits later. It is named here rather than quietly dropped, because
+**The head renderer ships.** `docs/PLAN-LEDGER.md` has carried automated head
+rendering as specified-and-deferred (its creation commit defers wake rendering and
+head-staleness checking; this tool is the form that shipped), and earlier in this
+same development line the deferral was restated in the tree as "an automated head
+renderer (`tools/render_head`) is **OWED, NOT SHIPPED**" (`4aaab89`). That sentence
+was true when it was written and is false of this tree: the renderer landed
+**fifteen commits later** at `fb29ae6` — `git rev-list --count 4aaab89..fb29ae6`. It is named here rather than quietly dropped, because
 a reader who follows this repository commit-by-commit will have read the deferral
 and would otherwise carry it forward. This release:
 
@@ -74,8 +75,10 @@ and would otherwise carry it forward. This release:
   that characterization is a reading, not a measurement. A later release owes
   the rest; nothing in this one should be read as claiming the collision is retired;
 - **renames `NON_SEAT_IDENTITIES` to `NON_PROFILE_IDENTITIES`** across eighteen
-  references in three files, with no behavior change — the source says so and the
-  diff bears it out. Residual identifiers survive the rename (a local `non_seat`,
+  references in three files, with **no in-tree behavior change** — the diff bears it
+  out. ⚠ The old name is a module-level attribute of `tools/conformance_check.py`
+  and was removed **without an alias**, so any out-of-tree code importing it by name
+  breaks. In-tree there is no such importer; out-of-tree we cannot know. Residual identifiers survive the rename (a local `non_seat`,
   the `NON_SEAT_REFUSED` fixture, the `NonSeatIdentityProfileTest` class) and are
   left for a later pass rather than claimed as done;
 - **narrows the "no network calls" trust claim** at its two sites (`README.md`,
@@ -85,8 +88,10 @@ and would otherwise carry it forward. This release:
   discharge path the code does not take. Documentation only: zero executable lines
   changed;
 - **genericises the worked example** so it no longer carries concrete dates or
-  round identifiers from the session it was drawn from — a reader can no longer
-  mistake an illustration for a record;
+  round identifiers from the session it was drawn from. It still describes itself as
+  a sanitized transcript and discusses its own demo run, so this removes the
+  incidental specifics rather than making the example unmistakable for an
+  illustration;
 - **cures four defects found inside this delta**, by auditing the release against
   the tree it produces rather than against its own commit messages. Three were
   sentences that stopped being true somewhere inside the delta and were never
@@ -105,8 +110,8 @@ and would otherwise carry it forward. This release:
   confirmed by injecting exactly that duplication and observing the pre-cure guard
   stay green where the cured guard goes red naming the file. (3) The repository
   inventory in `docs/CREATOR-SEAT-BOOTSTRAP.md` and its `.html` twin read "fifteen
-  utilities" and omitted `render_head`, which lands six commits earlier in this same
-  delta; the count is now measured at sixteen
+  utilities" and omitted `render_head`, which lands four commits earlier in this same
+  delta (`git rev-list --count fb29ae6..00cf926`); the count is now measured at sixteen
   (`git ls-files tools/ | grep -c '\.py$'`) and the missing name **added** — it was
   never in the inventory to be restored. (4) One
   un-reframed "four parties" survived in `docs/CLOUD.md` after the four-authority-party
