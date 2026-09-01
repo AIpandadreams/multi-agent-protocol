@@ -30,6 +30,28 @@ changes only through the
 
 ## [1.10.0] — 2026-09-01
 
+> ⚠ **AMENDED 2026-09-01, after the release.** Three statements in this entry were
+> measured wrong by an SOP-7 reviewer and corrected **one commit too late**: the
+> merge that produced `v1.10.0` took the branch at `66604bb`, and the corrections
+> landed at `d489a9f`. **The tree the `v1.10.0` tag points at therefore carries the
+> uncorrected text**; this copy is the corrected one, and the divergence is stated
+> here rather than repaired silently.
+>
+> | the released tree says | measured |
+> |---|---|
+> | the rename is "eleven word-instances" | **fourteen** instances on **eleven** changed lines (eleven was the changed-LINE count) |
+> | gates 14b/14c check the registry "against its own table" | they read the rule catalog from `docs/CREATOR-SEAT-BOOTSTRAP.md` — a **cross-document** check, which the released wording *understates* |
+> | "a stale entry **cannot fail**" | it could fail on the obsolete literal `## The four seats`; what it could not do is **protect** — and "cannot fail" contradicted this entry's own *vacuous-not-false* paragraph |
+>
+> None of the three is a safety, security, or behavioral claim, and no released
+> code is affected. The cause is worth more than the corrections: the tip sha was
+> reported as final **while a reviewer's verdict had not been fully reconciled
+> against the text**. A "final" marker is a claim about completed reconciliation,
+> not about freshness. No gate in this repository measures whether a changelog
+> sentence is true — `mirror-check` was green, CI was green, the tag verified, and
+> the Release object read back correct throughout.
+
+
 **The head renderer ships.** `docs/PLAN-LEDGER.md` has carried automated head
 rendering as specified-and-deferred (its creation commit defers wake rendering and
 head-staleness checking; this tool is the form that shipped), and earlier in this
