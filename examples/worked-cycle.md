@@ -17,13 +17,13 @@ The orchestrator queues it and dispatches:
 `TASKQUEUE.md` (row appended):
 
 ```
-| T7 | 2026-03-02 | principal | dependency-risk report for api/ | dispatched → builder |
+| T7 | YYYY-MM-DD | principal | dependency-risk report for api/ | dispatched → builder |
 ```
 
-`channel/orch_to_builder_2026-03-02.md` (entry appended):
+`channel/orch_to_builder_YYYY-MM-DD.md` (entry appended):
 
 ```
-## ORCH ENTRY <n> [v3.1] — 2026-03-02 — dispatch T7: dependency-risk report for api/ (latest BUILDER entry seen: <m>)
+## ORCH ENTRY <n> [v3.1] — YYYY-MM-DD — dispatch T7: dependency-risk report for api/ (latest BUILDER entry seen: <m>)
 
 Nothing in this entry is or carries the principal's authorization.
 
@@ -31,13 +31,17 @@ Nothing in this entry is or carries the principal's authorization.
 ancient-pinned deps). Deliverable: report file in the canonical repo per
 SIGNING rules, review round before adoption.
 
-*— orch session, 2026-03-02 14:05 -0500 (Entry <n>; latest builder entry seen: <m>)*
+*— orch session, YYYY-MM-DD 14:05 -0500 (Entry <n>; latest builder entry seen: <m>)*
 ```
 
 *(`<n>`/`<m>` are placeholder tokens in the two grammar positions; in the demo
 run they were the small integers the rest of this story uses — the orch lane at
 entry 3, the builder's latest at 2. Examples in this repo mint non-mintable id
 shapes only — see CONTRIBUTING, Conventions.)*
+
+*(Round numbers are placeholders too: `rNN` is the round this story opens on and
+`rNN+1` its successor. The demo run used the small integers a first review cycle
+produces; nothing in the protocol keys on the value, only on the succession.)*
 
 ## 1. Build
 
@@ -48,18 +52,18 @@ checkpoints BEFORE requesting review — `memory/builder/MEMORY.md`:
 ```
 ## ⚡ working state
 next channel entry: 4 · last seen: orch 3, owner 5
-next review round: r03
+next review round: rNN
 in flight: T7 report staged on branch t7-dep-report (2 commits)
 ## Next Step
-Post review_request_builder_r03 for t7-dep-report; fingerprint first.
+Post review_request_builder_rNN for t7-dep-report; fingerprint first.
 ```
 
 ## 2. Review round
 
-`channel/review_request_builder_r03.md`:
+`channel/review_request_builder_rNN.md`:
 
 ```
-# review request — builder r03 [PROTOCOL v3.1]
+# review request — builder rNN [PROTOCOL v3.1]
 artifact set:    docs/dep-risk-api.md · docs/dep-risk-api.html (rendered twin,
                  UNCHANGED — twins fail as a pair) · data/deps.lock (the input
                  the report's claims are derived from, unchanged)
@@ -83,10 +87,10 @@ numbers. And the fingerprint digests the SET rather than the diff — an unchang
 member emits no diff bytes, so a diff digest cannot pin it.
 
 The reviewer (a Codex-class second-vendor CLI, via the poller) answers in
-`channel/verdict_builder_r03.md`:
+`channel/verdict_builder_rNN.md`:
 
 ```
-# verdict — builder r03
+# verdict — builder rNN
 fingerprint checked: MATCH
 findings:
   [major] dep `oldxml` claimed "abandoned" — repo shows a release 4 months
@@ -102,7 +106,7 @@ verdict: ADOPT-WITH-CHANGES
 builder appending its own side's row only:
 
 ```
-| r03 | builder | RESULTS | review_request_builder_r03.md | verdict_builder_r03.md (poller-written) | ADOPT-WITH-CHANGES — 1 major (oldxml recheck), 1 minor (pin citations) | fixes committed | r04 |
+| rNN | builder | RESULTS | review_request_builder_rNN.md | verdict_builder_rNN.md (poller-written) | ADOPT-WITH-CHANGES — 1 major (oldxml recheck), 1 minor (pin citations) | fixes committed | rNN+1 |
 ```
 
 ## 3. The kill (this is the interesting part)
@@ -113,11 +117,11 @@ was updated at the checkpoint boundary:
 
 ```
 ## ⚡ working state
-next review round: r04 (r03 = ADOPT-WITH-CHANGES, fixes committed,
+next review round: rNN+1 (rNN = ADOPT-WITH-CHANGES, fixes committed,
   NOT yet re-requested)
 in flight: T7 — awaiting re-review
 ## Next Step
-Fingerprint t7-dep-report (post-fix) and post review_request_builder_r04.
+Fingerprint t7-dep-report (post-fix) and post review_request_builder_rNN+1.
 ```
 
 ## 4. Cold successor
@@ -132,14 +136,14 @@ The wake report:
 
 ```
 ☀️ AWAKE — builder @ demoproject-ws [PROTOCOL v3.1]
-State: entry 4 next · round r04 next · T7 in flight (fixes committed,
+State: entry 4 next · round rNN+1 next · T7 in flight (fixes committed,
   re-review pending)
 Channel: clean (orch 3, owner 5 acked)
 Next step: Fingerprint t7-dep-report (post-fix) and post
-  review_request_builder_r04.
+  review_request_builder_rNN+1.
 ```
 
-It does exactly that. r04 comes back `ADOPT`, fingerprint MATCH.
+It does exactly that. rNN+1 comes back `ADOPT`, fingerprint MATCH.
 
 ## 5. Adoption and closure
 
@@ -149,11 +153,11 @@ the owner merges (or, where the binding requires it, the principal does)
 and records the decision. The orchestrator closes the loop:
 
 ```
-| T7 | … | done — adopted r04, merged by owner, report at docs/dep-risk-api.md |
+| T7 | … | done — adopted rNN+1, merged by owner, report at docs/dep-risk-api.md |
 ```
 
 …and T7 appears in the principal's next briefing with the round history
-one line long: `r03 AWC → r04 ADOPT`.
+one line long: `rNN AWC → rNN+1 ADOPT`.
 
 ## What to notice
 
