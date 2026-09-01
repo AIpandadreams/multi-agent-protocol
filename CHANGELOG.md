@@ -124,11 +124,13 @@ went both ways: three new instances were introduced in `plans/README.md` and
 `wake.md` in this same span, and are owed a later pass.
 
 **Scale, stated so it is not overread.** Twenty-two commits, 44 files, +2,775/−180,
-measured **`v1.9.1..00cf926`** — up to and including the cure commit, and excluding the
-**three** commits that follow it: two that write this entry, and one that bumps the
-plugin and marketplace version strings. A scale line cannot count the commit that
-writes it. Run at the tag the span reads higher by those three; the difference is
-this entry and the version string, not behavior. The endpoint sha is printed so the
+measured **`v1.9.1..00cf926`** — up to and including the cure commit, and excluding
+**every commit that follows it**: those that write and revise this entry, and the one
+that bumps the plugin and marketplace version strings. A scale line cannot count the
+commit that writes it, and stating the bound rather than a count of excluded commits
+keeps this sentence true under further revision of the entry itself. Run at the tag
+the span reads higher by exactly those; the difference is this entry and the version
+string, not behavior. The endpoint sha is printed so the
 figure is reproducible — `git diff --shortstat v1.9.1..00cf926`. Six files carry
 runtime or CI behavior change; the other 38 are documentation, samples, manifest
 descriptions, and the behavior-neutral rename above. The cure commit changed no
