@@ -112,11 +112,15 @@ release is a defect the moment the release lands. ⚠ The sweep is not complete 
 went both ways: three new instances were introduced in `plans/README.md` and
 `wake.md` in this same span, and are owed a later pass.
 
-**Scale, stated so it is not overread.** Twenty-two commits, 44 files, +2,775/−180.
-Six files carry runtime or CI behavior change; the other 38 are documentation,
-samples, manifest descriptions, and the behavior-neutral rename above. The cure
-commit changed no file the delta had not already touched, which is why the file
-count is unchanged while the commit and line counts moved.
+**Scale, stated so it is not overread.** Twenty-two commits, 44 files, +2,775/−180 —
+measured over the delta up to and including the cure commit, and **excluding the
+changelog commits that state these figures**, because a scale line cannot count
+the commit that writes it. Run at the tag the span reads higher by exactly those
+commits and their lines; the difference is this entry, not code. Six files carry
+runtime or CI behavior change; the other 38 are documentation, samples, manifest
+descriptions, and the behavior-neutral rename above. The cure commit changed no
+file the delta had not already touched, which is why the file count is unchanged
+while the commit and line counts moved.
 
 Process: normal PR flow (branch → PR → merge), two merge commits in the span.
 
