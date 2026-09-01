@@ -4,7 +4,7 @@ The local deployments in [CONFIGURATIONS.md](CONFIGURATIONS.md) assume every
 session lives on one machine sharing one filesystem. This page covers the other
 case: sessions on **different machines** synchronizing only through a git remote,
 using the **git-sync transport** ([transports/git-sync.md](../transports/git-sync.md)).
-Nothing about the four parties, the gates, or the review rounds changes — only
+Nothing about the four authority parties, the gates, or the review rounds changes — only
 the transport under the channel does.
 
 > Neutral examples throughout: hosts `alpha`/`beta`, remotes on `example.com`,
