@@ -45,10 +45,13 @@ and would otherwise carry it forward. This release:
   HTML-comment footer carrying the render time and each source file's mtime, so a
   later wake can detect that the head it is about to read is stale rather than
   acting on it;
-- **states the integration honestly: no shipped tool invokes the renderer.** CI
-  exercises it and the wake procedure documents it, but `tools/` contains no call
-  site. It is operator-run in this release; a workspace that never runs it behaves
-  exactly as it did before;
+- **states the integration honestly: no shipped tool invokes the renderer.** The CI
+  configuration exercises it and the wake procedure documents it, but no call site
+  exists anywhere in the repository outside CI — measured repo-wide, not only under
+  `tools/`. It is operator-run in this release; a workspace that never runs it
+  behaves exactly as it did before. ⚠ **CI has not run against the cure commit.**
+  The evidence at this tree is local: the full suite at `00cf926` — 435 passed,
+  215 subtests, exit 0 — and `mirror_check` green;
 - **adds two SOP-registry gates to `tools/mirror_check.py`** (ids 14b and 14c,
   61 added lines, 7 emission sites) — they check `docs/SOP-REGISTRY.md`'s declared
   SOP count, the SOP names, and their order against the registry's own table, so a
@@ -64,8 +67,11 @@ and would otherwise carry it forward. This release:
   the four pointers to it, and the `CORE_HEADINGS` guard entry in
   `tools/mirror_check.py` that named it. The word collided with the workspace's own
   seat identities, which are a different thing entirely. ⚠ **This rename is begun,
-  not finished**: 57 `seat` tokens remain in `skills/.../review-convergence.md`
-  alone, most of them denoting exactly the thing renamed here. A later release owes
+  not finished**: 57 case-insensitive `seat` occurrences remain in
+  `skills/.../review-convergence.md` alone — `grep -oi seat | wc -l`; the
+  case-sensitive count is 56, and the instrument is named because the obvious
+  command returns the smaller number. Most denote exactly the thing renamed here;
+  that characterization is a reading, not a measurement. A later release owes
   the rest; nothing in this one should be read as claiming the collision is retired;
 - **renames `NON_SEAT_IDENTITIES` to `NON_PROFILE_IDENTITIES`** across eighteen
   references in three files, with no behavior change — the source says so and the
@@ -82,9 +88,12 @@ and would otherwise carry it forward. This release:
   round identifiers from the session it was drawn from — a reader can no longer
   mistake an illustration for a record;
 - **cures four defects found inside this delta**, by auditing the release against
-  the tree it produces rather than against its own commit messages. None was a
-  regression; each was a sentence or a string that stopped being true somewhere
-  inside the delta and was never revisited. (1) A governing table row added by this
+  the tree it produces rather than against its own commit messages. Three were
+  sentences that stopped being true somewhere inside the delta and were never
+  revisited. The fourth, D2 below, differs in kind and is stated separately rather
+  than folded in with them: its assertion never became *false* — it became
+  **vacuous**, which is exactly why it stayed green, and the protection it had been
+  providing was lost inside this delta rather than in any released version. (1) A governing table row added by this
   delta asserted the seats/stages collision "is retired"; it is not, and the row now
   states which term it *binds* rather than reporting a completion that has not
   happened — a governing table's job is the former, and it had accidentally done the
@@ -97,7 +106,9 @@ and would otherwise carry it forward. This release:
   stay green where the cured guard goes red naming the file. (3) The repository
   inventory in `docs/CREATOR-SEAT-BOOTSTRAP.md` and its `.html` twin read "fifteen
   utilities" and omitted `render_head`, which lands six commits earlier in this same
-  delta; the count is now measured at sixteen and the name restored. (4) One
+  delta; the count is now measured at sixteen
+  (`git ls-files tools/ | grep -c '\.py$'`) and the missing name **added** — it was
+  never in the inventory to be restored. (4) One
   un-reframed "four parties" survived in `docs/CLOUD.md` after the four-authority-party
   reframing landed at eleven other sites, in a file this release already touched.
 
@@ -112,11 +123,13 @@ release is a defect the moment the release lands. ⚠ The sweep is not complete 
 went both ways: three new instances were introduced in `plans/README.md` and
 `wake.md` in this same span, and are owed a later pass.
 
-**Scale, stated so it is not overread.** Twenty-two commits, 44 files, +2,775/−180 —
-measured over the delta up to and including the cure commit, and **excluding the
-changelog commits that state these figures**, because a scale line cannot count
-the commit that writes it. Run at the tag the span reads higher by exactly those
-commits and their lines; the difference is this entry, not code. Six files carry
+**Scale, stated so it is not overread.** Twenty-two commits, 44 files, +2,775/−180,
+measured **`v1.9.1..00cf926`** — up to and including the cure commit, and excluding the
+**three** commits that follow it: two that write this entry, and one that bumps the
+plugin and marketplace version strings. A scale line cannot count the commit that
+writes it. Run at the tag the span reads higher by those three; the difference is
+this entry and the version string, not behavior. The endpoint sha is printed so the
+figure is reproducible — `git diff --shortstat v1.9.1..00cf926`. Six files carry
 runtime or CI behavior change; the other 38 are documentation, samples, manifest
 descriptions, and the behavior-neutral rename above. The cure commit changed no
 file the delta had not already touched, which is why the file count is unchanged
