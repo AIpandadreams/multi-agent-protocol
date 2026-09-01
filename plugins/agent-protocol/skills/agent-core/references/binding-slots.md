@@ -20,7 +20,7 @@ this table governs and the other surface is the defect to fix:
 | **accepted wake tokens** | `owner` · `builder` · `orchestrator` · `creator` · `engine` · `helper` (· `orch`) | what `/wake` resolves, in tiers: canonical names self-resolve, the workspace's ROLE_ALIASES next, built-in aliases last — one normalization contract with the wake step-6b digest |
 | **participants** | principal · orchestrator · owner · builder · reviewer | the five default participants of a full (3-agent) deployment |
 | **authority parties** | principal · owner · builder · reviewer | the four participants that hold authority of some kind. The orchestrator is deliberately NOT in this set — it is an INTERFACE that carries bytes, never permission |
-| **review stages** | author · peer reviewer · cross-vendor reviewer · author-as-verifier | the four STAGES of a converging review (`review-convergence.md`) — stages of one review cycle, NOT agent seats. Earlier protocol text called these "seats"; that collision is retired in favor of "stages" |
+| **review stages** | author · peer reviewer · cross-vendor reviewer · author-as-verifier | the four STAGES of a converging review (`review-convergence.md`) — stages of one review cycle, NOT agent seats. Earlier protocol text called these "seats"; that rename is IN PROGRESS, not complete — `review-convergence.md` still carries the older word in its prose, and where it does, "stages" is the term this table binds |
 
 Stated deferral: `/sleep` supports the three positional seats only. A
 creator-bound session checkpoints per its charter's own procedure

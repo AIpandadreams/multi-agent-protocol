@@ -126,13 +126,13 @@ plugins/agent-protocol/
     orchestrator-agent/     role SKILL + START_SESSION, session-card,
                             channel-protocol, authorization-relay,
                             orchestration-protocol, models-and-cost, pa-duties
-tools/                     fifteen utilities: stampers (new_project,
+tools/                     sixteen utilities: stampers (new_project,
                            adopt_project, scale_workspace), verifiers
                            (conformance_check, validate_auth_log, mirror_check,
                            release_scrub, reconcile_vendored,
                            wave_coverage_check), lifecycle (migrate_workspace,
                            git_sync, watcher, reviewer_poller), plan ledger
-                           (plan_common, compaction_inject)
+                           (plan_common, compaction_inject, render_head)
 transports/                the transport contracts (local-fs, git-sync) —
                            top-level, not under docs/
 plans/                     plan-ledger adoption scaffold (plans/README.md)
@@ -143,7 +143,7 @@ docs/                      protocol book: AUTONOMY dial, QUICKSTART, CLOUD,
 ```
 
 > *Maintenance: this inventory is summarized from `git ls-files` at repo
-> release 1.9.1. When the tree changes, regenerate this block (and its twin —
+> release 1.10.0. When the tree changes, regenerate this block (and its twin —
 > the two files fail review as a pair) from `git ls-files`, not from memory.*
 
 **Key design decisions you should preserve in any custom build:**

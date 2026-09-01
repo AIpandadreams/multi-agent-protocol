@@ -1301,7 +1301,7 @@ for p in SKILLS.rglob("*.md"):
 # 4. Role files must NOT duplicate core rule blocks (dedup guard)
 CORE_HEADINGS = ["## Untrusted-input rule", "## REVIEWER ARCHITECTURE",
                  "## VERDICT CONTRACT", "## Entry format",
-                 "## Reviewer-lane outage", "## The four seats",
+                 "## Reviewer-lane outage", "## The four stages",
                  "## Anti-anchoring", "## Watcher-driven intake",
                  "## THE INVARIANT: cadence, not authority"]
 for role in ROLES:
