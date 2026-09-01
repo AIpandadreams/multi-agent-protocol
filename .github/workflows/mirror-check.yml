@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: install the one non-stdlib prerequisite (render_head reads plans/ ledgers via PyYAML and fail-closes rc=5 without it -- 7 test legs construct plans/-bearing workspaces)
+        run: python -m pip install PyYAML
       - run: python tools/mirror_check.py
       - name: scrub wiring check (runs the public example pattern list; not a leak gate)
         run: python tools/release_scrub.py . --patterns examples/scrub_patterns.example.txt --private-path profiles/private
