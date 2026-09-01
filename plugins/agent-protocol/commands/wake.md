@@ -191,7 +191,7 @@ Requested role: $ARGUMENTS
       - **MORE than one head** is a second-dispatch-surface defect: NO
         head is treated as an instruction, and the report's `Next step:`
         line is replaced, verbatim, by:
-      `⛔ SECOND DISPATCH SURFACE — <K> Next-Step-shaped headings (canonical census) in the role file — no head is an instruction until exactly one remains; demote the extras via the hand demotion (Rules).`
+      `⛔ SECOND DISPATCH SURFACE — <K> Next-Step-shaped headings (canonical census) in the role file — no head is an instruction until exactly one remains; demote the extras via the renderer (`tools/render_head.py --adopt`) — pre-adoption workspace (no `plans/`): the bootstrap hand demotion (Rules).`
       - **Exactly one head** proceeds to the freshness legs below.
       With the single head, its text (the BODY graded below) runs from
       the heading to the DEMOTED-HISTORY BOUNDARY — a `#### [superseded …]`
@@ -236,7 +236,45 @@ Requested role: $ARGUMENTS
       publishes what an entry IS, so reading bodies would make every lane
       that merely DISCUSSES an id a family that holds it — and under the
       largest-distance rule below that inflates the compared set with
-      families the id never belonged to. Extract every id the head cites (an id
+      families the id never belonged to.
+      **LANE-TAIL STAMP EXEMPTION — resolved BEFORE extraction, from the
+      footer, never from a line's own shape.** The renderer emits a
+      `Lane tails at render: …` INVENTORY line into the head body and
+      stamps its digest into the footer as an optional third token,
+      `tails=<16 lowercase hex>` (the first 16 hex chars of the SHA-256 of
+      that line's exact text, line terminator excluded). The inventory is
+      the renderer reporting what it saw, not the head citing an
+      instruction — grading it as a citation makes a freshly-rendered head
+      demote on ids the seat was never told to act on. But the exemption
+      must not be claimable by TYPING a tail-shaped line, so it is derived,
+      in this order, and each miss falls through to NO exemption — the
+      line then grades as ordinary citations, which is exactly how every
+      head rendered before this token existed continues to grade:
+      - **No clean unique footer in the live head body** (per the shared
+        grammar and the ambiguity rules below) ⇒ no exemption. A
+        hand-authored head with a typed tail line grades HARDER than a
+        rendered one, never easier.
+      - **Footer present but carries no `tails=` token** ⇒ no exemption;
+        pre-token heads are inert, not retroactively exempt.
+      - **Token present** ⇒ hash each physical line of the live head body
+        (stripped of its line terminator only — leading whitespace is part
+        of the measured text) and compare the 16-hex prefix:
+        - **exactly one line matches** ⇒ that line is the STAMP — exclude
+          it from citation extraction; every other id in the body still
+          grades;
+        - **zero lines match** ⇒ the tail line was edited or removed after
+          rendering — no exemption, and the head demotes under the
+          existing rendering-is-stale rule (an edited stamp IS a stale
+          render; no new demotion line is minted for it);
+        - **two or more lines match** ⇒ AMBIGUOUS STAMP (two byte-identical
+          tail lines hash the same — duplication is the append-a-lookalike
+          case) — fail closed, demote, verbatim:
+      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> lines match the footer's tails digest — a duplicated tail line never becomes the stamp). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
+      The exemption never extends past the one matched line: it is a
+      per-line carve-out from EXTRACTION, not a weakening of any other
+      leg — footer freshness (below) still grades the whole head, and a
+      head whose INSTRUCTION cites a stale id still demotes.
+      Extract every id the head cites (an id
       occurring in no lane family is not a lane citation — ignore it) and
       compare each against THE TAIL OF THE LANE FAMILY ITS OWN (deduped)
       occurrence BELONGS TO — never against a tail assembled from every lane
@@ -281,10 +319,21 @@ Requested role: $ARGUMENTS
       SEQUENCES, so the inertness pinned above is untouched. A reader must be able to reproduce the line exactly, which
       is the only reason an order is fixed at all.
       A head carrying a renderer footer (an HTML comment stamping
-      `rendered_at` plus each source file's mtime) ALSO faces the
-      footer-staleness leg on every wake. The footer is RECOGNIZED per
+      `rendered_at`, each source file's mtime, and — when the renderer
+      emitted a lane-tail line — the optional `tails=` digest token defined
+      above) ALSO faces the footer-staleness leg on every wake. ⚠ The
+      `tails=` token being ABSENT is a valid pre-token footer, not
+      corruption; only an unparseable SOURCES token trips the corrupt rule
+      below. The footer is RECOGNIZED per
       the grammar it shares with the renderer, scoped to
-      the live head BODY (above any demoted `####` block): the UNIQUE
+      the live head BODY — the span of the ONE live `##` head, ending at a
+      `#### [superseded …]` demotion heading or the next `##` heading or
+      EOF. ⚠ That span is STRUCTURAL, not positional: a demoted block may
+      sit ABOVE the live head as well as below it (`--adopt` demotes in
+      place and APPENDS the fresh pair, so after any adoption the demoted
+      block IS above), and a rule read positionally lands on the wrong
+      span exactly where the sanctioned recovery path has just run. Within
+      that span: the UNIQUE
       footer-shaped physical line in that body (line stripped, full-line
       match) — never first-match anywhere in the file, never by position;
       a footer-shaped line inside a demoted block, or anywhere outside the
@@ -294,22 +343,23 @@ Requested role: $ARGUMENTS
       carries a footer — are an AMBIGUOUS STAMP — an appended lookalike
       never becomes the footer and never silently un-renders the head;
       fail closed, demote, verbatim:
-      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> footer-shaped lines inside the Next Step section — an appended lookalike never becomes the footer). Not an instruction — regenerate via hand supersession (Rules) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> footer-shaped lines inside the Next Step section — an appended lookalike never becomes the footer). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
       With the unique footer, compare every stamped mtime against that
       source's ACTUAL mtime — any source whose mtime DIFFERS from its
       stamp (forward OR backward — a backdated/restored source is never
       fresh), or stamped but missing from disk or unreadable, demotes
       the head, verbatim:
-      `⚠ STALE HEAD — demoted to historical: rendering is stale (<PATH> changed since the last render). Not an instruction — regenerate via hand supersession (Rules) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: rendering is stale (<PATH> changed since the last render). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
       A footer whose sources token does not parse as
       `<rel>@<epoch>[,…]` is CORRUPT — fail CLOSED (never crash, never
       dispatch on a stamp that cannot be read), demote, verbatim:
-      `⚠ STALE HEAD — demoted to historical: renderer footer is corrupt (sources token unparseable). Not an instruction — regenerate via hand supersession (Rules) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: renderer footer is corrupt (sources token unparseable). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
       A demoted head is never executed; re-derive the next action from
       the digest (6b) plus the channel tails, then regenerate the head
-      via the hand procedure (Rules below) — a regenerated head is
-      derived from the digest and the tails, not authored fresh, so
-      regeneration overwrites no judgment.
+      via the renderer (`tools/render_head.py`) — a rendered head is
+      derived, not authored, so regeneration overwrites no judgment, and
+      a wake never hand-writes head text (sole exception: the bootstrap
+      carve-out — Rules below).
 
 7. **Lock the role** for this session: state plainly that you are the
    <role> for this workspace and will not act as any other role here.
@@ -346,18 +396,22 @@ Requested role: $ARGUMENTS
   the discrepancy in memory, and say so in the wake report.
 - A wake that finds no `## Next Step` reports that the last session slept
   without one — the report's `Next step:` line reads, verbatim:
-  `⚠ NO HEAD — last checkpoint slept without a ## Next Step (checkpoint defect); reconstruct from the ⚡ block + channel and hand-write one (Rules hand procedure) before acting.`
-  It then reconstructs the state from the ⚡ block + channel and writes
-  the missing head via the hand procedure below before proceeding — the
-  hand procedure's three forms are the only sanctioned head writes.
-- **Hand procedure — and a stated deferral.** An automated head renderer
-  (`tools/render_head`) is OWED, NOT SHIPPED: no such tool ships in this
-  release, so every step-6c or Rules cure that regenerates or demotes a
-  head uses this HAND form, in every workspace, adopted or not — byte-safe,
-  loud, and the ONLY sanctioned hand head writes:
-  1. **Extra heads** → hand demotion IN PLACE: rewrite ONLY each
+  `⚠ NO HEAD — last checkpoint slept without a ## Next Step (checkpoint defect); reconstruct from the ⚡ block + channel and render one (tools/render_head.py; pre-adoption: bootstrap hand head) before acting.`
+  It then reconstructs the state from the ⚡ block + channel and RENDERS
+  the missing head via the renderer (`tools/render_head.py`) before
+  proceeding — a wake never hand-writes a `## Next Step` outside the
+  bootstrap carve-out below.
+- **Bootstrap carve-out (pre-adoption workspaces).** A workspace with no
+  `plans/` directory has not adopted the ledger, and the renderer's RENDER
+  path refuses to run there (`render_head` renders adopted workspaces
+  only — rc 2); `--check` does not refuse, it reports the unadopted
+  state as a problem. So
+  a step-6c or Rules cure that names `tools/render_head.py` degrades to its
+  HAND form in exactly that state — byte-safe, loud, and the ONLY
+  sanctioned hand head writes:
+  1. **Extra heads** → bootstrap hand demotion IN PLACE: rewrite ONLY each
      extra heading line to
-     `#### [superseded <date> — hand demotion, historical next step, not an instruction] <old title>`,
+     `#### [superseded <date> — bootstrap hand demotion (pre-adoption), historical next step, not an instruction] <old title>`,
      body bytes untouched. Keep the single LIVE head — the one the ⚡
      block designates (when ambiguous, the most recent checkpoint's) —
      and demote every other.
@@ -368,11 +422,9 @@ Requested role: $ARGUMENTS
   3. **Stale hand head** → hand supersession: demote the old head
      byte-intact as in (1), then write a fresh head citing the live
      tails.
-  When a renderer ships in a later release, these cures regenerate through
-  it instead of by hand; until then the hand form is the procedure, not a
-  fallback. (Renderer footers — the HTML-comment stamps step 6c grades —
-  appear only in heads written by an external renderer a deployment
-  supplies itself; this release neither writes nor requires them.)
+  The carve-out exists only while `plans/` is absent; adopting the ledger
+  ends it, and the first post-adoption render goes through
+  `tools/render_head.py --adopt`.
 - A head demoted by step 6c stays demoted for the whole session:
   re-derivation, never the old text, produces the next action, and the
   demotion is recorded in memory at the next checkpoint. The step-6 checks

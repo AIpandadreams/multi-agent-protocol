@@ -50,8 +50,17 @@ with its operator-facing README. Every part below carries its own status:
 implementations exist and run in the steward's private deployment, and their public
 landing here is a gated port wave on the steward's side. That event is exactly what
 invalidates the "deferred" rows above: re-verify this table whenever a ported part
-lands (the same pass should re-check `/wake`'s renderer deferral, which lives on the
-same private side).
+lands (the same pass should re-check `/wake`'s renderer deferral).
+
+**Re-verified at the head-renderer landing.** `/wake`'s renderer is no longer on the
+private side: `tools/render_head.py` ships in this tree, and `/wake`'s step-6c and
+Rules cures route through it rather than through the hand form. Rows 3 and 4 above
+were re-checked in the same pass and are UNCHANGED — the enforcement check and the
+clock sweep remain specified-and-deferred. Two limits belong with this row rather than
+in a release note: no plan **schema** file ships, so a public adopter cannot yet
+validate a plan file against one; and the renderer's test suite ships with it
+(`tests/test_render_head_tails_stamp.py`), collected by
+`python -m unittest discover -s tests`.
 
 So the design below is written in the present tense of a **specification**: for parts
 3–5 it describes what those parts do *when built*, and you should not expect to find,
