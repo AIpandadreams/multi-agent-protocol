@@ -69,7 +69,7 @@ Artifact set + options: $ARGUMENTS
    artifacts, not from any summary, and to answer the omission question outright:
    *what should have changed here and didn't?* Verdict per review-core's contract.
 
-2. **Adjudicate + fix.** As author-verifier (the named seat): adopt each finding
+2. **Adjudicate + fix.** As author-verifier (the named stage): adopt each finding
    or REFUTE it with cited evidence quoted in the round record — never silent
    acceptance, never silent skipping. Apply fixes, re-fingerprint the moved tree.
 
