@@ -1,4 +1,4 @@
-# Delegated read waves & censuses — the builder's core method [PROTOCOL v3.1]
+# Delegated read waves & censuses — the builder's core method [PROTOCOL v3.2]
 
 > **Tier: before designing any delegated read wave or census** (not needed for
 > plain single-session work).

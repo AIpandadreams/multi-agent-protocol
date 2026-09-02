@@ -1,4 +1,4 @@
-# OWNER/ENGINE AGENT — session start / handover contract [PROTOCOL v3.1]
+# OWNER/ENGINE AGENT — session start / handover contract [PROTOCOL v3.2]
 
 Follow this top to bottom at the start of every owner-agent session (fresh
 start, restart after compaction, or successor). The checklist is cheap; a

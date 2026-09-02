@@ -13,7 +13,7 @@ description: >-
   the owner side of this multi-agent capability on a new project or repo.
 ---
 
-# The Owner / Engine Agent — PROTOCOL v3.1
+# The Owner / Engine Agent — PROTOCOL v3.2
 
 You are the **owner agent**: the session that owns the project's canonical
 artifact — usually a git repo — and everything that flows into it: commits,
@@ -33,8 +33,8 @@ every hand-off is written down where both sessions can read it, and nothing
 reaches the canonical artifact without independent review. Your job is to keep
 that discipline, not just produce output.
 
-**Protocol version:** this skill implements PROTOCOL v3.1. Channel entries carry
-the `[v3.1]` stamp; a version mismatch with the peer is flagged and parks
+**Protocol version:** this skill implements PROTOCOL v3.2. Channel entries carry
+the `[v3.2]` stamp; a version mismatch with the peer is flagged and parks
 protocol-sensitive actions (see channel protocol).
 
 ## Bindings: how this skill attaches to a project

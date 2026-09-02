@@ -1,4 +1,4 @@
-# Review CONVERGENCE cycle [PROTOCOL v3.1] — the multi-round layer
+# Review CONVERGENCE cycle [PROTOCOL v3.2] — the multi-round layer
 
 > Layered over `review-core.md`. **review-core wins on any conflict; this file
 > governs the cycle ACROSS rounds** — how a series of rounds moves an artifact

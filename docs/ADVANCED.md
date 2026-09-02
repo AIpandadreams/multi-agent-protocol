@@ -154,7 +154,8 @@ It verifies, profile-aware:
 - every required file for the profile exists (orchestrator-only files are
   required whenever the profile's role set includes the orchestrator —
   `3agent.local` **and** `3agent.git-sync`);
-- `PROTOCOL_VERSION` is one of the supported versions (v2.5, v2.6, v2.7, v2.8, v2.9, v3.0 or v3.1) and the
+- `PROTOCOL_VERSION` is one of the supported versions (v2.5, v2.6, v2.7,
+  v2.8, v2.9, v3.0, v3.1 or v3.2) and the
   profile's role set matches the `memory/` tree — minus any directory the
   optional `NON_ROLE_DIRS` slot declares (see below);
 - the **PROXY_AUTH guard is intact** — the six never-listable super-classes
@@ -170,7 +171,8 @@ Findings are tagged by severity, and the split is deliberate:
 
 - **BLOCKER** (nonzero exit) — structurally broken or unsafe: a missing
   required file, a wrong/unknown profile, a role set that disagrees with the
-  profile, a `PROTOCOL_VERSION` outside the supported set (v2.5 / v2.6 / v2.7 / v2.8 / v2.9 / v3.0 / v3.1), a
+  profile, a `PROTOCOL_VERSION` outside the supported set
+  (v2.5 / v2.6 / v2.7 / v2.8 / v2.9 / v3.0 / v3.1 / v3.2), a
   weakened PROXY_AUTH guard, or a broken auth-log chain.
 - **WARN** (exit 0 unless `--strict`) — stamped but not yet fully bound, or
   cosmetic drift: an unfilled `{{FILL}}` slot, or a per-file stamp / header on

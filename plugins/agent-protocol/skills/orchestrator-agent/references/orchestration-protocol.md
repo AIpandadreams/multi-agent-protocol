@@ -1,4 +1,4 @@
-# Orchestration protocol — translation, dispatch, bookkeeping [PROTOCOL v3.1]
+# Orchestration protocol — translation, dispatch, bookkeeping [PROTOCOL v3.2]
 
 Read once per workspace. The channel mechanics live in
 `../../agent-core/references/channel-core.md`; this file is the orchestrator's

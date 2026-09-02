@@ -3,7 +3,7 @@ description: "Wake an agent role in this session: bind, verify, resume from its 
 argument-hint: "<owner|builder|orchestrator|creator>"
 ---
 
-# /wake — reload a role from workspace state [PROTOCOL v3.1]
+# /wake — reload a role from workspace state [PROTOCOL v3.2]
 
 Wake the named role in THIS session, rebuilding its entire picture from the
 workspace repo (the cold-successor path — every wake is treated as one).
