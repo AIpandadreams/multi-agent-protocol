@@ -31,6 +31,28 @@ changes only through the
 
 ## [1.11.0] — 2026-09-02
 
+> ⚠ **AMENDED 2026-09-02, after the release.** Section 6.8 gained a **sixth**
+> surface — the host's repo metadata — one hour after `v1.11.0` was tagged, ruled
+> by the principal after he read the repository description on a phone and found
+> it saying "a four-party collaboration protocol" while `README.md` two lines in
+> said "five default participants; four of them hold **authority**". The word
+> *authority* had been dropped, turning a true claim into a false one, and no gate
+> in this repository was capable of seeing it: the description is host metadata,
+> not a file, and `mirror_check.py` reads the working tree.
+>
+> **The tree the `v1.11.0` tag points at therefore enumerates FIVE surfaces**, and
+> `CONTRIBUTING.md` in that tree says five. `main` says six. The divergence is
+> stated here rather than repaired silently. The description itself was corrected
+> on the live repository the same hour, verified by an independent read-back
+> against `README.md`'s opening clause.
+>
+> A blocking CI gate over the metadata was considered and **ruled against**: repo
+> metadata cannot be changed by a pull request, so the leg would stand
+> permanently red on a surface no contributor can reach — the failure this file's
+> own tree-declaration comment exists to prevent ("a gate nobody can ever see go
+> green is not a gate; it is a thing people learn to scroll past"). The cure is
+> enumeration by a person at release time, which is what a sixth surface is.
+
 **`PROTOCOL v3.2`: the release that carries a stamp the repository had already
 been advertising.** The v3.1 → v3.2 restamp landed earlier in this development
 line and moved every surface that names the protocol version — every reference
