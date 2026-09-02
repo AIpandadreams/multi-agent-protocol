@@ -436,10 +436,10 @@ describing the work accurately in plain QA terms (never evasion; if accurate
 wording still won't pass, escalate to the principal), and treat any partial
 stream as findings for adjudication, never ship authority.
 
-### 6.8 Cutting a public release (the five-surface enumeration)
+### 6.8 Cutting a public release (the six-surface enumeration)
 
-A release is not one object. Ours publishes FIVE public surfaces, and a
-verify leg that measures only four can pass clean while the fifth still
+A release is not one object. Ours publishes SIX public surfaces, and a
+verify leg that measures only five can pass clean while the sixth still
 advertises the previous version:
 
 1. **The main commit.** Land the stamp — which is wider than the two
@@ -468,6 +468,21 @@ advertises the previous version:
    release's CHANGELOG section as its notes, then read the record back to
    confirm it is the one marked latest.
 
+6. **The host's repo metadata.** The description, topics and social preview
+   are not files, so NO gate in this repository can see them — mirror_check.py
+   reads the working tree and this surface is not in it. The description is
+   the FIRST thing a reader meets (search results, the mobile repo home) and
+   the README is the second, so the two disagreeing is a contradiction on the
+   loudest surface we own. Read the description back against README.md's
+   opening clause, verbatim.
+
+   **The miss this item exists for.** The description read "a four-party
+   collaboration protocol" while README.md two lines in read "five default
+   participants; four of them hold AUTHORITY" — the word AUTHORITY had been
+   dropped, turning a true claim into a false one. Every gate was green, and
+   no gate could have been otherwise. A person reading the repo on a phone
+   found it, twice in two days, on two different surfaces.
+
 **The miss this enumeration exists to prevent.** We shipped a release whose
 commit, tag and both manifests all verified correct while the releases page
 still read "Latest: the previous version". It survived three separate
@@ -484,6 +499,10 @@ list. No gate caught it; a person did, after the fact.
   If your verify leg never reads the host's release record, it cannot see
   this class of miss: it will report green, correctly, on everything it did
   inspect.
+- **A surface that is not a file cannot be gated by a file checker.**
+  That is not a weakness in the checker; it is the boundary of its subject,
+  and the cure is enumeration by a person at release time rather than a CI
+  leg that would stand red on something no pull request can reach.
 
 ---
 
