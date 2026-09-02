@@ -1746,6 +1746,123 @@ if REGISTRY.is_file() and BOOT_MD.is_file():
                 "CREATOR-SEAT-BOOTSTRAP.md catalog carry the same names in a "
                 "DIFFERENT ORDER — the roster mirrors the catalog order")
 
+# 15. THE ADVERTISED STAMP MUST HAVE A ROW IN THE MAP OF RECORD.
+#
+# The repo carries FIVE version spaces (docs/PROTOCOL.md § Version spaces), and
+# the first two — the repo's release SemVer and the protocol stamp `PROTOCOL
+# vX.Y` — move INDEPENDENTLY. Independent is not unrelated: CHANGELOG.md's header
+# table is their map of record, one row per release, each row naming the stamp
+# that release carried. That table is the only artifact that says which stamps
+# have ever shipped.
+#
+# WHAT WENT WRONG, and why a gate and not a checklist item: the v3.1 -> v3.2
+# restamp moved every per-file stamp, the README protocol badge, and the plugin
+# manifest description — and did not add a table row, because CHANGELOG.md holds
+# BOTH frozen history (correct to freeze) and the live head of the map (must
+# grow), and a release freeze applied at FILE granularity took the whole file.
+# The repository then advertised, on its front page, a protocol version its own
+# map of record had never heard of. Every gate in this file was green while that
+# was true, because no gate compared those surfaces: the stamp gate (section 5)
+# checks that files carry the CURRENT stamp, and the current stamp is whatever
+# the source says it is — a claim can never fail a check that reads it as the
+# standard.
+#
+# The rule enforced: every surface that ADVERTISES a protocol stamp to a reader
+# outside this repo must name a stamp the table has a row for. Not "the newest
+# row" — a released stamp stays advertised across later patch releases, which is
+# exactly what rows 1.8.0 through 1.10.0 do with v3.1. Membership, not recency.
+#
+# CONSEQUENCE, stated rather than discovered later: the table is keyed by release
+# number and has no "unreleased" convention, so this gate makes a stamp bump and
+# its release row land TOGETHER. A restamp can no longer be advertised for the
+# weeks before the release that carries it goes out. That is the whole point —
+# the disagreement window was guaranteed by the table's grammar, and closing it
+# means the window cannot be entered — but it is a real change to how a restamp
+# is sequenced, not a free check.
+#
+# Fail LOUD, never silent: if a badge is reworded, a manifest reshaped, or the
+# table's header renamed, the surface stops being machine-readable and THAT is a
+# finding. A gate that quietly stops finding its subject reports green.
+STAMP_ADVERTISERS = [
+    ("README.md",
+     re.compile(r"img\.shields\.io/badge/protocol-(v\d+\.\d+)-"),
+     "the protocol badge"),
+    ("plugins/agent-protocol/.claude-plugin/plugin.json",
+     re.compile(r"PROTOCOL (v\d+\.\d+)"),
+     "the plugin manifest description"),
+]
+CHANGELOG_HEADER = "| repo release | protocol version | notes |"
+
+
+def changelog_stamp_rows():
+    """The protocol-version column of the header table, or None if the table is
+    not machine-readable.
+
+    Bounded to the table that STARTS at the header line: CHANGELOG.md carries
+    other markdown tables further down (the BOM demonstration, for one), and a
+    scan for row-shaped lines across the whole file would read those as releases.
+    A gate that widens its own subject to whatever matches is not reading the
+    map of record; it is reading the file."""
+    txt = text(ROOT / "CHANGELOG.md")
+    lines = txt.splitlines()
+    try:
+        i = next(n for n, ln in enumerate(lines)
+                 if ln.strip() == CHANGELOG_HEADER)
+    except StopIteration:
+        return None
+    stamps = []
+    for ln in lines[i + 1:]:
+        s = ln.strip()
+        if not s.startswith("|"):
+            break                      # the table ends where row shape ends
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) < 2 or set(cells[1]) <= set("-: "):
+            continue                   # the |---|---| separator row
+        stamps.append(cells[1])
+    return stamps
+
+
+_rows = changelog_stamp_rows()
+if _rows is None:
+    findings.append(
+        "map-of-record gate (15): CHANGELOG.md no longer carries the header row "
+        f"'{CHANGELOG_HEADER}' — the release/stamp map is no longer "
+        "machine-checkable (restore the header, or update the gate). Not a "
+        "silent skip.")
+else:
+    _advertised = {}
+    for _rel, _pat, _what in STAMP_ADVERTISERS:
+        _p = ROOT / _rel
+        if not _p.is_file():
+            findings.append(
+                f"map-of-record gate (15): {_rel} is missing — it advertises "
+                f"{_what} and the stamp it names cannot be read.")
+            continue
+        _m = _pat.search(text(_p))
+        if _m is None:
+            findings.append(
+                f"map-of-record gate (15): {_what} in {_rel} no longer matches "
+                f"/{_pat.pattern}/ — the advertised protocol stamp is no longer "
+                "machine-readable (restore the shape, or update the gate). Not "
+                "a silent skip.")
+            continue
+        _advertised[_rel] = (_m.group(1), _what)
+        check(_m.group(1) in _rows,
+              f"advertised stamp with no row in the map of record: {_what} in "
+              f"{_rel} advertises PROTOCOL {_m.group(1)}, but CHANGELOG.md's "
+              f"header table has no row naming it (it knows "
+              f"{', '.join(sorted(set(_rows), reverse=True)) or 'nothing'}). "
+              "Add the release row that carries this stamp — the table is the "
+              "map of record for the release/stamp pair, and a badge cannot "
+              "advertise a version the map has never heard of.")
+    # Two advertisers naming DIFFERENT stamps is its own defect: both could have
+    # rows and the repo would still be telling a reader two things at once.
+    if len({v[0] for v in _advertised.values()}) > 1:
+        findings.append(
+            "advertised stamps disagree: " + "; ".join(
+                f"{rel} ({what}) says {ver}"
+                for rel, (ver, what) in sorted(_advertised.items())))
+
 # Relaxations are printed on EVERY run, green or red, before the verdict. A gate
 # that quietly runs a reduced set still prints the word "green", and that word is
 # then a lie by omission — the reader has no way to tell full coverage from

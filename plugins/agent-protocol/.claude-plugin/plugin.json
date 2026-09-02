@@ -1,6 +1,6 @@
 {
   "name": "agent-protocol",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Multi-agent collaboration protocol (PROTOCOL v3.2): owner/engine, helper/builder, and orchestrator role skills over a shared agent-core reference library, plus /sleep, /wake and /converge session-lifecycle commands. An independent reviewer gates every commit/job; a human principal holds all authorization gates (four authority parties; the orchestrator is an interface).",
   "author": {
     "name": "AIpandadreams"
