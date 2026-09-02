@@ -206,7 +206,7 @@ docs/                      protocol book: AUTONOMY dial, QUICKSTART, CLOUD,
 </code></pre>
 <blockquote>
 <p><em>Maintenance: this inventory is summarized from <code>git ls-files</code> at repo
-release 1.10.0. When the tree changes, regenerate this block (and its twin —
+release 1.11.0. When the tree changes, regenerate this block (and its twin —
 the two files fail review as a pair) from <code>git ls-files</code>, not from memory.</em></p>
 </blockquote>
 <p><strong>Key design decisions you should preserve in any custom build:</strong></p>
@@ -529,6 +529,13 @@ advertises the previous version:</p>
 <li><strong>The main commit.</strong> Land the stamp — which is wider than the two
    manifests below: CHANGELOG.md carries the number TWICE, in the section
    heading and in the release table's leading cell, and both move here.
+   The table's SECOND cell is a THIRD surface inside this one file, and it is
+   not the release number: it names the PROTOCOL stamp the release carries, so
+   it moves only on a restamp — and when it does, it moves HERE, in the release
+   that ships it. Omitting it is how the repository came to advertise a protocol
+   version its own map of record had never heard of; mirror_check.py section 15
+   now fails on exactly that, so the omission is a red gate rather than a
+   reader's later discovery.
    Re-derive the landed sha from the remote rather than quoting the one you
    handed the executing seat: a fast-forward preserves it, a squash mints a
    new one, and only the remote tells you which happened.</li>

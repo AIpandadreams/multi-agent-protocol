@@ -8,6 +8,7 @@ changes only through the
 
 | repo release | protocol version | notes |
 |---|---|---|
+| 1.11.0 | v3.2 | **`PROTOCOL v3.2`: the release that carries a stamp the repository had already been advertising.** The restamp moved every surface that names the protocol version except its own map of record -- this table -- and all three CI gates were green while the README badge advertised a version the map had never heard of. `mirror_check.py` section 15 now fails on exactly that; section 6.8's release enumeration is amended to name the table cell it omitted. Also: the commit-identity gate lands (`PA_PERSONAL_EMAIL_MARKERS`, unconfigured markers reported rather than passing silently), and its first grading -- ABSENT identity as a BLOCKER -- is corrected to a WARN that still reports, with the six arms it shipped without. |
 | 1.10.0 | v3.1 | **The head renderer ships, and the release says plainly what it does not yet do.** `tools/render_head.py` (1,469 lines) lands with its test suite (`tests/test_render_head_tails_stamp.py`, 12 test methods) and renders a role file's working-state head from the `plans/` ledger and the channel lane tails, stamping a footer that lets a later wake detect its own staleness — superseding the declaration made earlier in this same development line that the renderer was "OWED, NOT SHIPPED", a sentence that was true when written and is false of this tree. No shipped tool invokes it yet: the renderer is operator-run, CI exercises it, and nothing in `tools/` calls it, so a workspace that never runs it is unchanged by this release. Alongside it, `tools/mirror_check.py` gains two SOP-registry gates (14b, 14c) checking the registry's declared count, names, and order against the rule catalog in `docs/CREATOR-SEAT-BOOTSTRAP.md`; CI installs PyYAML before the suite; `tools/new_project.py` stamps a deliberately non-mintable id placeholder so a seeded workspace cannot be mistaken for one carrying live fleet ids; the four positions of a converging review are renamed from "seats" to "stages" at fourteen word-instances on eleven changed lines across six files, to stop that word colliding with the workspace's own seat identities — a rename that is begun, not finished, and the residual is named in the section below; the `NON_SEAT_IDENTITIES` constant becomes `NON_PROFILE_IDENTITIES` across eighteen references with no behavior change; the repository's "no network calls" trust claim is narrowed at its two sites and the actual egress enumerated; a worked example is genericised so it no longer reads as a record of a particular session; and four defects found *inside this delta* — by auditing it against the tree it produces rather than against its own commit messages — are cured before the cut, one of which had left a dedup guard green while protecting only a string the tree no longer contains. Process: normal PR flow (branch → PR → merge), two merge commits in the span. |
 | 1.9.1 | v3.1 | **Scope-correction release, and the correction is the release.** 1.9.0's published sentence — "none of the five parts it describes ships as tooling in this release" — was true of 1.9.0, but the deferral it rested on contradicted the principal's recorded cut-scope decision, which had placed the compaction re-injection hook and the `plans/` operator README in the shipping set; the reviewed release sentence had silently overridden a first-hand scope grant, and when that surfaced the principal ruled his scope word governs. This release lands what that word named, and amends the sentence openly rather than editing published history: part 2 of the plan-ledger specification (the memory failsafe) now **ships as runnable tooling** — `tools/compaction_inject.py` (PreCompact `--mark` / SessionStart `--inject`) **plus `tools/plan_common.py`**, the shared ledger-access module the hook imports, named here because the originating enumeration listed the hook alone and a hook that cannot import is not shipped — and the `plans/` directory now exists carrying `plans/README.md`, the operator-facing seed (still no schema file and no example plan file; the enforcement check, clock sweep, and wake integration remain specified-and-deferred per `docs/PLAN-LEDGER.md`'s status table, which this release updates to match the tree). The public copies are derived from the private originals: internal review-round citations removed from comments AND from five emitted stderr/digest strings (each surrounding sentence kept where it survives losing its citation), the post-injection hint reworded so it no longer instructs the operator to run a file that does not ship, and ONE deliberate behavior hardening for the public tree — the PyYAML import is guarded, so a clone without PyYAML (the single non-stdlib prerequisite, stated in `plans/README.md`) degrades to a loud ledger-unreadable error under the hook's declared fail direction instead of crashing a session-start hook with an uncaught ImportError. Ship-time checks are recorded in the maintainers' release workpapers: their content scrubber and fleet-identifier gate (private instruments — the repo's own CI scrub is a wiring check whose green is not leak assurance, per 1.9.0's own entry), with the two residual id-shaped tokens adjudicated as public technical forms (a flake8 code, a regex character class). The hook's `--ack` discharge path completes only when the enforcement gate lands with its own reviewed release. Process note, recorded because the audit line matters: adopted with this release, normal releases land through a pull request by convention — branch, PR, merge, no approval quorum; this entry itself arrives by that route — with the owner direct-push bypass retained solely as an emergency escape hatch whose bypass warning remains the audit record when used. |
 | 1.9.0 | v3.1 | **Documentation release — uncut intermediate: merged 2026-08-07, absorbed into the 1.9.1 cut; no v1.9.0 tag or Release object exists.** Two documents added. `docs/PLAN-LEDGER.md` specifies the plan-ledger obligation model — typed plan files, `done_when` verification (a step is finished when a command proves it, not when someone reports it), mechanical gate blocking, and liveness as a positive assertion rather than an inference from silence. It is a SPECIFICATION: none of the five parts it describes ships as tooling in this release, and the document carries a per-part shipped/deferred status table. A vendored-checker migration note joins `docs/MIGRATION.md`: the upgrade ordering that avoids the two observed failure modes (a loud wake-stop from a refused declaration, and the silent loss of local guards under a straight re-vendor — the quiet one is the dangerous one), conformance changes framed by the age of YOUR copy rather than by this release, and two input-compatibility breaks that no name-level diff can show (sentinel cells in `NON_ROLE_DIRS` are no longer normalized away; `ROLE_LOCK` requires the colon form). Deferred, stated in full — a deferral that is stated is a scope decision; a deferral that is silent is a broken promise: the enforcement check's source and its test suite (309 KB across 3 files — a unit of its own, owed its own review round), the compaction re-injection hook, the clock-sweep daemon and its heartbeat stamp, wake integration, and any plan-file schema or example file (no `plans/` directory ships; a fresh checkout contains no plan files). Also in this release: the creator-seat charter revision — cold-start restated to what is true of a live deployment (a wake may bind the name; the mandate is read, not resolved), a **governed-before-used** precondition placed at the permission sites rather than in a distant denial (provisioning a directory does not make it a coordination surface; verification of the checker actually in force does), a transition provision (ungoverned means no surface, never no work), a rule that a name the resolver decides at tier 1 must never silently displace a workspace's own side name of the same spelling (ambiguity takes the stop-and-ask path), and the documentation-pipeline mandate reworded for a public audience; the `/wake` command REV3 revision lands as its own unit against its own round, exactly as 1.8.0 promised, with its protocol stamp reconciled to v3.1 at landing (the frozen revision predated the 1.8.0 stamp crossing — a one-token deviation from the frozen source, named here rather than silent), and with two remaining private working-paper references caught by the pre-publication scan and dropped at the gate — the same class the revision had already removed elsewhere, a second named deviation; a comment-only re-grounding in `tools/conformance_check.py` (the identities-that-are-not-seats block's stated grounds no longer held once tier 1 self-resolves the identity; the conclusion survives on a measured ground — the identity check and the seat positions read the same condition), which also removes a private line-address citation from the tip (the reference remains in published history — see Known and accepted); the SOP-registry collision lesson aligned to the repo's conditional form; two unescaped placeholder tokens in `CREATOR-SEAT-BOOTSTRAP` escaped (backtick spans in the `.md`, code entities in the `.html`, so the twins stay convergent under the mirror check); an incident-case-study count corrected (nine → eleven, re-derived structurally rather than by prefix counting — the miscount survived because one case study breaks the lead-in shape the old count keyed on); `.claude/` added to `.gitignore` (session-tool state should never ride a clone); and the CI scrub step gains an honest name — it is a wiring check running the public example pattern list, not a leak gate, and its green must never be read as leak assurance. Known and accepted: some earlier commit messages in this repository's published history contain internal record identifiers; they are left in place deliberately — rewriting published history would change every commit hash anyone may have referenced — and checking for them is part of the pre-publication routine going forward, which is the half that was actually missing. |
@@ -27,6 +28,81 @@ changes only through the
 | 1.2.0 | v2.6 | `PROTOCOL v2.6`: review-convergence, never-idle, git-sync cloud transport, role aliasing, wizard v2, ops tooling |
 | 1.1.0 | v2.5 | tooling: `--wizard`, `--watch`, conformance suite |
 | 1.0.0 | v2.5 | first public release |
+
+## [1.11.0] — 2026-09-02
+
+**`PROTOCOL v3.2`: the release that carries a stamp the repository had already
+been advertising.** The v3.1 → v3.2 restamp landed earlier in this development
+line and moved every surface that names the protocol version — every reference
+and skill file, the README badge, the plugin manifest description — *except its
+own map of record*. The release table at the top of this file had **zero** v3.2
+rows. All three CI gates ran green throughout, because no gate compared those
+surfaces: the stamp gate certifies that files carry the *current* stamp, and the
+current stamp is whatever the source says it is, so a claim could never fail a
+check that read it as the standard. The principal found it on the releases page,
+which still read `PROTOCOL v3.1 (1.10.0)`.
+
+The cause is worth naming precisely, because "we forgot the changelog" is the
+wrong lesson. This file holds two different things: frozen release history, which
+is correct to freeze, and the live head of the release/stamp map, which must
+grow. A release freeze applied at *file* granularity takes both. The map was not
+forgotten; it was frozen along with the history it shares a file with.
+
+**`tools/mirror_check.py` section 15 makes the window unenterable.** Every
+surface that advertises a protocol stamp to a reader outside this repository —
+currently the README badge and the plugin manifest description — must name a
+stamp the header table has a row for. Membership, not recency: a released stamp
+stays advertised across later patch releases, which is exactly what 1.8.0
+through 1.10.0 do with v3.1. Two advertisers naming *different* stamps is a
+separate finding, because both could have rows and the repository would still be
+telling a reader two things at once. Every read fails closed — a reworded badge,
+a reshaped manifest, a renamed table header, or a missing advertiser is a
+finding, not a silent skip — and the table scan is bounded to the rows following
+the header row, so a row-shaped line elsewhere in this file cannot license a
+badge. `tests/test_stamp_map_of_record.py` carries ten arms, including a
+positive control on that bound and a canary that fails if the unmutated tree is
+not green.
+
+The gate was written against the failing tree, so its first run was a red on the
+real artifact naming both advertising surfaces — not a green prediction about a
+planted one.
+
+**A consequence, stated rather than discovered later.** The header table is keyed
+by release number and has no "unreleased" convention, so a stamp bump and the
+release row that carries it now land together. A restamp can no longer be
+advertised for the weeks before the release that ships it goes out. That is the
+point — the disagreement window was guaranteed by the table's grammar — but it is
+a real change to how a restamp is sequenced, not a free check.
+
+Section 6.8's release enumeration is amended in the direction it teaches. It
+named `CHANGELOG.md` as carrying "the number TWICE" and stopped there; the
+table's second cell is a third surface in that one file, it is not the release
+number, and it is the one that was dropped. *A hand-written surface list cannot
+fail on the surface it omits* — the section's own sentence, and it had just done
+it one level down.
+
+**The commit-identity gate, and the machine it was measured on.**
+`conformance_check.py` gains a check that a workspace's effective `user.email` is
+not a personal address, configured through `PA_PERSONAL_EMAIL_MARKERS` rather
+than by writing anyone's address into a public tree, with the unconfigured case
+printed as a WARN rather than passing silently — a marker list nobody set is a
+check that certifies nothing, and it now says so.
+
+Its first grading was wrong and shipped red: an ABSENT effective identity was
+graded a BLOCKER. Absence carries no publication risk — git refuses to commit at
+all, so no address can leak — and the read resolves the full include chain, so a
+personal *global* address is returned and graded by the marker branch regardless.
+The BLOCKER passed on every developer machine, because every one of them already
+had a global identity for the fixtures to inherit, and failed eleven tests on a
+bare CI runner. It is now a WARN that still REPORTS. The environment was a hidden
+input to the gate, and a gate that reads host state is green on every machine
+where its precondition already holds; the six arms the check shipped without now
+run under `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null`, each
+asserting the strip took before grading anything.
+
+Also in this release: the `seats` → `stages` rename of the converging-review
+positions is finished, and the conformance checker names the MSYS path *shape*
+instead of a literal machine path.
 
 ## [1.10.0] — 2026-09-01
 
