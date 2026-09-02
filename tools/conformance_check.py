@@ -951,9 +951,10 @@ def check_commit_identity(ws: Path, f: Findings):
     We ask git what identity it would ACTUALLY use here (`git config --get user.email`,
     resolved through the full include chain) rather than reading any config file.
     Reason, measured: an `[includeIf "gitdir:..."]` stanza written with an MSYS-form
-    path (`/c/Users/...`) — the form mktemp, pwd and every shell variable produce under
-    Git for Windows — PARSES CLEAN, raises nothing, and NEVER FIRES. Only the Windows
-    form works. A guard that read the config back would have declared that inert stanza
+    path — the `/<drive-letter>/Users/<name>/...` shape that mktemp, pwd and
+    every shell variable produce under Git for Windows — PARSES CLEAN, raises
+    nothing, and NEVER FIRES. Only the Windows form works. A guard that read the
+    config back would have declared that inert stanza
     present and correct. Inspection cannot distinguish a rule that applies from one that
     merely exists; only behaviour can.
     """
