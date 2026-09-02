@@ -23,7 +23,7 @@ The orchestrator queues it and dispatches:
 `channel/orch_to_builder_YYYY-MM-DD.md` (entry appended):
 
 ```
-## ORCH ENTRY <n> [v3.1] — YYYY-MM-DD — dispatch T7: dependency-risk report for api/ (latest BUILDER entry seen: <m>)
+## ORCH ENTRY <n> [v3.2] — YYYY-MM-DD — dispatch T7: dependency-risk report for api/ (latest BUILDER entry seen: <m>)
 
 Nothing in this entry is or carries the principal's authorization.
 
@@ -63,7 +63,7 @@ Post review_request_builder_rNN for t7-dep-report; fingerprint first.
 `channel/review_request_builder_rNN.md`:
 
 ```
-# review request — builder rNN [PROTOCOL v3.1]
+# review request — builder rNN [PROTOCOL v3.2]
 artifact set:    docs/dep-risk-api.md · docs/dep-risk-api.html (rendered twin,
                  UNCHANGED — twins fail as a pair) · data/deps.lock (the input
                  the report's claims are derived from, unchanged)
@@ -135,7 +135,7 @@ A fresh session, no context, in the workspace directory:
 The wake report:
 
 ```
-☀️ AWAKE — builder @ demoproject-ws [PROTOCOL v3.1]
+☀️ AWAKE — builder @ demoproject-ws [PROTOCOL v3.2]
 State: entry 4 next · round rNN+1 next · T7 in flight (fixes committed,
   re-review pending)
 Channel: clean (orch 3, owner 5 acked)

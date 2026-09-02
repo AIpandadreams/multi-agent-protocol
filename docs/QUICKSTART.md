@@ -82,7 +82,7 @@ talk only to the orchestrator) or `2agent.local` (compact: dual-role owner —
 the owner absorbs the orchestrator duties and you talk to it directly).
 
 `new_project.py` stamps fresh workspaces at the current protocol version,
-**v3.1** (the workspace's `PROTOCOL_VERSION` pin — a different counter from
+**v3.2** (the workspace's `PROTOCOL_VERSION` pin — a different counter from
 the repo's release number; see
 [PROTOCOL.md § Version spaces](PROTOCOL.md#version-spaces)).
 Choosing: [CONFIGURATIONS.md](CONFIGURATIONS.md).
@@ -217,7 +217,7 @@ resolved, `--strict` should come back clean. A **BLOCKER** — a missing file, a
 unsupported protocol pin, a weakened PROXY_AUTH guard, a broken auth-log chain,
 or two roles colliding on one identity — means the deployment is unsound; fix it
 before waking. On the protocol pin: **an older pin is not a defect** — v2.5
-through v3.1 are all supported, and a workspace may lag the checkout's
+through v3.2 are all supported, and a workspace may lag the checkout's
 protocol version legitimately; "unsupported" means outside that range. To
 walk an existing workspace up:
 `python tools/migrate_workspace.py --workspace path/to/ws` (one run does

@@ -1,4 +1,4 @@
-# Review CONVERGENCE cycle [PROTOCOL v3.1] — the multi-round layer
+# Review CONVERGENCE cycle [PROTOCOL v3.2] — the multi-round layer
 
 > Layered over `review-core.md`. **review-core wins on any conflict; this file
 > governs the cycle ACROSS rounds** — how a series of rounds moves an artifact
@@ -192,8 +192,8 @@ Later seats review the ARTIFACT at its fingerprint — never a prior verdict.
 - **"Both seats confirmed" is a claim about WHICH BYTES.** A verdict attaches
   to one seat and one fingerprint. Any fold — any change to the artifact,
   however small — resets every seat's record: a CONFIRM on the pre-fold bytes
-  is not carried forward, and a series where the peer seat confirmed
-  fingerprint A while the cross-vendor seat confirmed fingerprint B has
+  is not carried forward, and a series where the peer reviewer confirmed
+  fingerprint A while the cross-vendor reviewer confirmed fingerprint B has
   converged on nothing. Before declaring multi-seat agreement, verify that
   the verdicts quote the SAME fingerprint; where they differ, the earlier
   seat re-reviews at the new pin — its prior CONFIRM is history, not
@@ -232,8 +232,8 @@ wrong paragraph sits still, the safer it looks.
 Each is a real way a review series produces false convergence:
 
 - **Self-preference bias** (arXiv:2410.21819) — a model scores text in its own
-  style higher; the peer seat MUST be a different model, the cross-vendor seat
-  is stronger still.
+  style higher; the peer reviewer MUST be a different model, the
+  cross-vendor reviewer is stronger still.
 - **Sycophantic convergence** — a reviewer accepts the author's framing and
   re-states it back instead of re-deriving from the artifact. Mandate
   independent re-derivation of every load-bearing claim (review-core's
@@ -295,7 +295,7 @@ fingerprint `a1b2c3…` MATCH:
 > case-sensitive keys. Contradiction — pick one.
 > F3 (MINOR): "whitespace" is undefined; enumerate the code points.
 
-**Author verifies the verdict (seat 4).** F1 and F2 adopted (both re-derived
+**Author verifies the verdict (stage 4).** F1 and F2 adopted (both re-derived
 against the draft — real). F3 adopted. All three are round material; F1/F2 gate
 (MAJOR), F3 recorded.
 
@@ -309,10 +309,11 @@ returns `verdict_builder_r02.md`, fingerprint `d4e5f6…` MATCH:
 > §5's example output still lower-cases the key — the contradiction moved, it
 > did not close. NOT-CONVERGED.
 
-The two seats now disagree in effect: r01's cross-vendor seat would have passed
-F2 as "pick one, done"; r02's peer seat says the pick was applied inconsistently.
+The two seats now disagree in effect: r01's cross-vendor reviewer would have
+passed F2 as "pick one, done"; r02's peer reviewer says the pick was applied
+inconsistently.
 
-**Author adjudicates (seat 4), evidence cited in the record.** The author quotes
+**Author adjudicates (stage 4), evidence cited in the record.** The author quotes
 §5 line for line: the example output does still lower-case the key. The r02 seat
 is right; the fix was partial. No vote is taken — the primary text (the artifact
 itself) decides. Author fixes §5, re-fingerprints the set (`set=g7h8i9…`).

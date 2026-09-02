@@ -3,7 +3,7 @@ description: "Run a multi-round convergence review of a committed artifact SET t
 argument-hint: "<artifact>... [--rounds N]"
 ---
 
-# /converge — drive a review series to convergence [PROTOCOL v3.1]
+# /converge — drive a review series to convergence [PROTOCOL v3.2]
 
 Run the multi-round convergence cycle over an **artifact set**: peer round →
 cross-vendor round → fix-confirmation round(s) → stop on the reviewer's own
@@ -69,7 +69,7 @@ Artifact set + options: $ARGUMENTS
    artifacts, not from any summary, and to answer the omission question outright:
    *what should have changed here and didn't?* Verdict per review-core's contract.
 
-2. **Adjudicate + fix.** As author-verifier (the named seat): adopt each finding
+2. **Adjudicate + fix.** As author-verifier (the named stage): adopt each finding
    or REFUTE it with cited evidence quoted in the round record — never silent
    acceptance, never silent skipping. Apply fixes, re-fingerprint the moved tree.
 

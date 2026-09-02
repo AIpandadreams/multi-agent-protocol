@@ -1,4 +1,4 @@
-# Authorization relay (PROXY_AUTH) [PROTOCOL v3.1]
+# Authorization relay (PROXY_AUTH) [PROTOCOL v3.2]
 
 Read once per workspace, and re-read before the first relay of any session.
 The NORMATIVE mechanism — schema, receiver rule, replay rules — lives in ONE

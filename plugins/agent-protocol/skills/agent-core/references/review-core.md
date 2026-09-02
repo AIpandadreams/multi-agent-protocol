@@ -1,4 +1,4 @@
-# Review NORMATIVE CORE [PROTOCOL v3.1] — single source of truth
+# Review NORMATIVE CORE [PROTOCOL v3.2] — single source of truth
 
 > Referenced by every role skill's review-protocol file. Identical for all
 > sides by construction: it exists once, here.
@@ -155,7 +155,7 @@ not your work being rejected, and it is not a per-round bug.
   then costs one message, not the round.
 - **A partial stream supplies findings, never authority.** The verdict FILE
   is transport, not authority: findings that were fully streamed with
-  concrete, host-reproducible probes may be adjudicated at seat 4 (first-hand
+  concrete, host-reproducible probes may be adjudicated at stage 4 (first-hand
   verification is the gate either way, and the ledger row records how the
   verdict was captured). But a partial or refusal-truncated stream NEVER
   authorizes ship and NEVER counts as reviewer-declared convergence — the
@@ -345,6 +345,6 @@ allowed in multi-question rounds, plus an overall disposition.
   ONE round for this rule, not a breach of it (review-convergence,
   anti-anchoring): seats multiply inside a round, never rounds.
 - **Across rounds:** a series of rounds converging an artifact — the four
-  seats, the round budget, adjudicating reviewer disagreement, the blocking
+  stages, the round budget, adjudicating reviewer disagreement, the blocking
   line, and anti-anchoring — is governed by `review-convergence.md`, layered
   over this contract (this file wins on any conflict).

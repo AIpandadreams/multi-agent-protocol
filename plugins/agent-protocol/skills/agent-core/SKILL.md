@@ -2,7 +2,7 @@
 name: agent-core
 description: >-
   Shared normative core of the multi-agent collaboration protocol
-  (PROTOCOL v3.1) — the channel rules, reviewer architecture, verdict contract,
+  (PROTOCOL v3.2) — the channel rules, reviewer architecture, verdict contract,
   binding-slot glossary, memory discipline, and self-improvement protocol that
   the role skills (owner-engine-agent, helper-builder-agent, orchestrator-agent)
   all reference. This is NOT a role: do not load it as a persona. Load it when a
@@ -10,7 +10,7 @@ description: >-
   amendments to the protocol.
 ---
 
-# Agent-core — PROTOCOL v3.1 shared references
+# Agent-core — PROTOCOL v3.2 shared references
 
 One protocol, three role skills, four AUTHORITY parties (owner agent, builder
 agent, independent reviewer, human principal) — plus the orchestrator, an

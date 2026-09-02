@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Workspace conformance suite [PROTOCOL v2.5 / v2.6 / v2.7 / v2.8 / v2.9 / v3.0 / v3.1].
+"""Workspace conformance suite
+[PROTOCOL v2.5 / v2.6 / v2.7 / v2.8 / v2.9 / v3.0 / v3.1 / v3.2].
 
 A self-runnable, point-in-time readiness check for a stamped workspace.
 Where the integrity CI protects the coordination *record over time*
@@ -14,10 +15,10 @@ Version handling is PIN-AWARE: the workspace's own `PROTOCOL_VERSION` must be
 one of the SUPPORTED_VERSIONS (a version outside the set is a BLOCKER — the
 required-file and stamp expectations are undefined for it), and every per-file
 stamp (auth-logs, channel INDEX) is checked against that WORKSPACE'S pinned
-version, not a hardcoded literal. This keeps v2.5 through v3.0 workspaces green
-under a v3.1 checkout of the suite, while fresh v3.1 workspaces are accepted by
+version, not a hardcoded literal. This keeps v2.5 through v3.1 workspaces green
+under a v3.2 checkout of the suite, while fresh v3.2 workspaces are accepted by
 that same checkout. (An OLDER checkout does not learn newer pins — a
-v3.1-pinned workspace under a v2.9-era checkout is a BLOCKER by design.)
+v3.2-pinned workspace under a v2.9-era checkout is a BLOCKER by design.)
 
 Run it from a protocol checkout for a TRUST decision and point --workspace
 at the workspace you want to check. (Stamping also drops a copy of this file
@@ -40,9 +41,11 @@ stamp is green, only a newer/unsupported/missing banner stamp is a finding) —
 resolve before relying on the workspace, or gate with --strict.
 """
 import argparse
+import os
 import re
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Roles a profile is expected to carry (used to make the required-file list
@@ -72,11 +75,12 @@ ABS_PATH_RE = re.compile(
 # Protocol versions this suite knows how to validate. A workspace pinned outside
 # the set is a BLOCKER (its file/stamp expectations are undefined here); a
 # workspace pinned inside it is checked against its OWN version, so a live v2.5
-# through v3.0 workspace and a fresh v3.1 one all pass under one checkout of this
+# through v3.1 workspace and a fresh v3.2 one all pass under one checkout of this
 # tool. Membership in THIS tuple is the acceptance gate; keep it ascending with
 # the newest version LAST (reconcile_vendored.py reads supports-through from the
 # last element positionally).
-SUPPORTED_VERSIONS = ("v2.5", "v2.6", "v2.7", "v2.8", "v2.9", "v3.0", "v3.1")
+SUPPORTED_VERSIONS = ("v2.5", "v2.6", "v2.7", "v2.8", "v2.9", "v3.0",
+                      "v3.1", "v3.2")
 # Any-major version-token extractor (widened from v2-only for the v3.0 cut).
 # Acceptance is decided by SUPPORTED_VERSIONS membership above, never by this
 # regex, so widening it admits nothing — it only lets a non-v2 pin be READ so
@@ -912,6 +916,157 @@ def _self_check_banner():
               "protocol checkout's copy against this workspace.\n")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Commit-identity and receipt checks.
+#
+# Both arrived here as local additions in a deployed workspace's vendored copy
+# and are upstreamed so a re-vendor stops deleting them silently — the failure
+# mode docs/MIGRATION.md §(b) describes, where nothing goes red.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ⛔ The marker list is CONFIGURATION, never source. This repository is public,
+# so a personal address written here would be published — by a check whose whole
+# premise is that an address in commit metadata cannot be retracted. The literal
+# that would leak is exactly the literal the check exists to catch, so the one
+# place it must never live is this file.
+PERSONAL_EMAIL_MARKERS_ENV = "PA_PERSONAL_EMAIL_MARKERS"
+NOREPLY_SUFFIX = "@users.noreply.github.com"
+IDENTITY_ESCAPE = "PA_ALLOW_PERSONAL_COMMIT_EMAIL"
+
+
+def personal_email_markers():
+    """Configured personal-address substrings, lower-cased. Empty tuple when unset."""
+    raw = os.environ.get(PERSONAL_EMAIL_MARKERS_ENV, "")
+    return tuple(m.strip().lower() for m in raw.split(",") if m.strip())
+
+
+def check_commit_identity(ws: Path, f: Findings):
+    """BLOCKER if this workspace would commit under a configured personal address.
+
+    Commit metadata is a PUBLICATION surface — pushed, mirrored, and unretractable
+    once it lands. The remedy is one command, so a block that PRINTS that command is
+    not the kind of gate operators learn to route around; an unexplained one is.
+
+    == THIS IS A POSITIVE TEST, AND THAT IS DELIBERATE, NOT A STYLE CHOICE ==
+    We ask git what identity it would ACTUALLY use here (`git config --get user.email`,
+    resolved through the full include chain) rather than reading any config file.
+    Reason, measured: an `[includeIf "gitdir:..."]` stanza written with an MSYS-form
+    path — the `/<drive-letter>/Users/<name>/...` shape that mktemp, pwd and
+    every shell variable produce under Git for Windows — PARSES CLEAN, raises
+    nothing, and NEVER FIRES. Only the Windows form works. A guard that read the
+    config back would have declared that inert stanza
+    present and correct. Inspection cannot distinguish a rule that applies from one that
+    merely exists; only behaviour can.
+    """
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(ws), "config", "--get", "user.email"],
+            capture_output=True, text=True, timeout=20,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        f.warn(f"commit identity: could not run git to resolve user.email ({exc}) — "
+               "identity NOT verified")
+        return
+
+    if proc.returncode != 0 or not proc.stdout.strip():
+        # Unset is not "fine by default": a commit here would fail or fall back to
+        # something unreviewed. Unknown is not the same as safe.
+        f.blocker(
+            "commit identity: user.email is UNSET for this workspace.\n"
+            f"      remedy: git -C \"{ws}\" config --local user.email "
+            f"<id>+<user>{NOREPLY_SUFFIX}"
+        )
+        return
+
+    email = proc.stdout.strip()
+    markers = personal_email_markers()
+
+    # An unconfigured marker list makes the branch below UNMATCHABLE. That is a guard
+    # which cannot fire on the case it is named for, and the one thing it must not do
+    # is pass silently — a green that means "nothing was checked" is the shape this
+    # whole file exists to refuse. So the vacuity is REPORTED, at the identity it did
+    # not check, rather than inferred later from an absence of findings.
+    if not markers:
+        f.warn(
+            f"commit identity: no markers configured ({PERSONAL_EMAIL_MARKERS_ENV} unset "
+            f"or empty) — the personal-address branch CANNOT FIRE. This workspace would "
+            f"commit as {email!r}, unchecked against any list. The UNSET-address blocker "
+            f"above is unaffected. Arm this by setting {PERSONAL_EMAIL_MARKERS_ENV} to a "
+            "comma-separated list of address substrings."
+        )
+        return
+
+    if any(m in email.lower() for m in markers):
+        # The escape hatch is LOUD by construction: a WARN that names the variable AND
+        # the address it admitted, so it lands in the report line rather than silently
+        # skipping. An escape nobody can see in the output is indistinguishable from a
+        # guard that did not run.
+        #
+        # It is tested INSIDE this branch, not above it, and that placement is the whole
+        # point: an escape evaluated first would announce "check BYPASSED" on a workspace
+        # whose address is perfectly conformant — reporting a bypass that never happened
+        # and muting nothing. A correct outcome reached through a misstated ground is
+        # still a defect, and here it would be worse than noise: an operator who left the
+        # variable exported would see the same "bypassed" line whether or not the guard
+        # was actually holding, so the line would stop carrying information exactly when
+        # it mattered. The escape reports only what it really let through.
+        if os.environ.get(IDENTITY_ESCAPE):
+            f.warn(
+                f"commit identity: personal-address check BYPASSED via {IDENTITY_ESCAPE} "
+                f"— this workspace will commit as {email!r}. Emergency use only; unset it."
+            )
+            return
+        f.blocker(
+            f"commit identity: this workspace would commit as {email!r} — a configured "
+            "PERSONAL address.\n"
+            "      Commit metadata is a publication surface: it is pushed and mirrored, "
+            "and cannot be retracted by a later fix.\n"
+            f"      remedy: git -C \"{ws}\" config --local user.email "
+            f"<id>+<user>{NOREPLY_SUFFIX}\n"
+            f"      emergency only: set {IDENTITY_ESCAPE}=1 (reported loudly in the "
+            "verdict, never silent)"
+        )
+
+
+def write_receipt(path: Path, ws: Path, verdict, blockers, warns, roles, strict):
+    """Append one durable line recording this run's verdict. Returns None, or an error string.
+
+    WHY THIS EXISTS. The gate was console-only, so its verdict lived exactly as long as the
+    session that read it: a red could be seen, not acted on, and leave no trace — and in
+    practice one stayed red across a fleet for days with nothing durable to show it. A
+    receipt does not make anyone fix a red, but it makes a red UNFORGETTABLE and its
+    absence visible to the next reader.
+
+    Append-only, one line, newline pinned to LF so a receipt is byte-comparable across
+    platforms (open(..., "a") with newline=None would translate to os.linesep on Windows).
+    """
+    line = ("- %s | ws=%s | roles=%s | verdict=%s | blockers=%d | warns=%d%s\n" % (
+        datetime.now().astimezone().isoformat(timespec="seconds"),
+        ws.name, ",".join(sorted(roles)) or "none", verdict, blockers, warns,
+        " | strict" if strict else ""))
+    # ⛔ The parent directory is NOT created. Measured 2026-09-01, and the measurement is
+    # why: `mkdir(parents=True, exist_ok=True)` on a mistyped receipt path SUCCEEDS, builds
+    # a directory tree nobody asked for, and reports a receipt written — the silent-success-
+    # into-the-wrong-place shape this whole file exists to refuse. Worse in one deployment:
+    # the path a shell and a Python subprocess each resolve from the SAME string differ, so
+    # the convenience quietly re-created an accident sink that had just been cleared. A
+    # receipt whose parent does not exist is a typo or a wrong workspace, and the honest
+    # answer is to say so at the path rather than to manufacture somewhere to put it.
+    if not path.parent.is_dir():
+        return f"parent directory does not exist: {path.parent}"
+    try:
+        new = not path.exists()
+        with open(path, "a", encoding="utf-8", newline="\n") as fh:
+            if new:
+                fh.write("# Wake-gate receipts — append-only, one line per gate run.\n"
+                         "# Written by tools/conformance_check.py --receipt. A wake with no\n"
+                         "# receipt did not run the gate.\n\n")
+            fh.write(line)
+    except OSError as exc:
+        return str(exc)
+    return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -919,6 +1074,10 @@ def main() -> int:
                     help="workspace root to check (default: current dir)")
     ap.add_argument("--strict", action="store_true",
                     help="treat WARN (unbound slots etc.) as failing too")
+    ap.add_argument("--receipt", metavar="PATH", default=None,
+                    help="append this run's verdict to PATH (durable gate receipt). "
+                         "A receipt that cannot be written FAILS the run: an unrecordable "
+                         "gate verdict is the silent-red shape this flag exists to close.")
     args = ap.parse_args()
 
     _self_check_banner()
@@ -942,6 +1101,7 @@ def main() -> int:
     check_bindings(ws, slots, roles, pinned, f)
     check_side_names(slots, roles, f)
     check_transport(slots, f)
+    check_commit_identity(ws, f)
     check_one_agent_per_role(ws, roles, f)
     check_auth_logs(ws, roles, pinned, f)
     check_channel(ws, pinned, f)
@@ -960,17 +1120,32 @@ def main() -> int:
                     f"{', '.join(refused)}")
 
     blockers, warns = f.counts()
+    fail = blockers > 0 or (args.strict and warns > 0)
+    verdict = "BLOCKED" if blockers else ("WARN" if warns else "CLEAN")
+
+    # The clean path no longer returns early. A receipt that records only non-clean runs
+    # cannot distinguish "the gate ran and passed" from "the gate never ran", which is the
+    # absence this flag exists to make visible.
     if not f.items:
         print(f"CONFORMANCE: clean ({ws.name}, {context})")
-        return 0
+    else:
+        print(f"CONFORMANCE: {blockers} blocker(s), {warns} warning(s) [{ws.name}, {context}]")
+        for sev, msg in f.items:
+            print(f"  [{sev}] {msg}")
+        if not fail:
+            print("(warnings only — workspace is structurally sound but not fully "
+                  "bound; use --strict to require every slot resolved)")
 
-    print(f"CONFORMANCE: {blockers} blocker(s), {warns} warning(s) [{ws.name}, {context}]")
-    for sev, msg in f.items:
-        print(f"  [{sev}] {msg}")
-    fail = blockers > 0 or (args.strict and warns > 0)
-    if not fail:
-        print("(warnings only — workspace is structurally sound but not fully "
-              "bound; use --strict to require every slot resolved)")
+    if args.receipt:
+        err = write_receipt(Path(args.receipt), ws, verdict, blockers, warns, roles,
+                            args.strict)
+        if err:
+            # FAIL-CLOSED. A gate whose verdict could not be recorded has not met its
+            # contract, whatever the verdict was — treating this as cosmetic would
+            # reinstate the silent red one layer down.
+            print(f"CONFORMANCE: receipt could not be written to {args.receipt}: {err}")
+            return 1
+        print(f"CONFORMANCE: receipt appended to {args.receipt} (verdict={verdict})")
     return 1 if fail else 0
 
 

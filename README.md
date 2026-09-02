@@ -8,7 +8,7 @@ builder, reviewer) — the orchestrator is an interface, never an authority.
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml/badge.svg)](https://github.com/AIpandadreams/multi-agent-protocol/actions/workflows/mirror-check.yml)
 [![Release](https://img.shields.io/github/v/release/AIpandadreams/multi-agent-protocol?sort=semver)](https://github.com/AIpandadreams/multi-agent-protocol/releases)
-[![Protocol](https://img.shields.io/badge/protocol-v3.1-informational)](docs/PROTOCOL.md)
+[![Protocol](https://img.shields.io/badge/protocol-v3.2-informational)](docs/PROTOCOL.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A2BE2)](docs/QUICKSTART.md#1-install-the-plugin)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen)](#trust-properties)
@@ -141,7 +141,7 @@ tools/
   watcher.py                generic multi-lane channel watcher (reports only)
   scale_workspace.py        upgrade a 2-agent workspace to 3-agent
   adopt_project.py          adopt an ad-hoc collaboration into a workspace
-  migrate_workspace.py      migrate a stamped v2.5–v3.0 workspace up to v3.1
+  migrate_workspace.py      migrate a stamped v2.5–v3.1 workspace up to v3.2
   reconcile_vendored.py     re-vendor / drift-check each workspace's vendored checker
   compaction_inject.py      the plan-ledger memory failsafe (PreCompact/SessionStart hook)
   plan_common.py            shared ledger-access module the hook imports

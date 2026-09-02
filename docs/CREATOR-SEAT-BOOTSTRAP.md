@@ -10,8 +10,8 @@ July 2026) that runs a 5-agent "3+2" system across two teams on real business
 work, with every pattern below battle-tested. Private business specifics have
 been removed; every mechanism, SOP, runbook, and burned lesson is complete.*
 
-*Currency: the current protocol version is v3.1; the mechanisms in this
-document have not been re-verified against v3.1.*
+*Currency: the current protocol version is v3.2; the mechanisms in this
+document have not been re-verified against v3.2.*
 
 *A rendered twin, `CREATOR-SEAT-BOOTSTRAP.html`, ships beside this file for
 browser reading; the two are convergence-gated (`tools/mirror_check.py`) and

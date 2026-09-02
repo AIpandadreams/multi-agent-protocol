@@ -1,4 +1,4 @@
-# Never-idle autonomy [PROTOCOL v3.1] — the fourth dial level
+# Never-idle autonomy [PROTOCOL v3.2] — the fourth dial level
 
 > The autonomy dial (docs/AUTONOMY.md) has four levels: attended,
 > semi-autonomous, standing-duties, never-idle. This file is the normative
