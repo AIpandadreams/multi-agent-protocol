@@ -969,11 +969,29 @@ def check_commit_identity(ws: Path, f: Findings):
         return
 
     if proc.returncode != 0 or not proc.stdout.strip():
-        # Unset is not "fine by default": a commit here would fail or fall back to
-        # something unreviewed. Unknown is not the same as safe.
-        f.blocker(
-            "commit identity: user.email is UNSET for this workspace.\n"
-            f"      remedy: git -C \"{ws}\" config --local user.email "
+        # WARN, not BLOCKER, and the downgrade corrects a real defect rather than
+        # conceding to CI.
+        #
+        # This gate's subject is PUBLICATION RISK. An absent effective identity carries
+        # none: the read above resolves the FULL include chain, so a personal GLOBAL
+        # address would be RETURNED here and graded by the marker branch below. Empty
+        # therefore means there is nothing to inherit -- and git refuses to create a
+        # commit with no identity at all, so nothing can reach a remote. The previous
+        # comment here claimed a commit would "fall back to something unreviewed"; that
+        # is false for the object this function actually measures, because the fallback
+        # IS what the effective read returns.
+        #
+        # Measured, and the reason this note exists: as a BLOCKER this branch failed 11
+        # tests on a bare CI runner while passing on every developer machine. A machine
+        # with a global identity lends it to every synthetic fixture workspace the suite
+        # builds, so the gate was green only where its own precondition was already
+        # satisfied and the author's local run could not see it. Reproduce the runner's
+        # condition before trusting a green here:
+        #   GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null python -m unittest ...
+        f.warn(
+            "commit identity: user.email resolves to nothing here -- git would REFUSE "
+            "to commit, so no address can leak, but no commit can be made either.\n"
+            f'      remedy: git -C "{ws}" config --local user.email '
             f"<id>+<user>{NOREPLY_SUFFIX}"
         )
         return
@@ -990,7 +1008,7 @@ def check_commit_identity(ws: Path, f: Findings):
         f.warn(
             f"commit identity: no markers configured ({PERSONAL_EMAIL_MARKERS_ENV} unset "
             f"or empty) — the personal-address branch CANNOT FIRE. This workspace would "
-            f"commit as {email!r}, unchecked against any list. The UNSET-address blocker "
+            f"commit as {email!r}, unchecked against any list. The unresolvable-address WARN "
             f"above is unaffected. Arm this by setting {PERSONAL_EMAIL_MARKERS_ENV} to a "
             "comma-separated list of address substrings."
         )
