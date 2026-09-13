@@ -31,6 +31,9 @@ changes only through the
 
 ## [1.11.0] — 2026-09-02
 
+> ⚠ **AMENDED 2026-09-13, after the release (docs only, no protocol text changed).**
+> - docs: `docs/DECLARED-DELTAS.md` — a dated register of the places `commands/wake.md` deliberately differs from the canonical deployment (protocol stamp, seat-token source, daemon-liveness scope rule, inline plan-file rules); differences not in the register are drift.
+
 > ⚠ **AMENDED 2026-09-02, after the release.** Section 6.8 gained a **sixth**
 > surface — the host's repo metadata — one hour after `v1.11.0` was tagged, ruled
 > by the principal after he read the repository description on a phone and found
