@@ -56,11 +56,36 @@ def declare(repo: Path, obj, track: bool = True, raw: bytes = None):
     """Write the declaration AND put it in the index. A declaration that relaxes
     gates must be visible in the diff that relaxes them, so an untracked one is
     refused — which means a test that forgets to track it is testing the refusal
-    path, not the feature."""
+    path, not the feature.
+
+    The copy is of the REAL tree, and the real tree may carry its own standing
+    declaration. A test's declaration REPLACES that file, so a stamp exemption the
+    tree needs would vanish and every quiet-path test would go red on a finding it
+    never planted. A dict declaration therefore inherits the tree's standing
+    stamp_exempt entries it does not already name. An untracked declaration also
+    drops the standing file's index entry — otherwise the path is still tracked and
+    the untracked refusal is never reached."""
+    if raw is None and isinstance(obj, dict):
+        obj = dict(obj)
+        standing = ROOT / DECL
+        if standing.is_file() and isinstance(obj.get("stamp_exempt", []), list):
+            # Hostile-entry tests put lists and dicts in 'path'; only a string can
+            # collide with an inherited path, and a set cannot hold the others.
+            named = {e.get("path") for e in obj.get("stamp_exempt", [])
+                     if isinstance(e, dict) and isinstance(e.get("path"), str)}
+            inherited = [e for e in json.loads(standing.read_text(encoding="utf-8"))
+                         .get("stamp_exempt", []) if e.get("path") not in named]
+            if inherited:
+                obj["stamp_exempt"] = list(obj.get("stamp_exempt", [])) + inherited
     (repo / DECL).write_bytes(
         raw if raw is not None else json.dumps(obj, indent=2).encode("utf-8"))
     if track:
         subprocess.run(["git", "-c", "core.autocrlf=false", "add", "-f", DECL],
+                       cwd=str(repo), check=True, capture_output=True)
+    else:
+        # --force-remove: the fixture index has no HEAD, and `git rm --cached`
+        # refuses a path whose staged bytes differ from both the file and HEAD.
+        subprocess.run(["git", "update-index", "--force-remove", "--", DECL],
                        cwd=str(repo), check=True, capture_output=True)
 
 
@@ -1682,6 +1707,8 @@ class BrokenDeclarationTest(unittest.TestCase):
             target.write_text('{"docs_tree": false}', encoding="utf-8")
             subprocess.run(["git", "config", "core.symlinks", "true"],
                            cwd=str(repo), capture_output=True)
+            # The real tree may carry a standing declaration; the symlink replaces it.
+            (repo / DECL).unlink(missing_ok=True)
             os.symlink(target, repo / DECL)
             subprocess.run(["git", "add", "-f", DECL], cwd=str(repo),
                            capture_output=True)
