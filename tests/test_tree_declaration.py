@@ -63,7 +63,11 @@ def stamp_finding(rel: str) -> tuple:
 
 
 def assert_stamp_finding(case, out: str, rel: str):
-    case.assertTrue(any(s in out for s in stamp_finding(rel)),
+    # END-anchored per line: the finding is the last text on its line, so a bare
+    # substring would also accept a longer path that merely starts with `rel`
+    # (`copy.md` inside `copy.md.extra.md`).
+    case.assertTrue(any(line.rstrip().endswith(s)
+                        for line in out.splitlines() for s in stamp_finding(rel)),
                     "no stamp finding for %s in:\n%s" % (rel, out))
 
 
@@ -96,6 +100,10 @@ def declare(repo: Path, obj, track: bool = True, raw: bytes = None):
     (repo / DECL).write_bytes(
         raw if raw is not None else json.dumps(obj, indent=2).encode("utf-8"))
     if track:
+        # -f is defensive, not load-bearing today: the copied index already tracks
+        # the standing declaration's path, so a plain add would stage it too. It
+        # keeps a future ignore rule from silently turning this into the untracked
+        # (refusal) path.
         subprocess.run(["git", "-c", "core.autocrlf=false", "add", "-f", DECL],
                        cwd=str(repo), check=True, capture_output=True)
     else:
@@ -1468,15 +1476,83 @@ class DeclarationDefaultTest(unittest.TestCase):
             (repo / DECL).unlink(missing_ok=True)
             subprocess.run(["git", "update-index", "--force-remove", "--", DECL],
                            cwd=str(repo), check=True, capture_output=True)
+            # The precondition, asserted directly rather than inferred from the output.
+            self.assertFalse((repo / DECL).exists())
+            # check=True: git must ANSWER. A nonzero rc alone would also pass on "not a git
+            # repository" or a safe.directory refusal, which proves nothing about the index.
+            listed = subprocess.run(["git", "ls-files", "-z", "--", DECL],
+                                    cwd=str(repo), check=True, capture_output=True)
+            self.assertEqual(listed.stdout, b"", "the declaration is still in the index")
             (repo / "docs" / "CREATOR-SEAT-BOOTSTRAP.html").unlink()
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
             self.assertIn("twin gate blind", out)
-            # Every line about the declaration names the file: a refusal (an untracked
-            # leftover is refused and falls back to strict, which would hide the default),
-            # a tracked-but-missing finding, and the relaxation header. None may print.
+            # Belt to the precondition above: the declaration lines that would betray a
+            # leftover -- a refusal of an untracked file, a tracked-but-missing finding --
+            # name the file, and the relaxation header names the relaxation. Not every
+            # declaration-related line names the file (a stale-exemption finding does not),
+            # which is why the precondition is asserted on the tree itself.
             self.assertNotIn(DECL, out)
             self.assertNotIn("declared relaxation", out)
+
+
+class DeclareHelperTest(unittest.TestCase):
+    """The helper's inheritance of the tree's standing stamp_exempt entries, tested on
+    the bytes it writes. Every quiet-path test rests on it. The gate refuses a duplicated
+    entry, but no gate-level test declares a standing path, so a collision-free
+    declaration never exercises the collision filter: a broken filter was invisible to
+    the suite, not to the gate."""
+
+    def _standing_paths(self):
+        standing = ROOT / DECL
+        if not standing.is_file():
+            self.skipTest("the tree carries no standing declaration")
+        paths = [e["path"] for e in json.loads(standing.read_text(encoding="utf-8"))
+                 .get("stamp_exempt", [])]
+        if not paths:
+            self.skipTest("the standing declaration exempts nothing")
+        return paths
+
+    def _written(self, repo):
+        return json.loads((repo / DECL).read_text(encoding="utf-8"))["stamp_exempt"]
+
+    def test_a_declaration_inherits_the_standing_entries_it_does_not_name(self):
+        paths = self._standing_paths()
+        with repo_copy() as repo:
+            declare(repo, {"stamp_exempt": [
+                {"path": "plugins/agent-protocol/skills/other.md", "reason": "x"}]})
+            written = [e["path"] for e in self._written(repo)]
+            for p in paths:
+                self.assertEqual(written.count(p), 1, written)
+            # The test's own entry survives the inheritance too.
+            self.assertEqual(written.count("plugins/agent-protocol/skills/other.md"), 1, written)
+
+    def test_the_stamp_assertion_is_end_anchored(self):
+        """A longer path that starts with the asserted one is not its finding."""
+        longer = "  - missing PROTOCOL v3.2 stamp: transports/copy.md.extra.md\n"
+        with self.assertRaises(AssertionError):
+            assert_stamp_finding(self, longer, "transports/copy.md")
+        assert_stamp_finding(self, longer, "transports/copy.md.extra.md")
+        assert_stamp_finding(self, longer.replace("/", "\\"), "transports/copy.md.extra.md")
+        # Not only the last line, and trailing spaces do not hide the end of the finding.
+        two = ("  - missing PROTOCOL v3.2 stamp: transports/cloud-git.md   \n"
+               "  - some later finding\n")
+        assert_stamp_finding(self, two, "transports/cloud-git.md")
+
+    def test_a_declaration_naming_a_standing_path_replaces_that_entry(self):
+        """A collision keeps the test's entry and drops the standing one: exactly one
+        entry for the path, carrying the test's reason."""
+        paths = self._standing_paths()
+        with repo_copy() as repo:
+            declare(repo, {"stamp_exempt": [{"path": paths[0], "reason": "the test's own"}]})
+            written = self._written(repo)
+            same = [e for e in written if e["path"] == paths[0]]
+            self.assertEqual(len(same), 1, same)
+            self.assertEqual(same[0]["reason"], "the test's own")
+            # The other standing entries are still inherited, once each. Vacuous while the
+            # standing file has one entry; a real check once it has two.
+            for p in paths[1:]:
+                self.assertEqual([e["path"] for e in written].count(p), 1, written)
 
 
 class MirrorTreeTest(unittest.TestCase):
