@@ -1462,9 +1462,9 @@ class DeclarationDefaultTest(unittest.TestCase):
         """The default is not 'trusting'. Deleting a twin with no declaration
         present must still fail — this is the r4 hole, and it stays closed."""
         with repo_copy() as repo:
-            # The real tree carries a standing declaration; without removing it (file AND
-            # index entry) this test never reaches the no-declaration branch it is named
-            # for, and a permissive default would pass it.
+            # The real tree carries a standing declaration. Remove it the way a tree without
+            # one looks, file AND index entry: without the file this test never reaches the
+            # no-declaration branch it is named for, and a permissive default would pass it.
             (repo / DECL).unlink(missing_ok=True)
             subprocess.run(["git", "update-index", "--force-remove", "--", DECL],
                            cwd=str(repo), check=True, capture_output=True)
@@ -1472,6 +1472,10 @@ class DeclarationDefaultTest(unittest.TestCase):
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
             self.assertIn("twin gate blind", out)
+            # Every line about the declaration names the file: a refusal (an untracked
+            # leftover is refused and falls back to strict, which would hide the default),
+            # a tracked-but-missing finding, and the relaxation header. None may print.
+            self.assertNotIn(DECL, out)
             self.assertNotIn("declared relaxation", out)
 
 
