@@ -1478,9 +1478,11 @@ class DeclarationDefaultTest(unittest.TestCase):
                            cwd=str(repo), check=True, capture_output=True)
             # The precondition, asserted directly rather than inferred from the output.
             self.assertFalse((repo / DECL).exists())
-            listed = subprocess.run(["git", "ls-files", "--error-unmatch", "--", DECL],
-                                    cwd=str(repo), capture_output=True)
-            self.assertNotEqual(listed.returncode, 0, "the declaration is still in the index")
+            # check=True: git must ANSWER. A nonzero rc alone would also pass on "not a git
+            # repository" or a safe.directory refusal, which proves nothing about the index.
+            listed = subprocess.run(["git", "ls-files", "-z", "--", DECL],
+                                    cwd=str(repo), check=True, capture_output=True)
+            self.assertEqual(listed.stdout, b"", "the declaration is still in the index")
             (repo / "docs" / "CREATOR-SEAT-BOOTSTRAP.html").unlink()
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
@@ -1496,8 +1498,10 @@ class DeclarationDefaultTest(unittest.TestCase):
 
 class DeclareHelperTest(unittest.TestCase):
     """The helper's inheritance of the tree's standing stamp_exempt entries, tested on
-    the bytes it writes. Every quiet-path test rests on it, and the gate's output
-    cannot tell a duplicated entry from a single one."""
+    the bytes it writes. Every quiet-path test rests on it. The gate refuses a duplicated
+    entry, but no gate-level test declares a standing path, so a collision-free
+    declaration never exercises the collision filter: a broken filter was invisible to
+    the suite, not to the gate."""
 
     def _standing_paths(self):
         standing = ROOT / DECL
@@ -1520,6 +1524,8 @@ class DeclareHelperTest(unittest.TestCase):
             written = [e["path"] for e in self._written(repo)]
             for p in paths:
                 self.assertEqual(written.count(p), 1, written)
+            # The test's own entry survives the inheritance too.
+            self.assertEqual(written.count("plugins/agent-protocol/skills/other.md"), 1, written)
 
     def test_the_stamp_assertion_is_end_anchored(self):
         """A longer path that starts with the asserted one is not its finding."""
@@ -1528,6 +1534,10 @@ class DeclareHelperTest(unittest.TestCase):
             assert_stamp_finding(self, longer, "transports/copy.md")
         assert_stamp_finding(self, longer, "transports/copy.md.extra.md")
         assert_stamp_finding(self, longer.replace("/", "\\"), "transports/copy.md.extra.md")
+        # Not only the last line, and trailing spaces do not hide the end of the finding.
+        two = ("  - missing PROTOCOL v3.2 stamp: transports/cloud-git.md   \n"
+               "  - some later finding\n")
+        assert_stamp_finding(self, two, "transports/cloud-git.md")
 
     def test_a_declaration_naming_a_standing_path_replaces_that_entry(self):
         """A collision keeps the test's entry and drops the standing one: exactly one
@@ -1535,9 +1545,14 @@ class DeclareHelperTest(unittest.TestCase):
         paths = self._standing_paths()
         with repo_copy() as repo:
             declare(repo, {"stamp_exempt": [{"path": paths[0], "reason": "the test's own"}]})
-            same = [e for e in self._written(repo) if e["path"] == paths[0]]
+            written = self._written(repo)
+            same = [e for e in written if e["path"] == paths[0]]
             self.assertEqual(len(same), 1, same)
             self.assertEqual(same[0]["reason"], "the test's own")
+            # The other standing entries are still inherited, once each. Vacuous while the
+            # standing file has one entry; a real check once it has two.
+            for p in paths[1:]:
+                self.assertEqual([e["path"] for e in written].count(p), 1, written)
 
 
 class MirrorTreeTest(unittest.TestCase):
