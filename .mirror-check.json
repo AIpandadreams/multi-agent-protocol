@@ -1,0 +1,8 @@
+{
+  "stamp_exempt": [
+    {
+      "path": "transports/cloud-git.md",
+      "reason": "A SUPERSEDED transport profile, retained for history and not for reuse. Its header pins [PROTOCOL v2.5] because v2.5 is the protocol version the document describes; the canonical profile for this transport is transports/git-sync.md. Stamping the current version into it would assert that the superseded document had been revised to the current protocol, which is the opposite of what it records, so the stamp gate is exempted here and only here."
+    }
+  ]
+}
