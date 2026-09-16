@@ -52,15 +52,56 @@ def write(repo: Path, rel: str, data: bytes):
     t.write_bytes(data)
 
 
+def stamp_finding(rel: str) -> tuple:
+    """Both spellings of the gate's stamp finding for one path. The gate prints
+    p.relative_to(ROOT), so the separator is the host's. With the tree's standing
+    declaration inherited, and cloud-git.md unstamped on every refused run, a bare
+    'missing PROTOCOL v3.2 stamp' substring no longer ties an assertion to the file
+    the test planted."""
+    base = "missing PROTOCOL v3.2 stamp: "
+    return (base + rel, base + rel.replace("/", "\\"))
+
+
+def assert_stamp_finding(case, out: str, rel: str):
+    case.assertTrue(any(s in out for s in stamp_finding(rel)),
+                    "no stamp finding for %s in:\n%s" % (rel, out))
+
+
 def declare(repo: Path, obj, track: bool = True, raw: bytes = None):
     """Write the declaration AND put it in the index. A declaration that relaxes
     gates must be visible in the diff that relaxes them, so an untracked one is
     refused — which means a test that forgets to track it is testing the refusal
-    path, not the feature."""
+    path, not the feature.
+
+    The copy is of the REAL tree, and the real tree may carry its own standing
+    declaration. A test's declaration REPLACES that file, so a stamp exemption the
+    tree needs would vanish and every quiet-path test would go red on a finding it
+    never planted. A dict declaration therefore inherits the tree's standing
+    stamp_exempt entries it does not already name -- stamp_exempt ONLY. A standing
+    docs_tree is NOT inherited: this suite assumes a tree that carries the docs. An untracked declaration also
+    drops the standing file's index entry — otherwise the path is still tracked and
+    the untracked refusal is never reached."""
+    if raw is None and isinstance(obj, dict):
+        obj = dict(obj)
+        standing = ROOT / DECL
+        if standing.is_file() and isinstance(obj.get("stamp_exempt", []), list):
+            # Hostile-entry tests put lists and dicts in 'path'; only a string can
+            # collide with an inherited path, and a set cannot hold the others.
+            named = {e.get("path") for e in obj.get("stamp_exempt", [])
+                     if isinstance(e, dict) and isinstance(e.get("path"), str)}
+            inherited = [e for e in json.loads(standing.read_text(encoding="utf-8"))
+                         .get("stamp_exempt", []) if e.get("path") not in named]
+            if inherited:
+                obj["stamp_exempt"] = list(obj.get("stamp_exempt", [])) + inherited
     (repo / DECL).write_bytes(
         raw if raw is not None else json.dumps(obj, indent=2).encode("utf-8"))
     if track:
         subprocess.run(["git", "-c", "core.autocrlf=false", "add", "-f", DECL],
+                       cwd=str(repo), check=True, capture_output=True)
+    else:
+        # --force-remove: the fixture index has no HEAD, and `git rm --cached`
+        # refuses a path whose staged bytes differ from both the file and HEAD.
+        subprocess.run(["git", "update-index", "--force-remove", "--", DECL],
                        cwd=str(repo), check=True, capture_output=True)
 
 
@@ -634,7 +675,7 @@ class MojibakeExemptionIsBoundedTest(unittest.TestCase):
             self.assertNotEqual(rc, 0, out)
             self.assertIn("contains '..'", out)
             self.assertIn("REFUSED", out)
-            self.assertIn("missing PROTOCOL v3.2 stamp", out)
+            assert_stamp_finding(self, out, "transports/custody/copy.md")
 
     def test_an_out_of_tree_symlink_is_a_finding_not_a_crash(self):
         """Round 12's second half: resolve()-based rel computation raised
@@ -1421,10 +1462,21 @@ class DeclarationDefaultTest(unittest.TestCase):
         """The default is not 'trusting'. Deleting a twin with no declaration
         present must still fail — this is the r4 hole, and it stays closed."""
         with repo_copy() as repo:
+            # The real tree carries a standing declaration. Remove it the way a tree without
+            # one looks, file AND index entry: without the file this test never reaches the
+            # no-declaration branch it is named for, and a permissive default would pass it.
+            (repo / DECL).unlink(missing_ok=True)
+            subprocess.run(["git", "update-index", "--force-remove", "--", DECL],
+                           cwd=str(repo), check=True, capture_output=True)
             (repo / "docs" / "CREATOR-SEAT-BOOTSTRAP.html").unlink()
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
             self.assertIn("twin gate blind", out)
+            # Every line about the declaration names the file: a refusal (an untracked
+            # leftover is refused and falls back to strict, which would hide the default),
+            # a tracked-but-missing finding, and the relaxation header. None may print.
+            self.assertNotIn(DECL, out)
+            self.assertNotIn("declared relaxation", out)
 
 
 class MirrorTreeTest(unittest.TestCase):
@@ -1524,7 +1576,7 @@ class StampExemptionTest(unittest.TestCase):
                  "reason": "byte-identical custody copy; stamping breaks custody"}]})
             rc, out = run(repo)
             self.assertEqual(rc, 0, out)
-            self.assertIn("stamp-exempt:", out)
+            self.assertIn("stamp-exempt: " + self.SKILL, out)
             self.assertIn("breaks custody", out)
 
     def test_an_exemption_without_a_reason_is_refused(self):
@@ -1534,7 +1586,7 @@ class StampExemptionTest(unittest.TestCase):
             rc, out = run(repo)
             self.assertNotEqual(rc, 0, out)
             self.assertIn("no non-empty string reason", out)
-            self.assertIn("missing PROTOCOL v3.2 stamp", out)  # and nothing relaxed
+            assert_stamp_finding(self, out, self.SKILL)  # and nothing relaxed
 
     def test_a_stale_exemption_is_a_finding(self):
         """A list that outlives its files silently becomes a bypass."""
@@ -1682,6 +1734,8 @@ class BrokenDeclarationTest(unittest.TestCase):
             target.write_text('{"docs_tree": false}', encoding="utf-8")
             subprocess.run(["git", "config", "core.symlinks", "true"],
                            cwd=str(repo), capture_output=True)
+            # The real tree may carry a standing declaration; the symlink replaces it.
+            (repo / DECL).unlink(missing_ok=True)
             os.symlink(target, repo / DECL)
             subprocess.run(["git", "add", "-f", DECL], cwd=str(repo),
                            capture_output=True)
@@ -1758,7 +1812,7 @@ class ReasonMustBeARealReasonTest(unittest.TestCase):
                 self.assertNotEqual(rc, 0, out)
                 self.assertIn("REFUSED", out)
                 # and the exemption did NOT take effect
-                self.assertIn("missing PROTOCOL v3.2 stamp", out)
+                assert_stamp_finding(self, out, self.SKILL)
 
     def test_a_real_reason_is_honoured(self):
         with repo_copy() as repo:
@@ -1818,7 +1872,7 @@ class ExemptionPathIsConfinedTest(unittest.TestCase):
                 self.assertNotEqual(rc, 0, out)
                 self.assertIn("REFUSED", out)
                 self.assertIn("canonical", out)
-                self.assertIn("missing PROTOCOL v3.2 stamp", out)  # nothing granted
+                assert_stamp_finding(self, out, "transports/custody/copy.md")  # nothing granted
 
     def test_a_case_variant_spelling_is_refused_where_it_finds_a_file(self):
         """Round 16: canonical FORM is not enough — is_file() answers
