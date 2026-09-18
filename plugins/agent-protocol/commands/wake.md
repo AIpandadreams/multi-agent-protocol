@@ -10,6 +10,8 @@ workspace repo (the cold-successor path — every wake is treated as one).
 This replaces pasting recall lines: a fresh session plus `/wake owner` is a
 full reload.
 
+Note: deliberate differences from the canonical deployment are recorded in `docs/DECLARED-DELTAS.md`.
+
 Requested role: $ARGUMENTS
 
 ## Steps (in order)
