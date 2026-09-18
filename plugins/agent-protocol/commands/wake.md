@@ -114,6 +114,8 @@ Requested role: $ARGUMENTS
    6a/6b (the report's `Ledger:` line says `no plans/ ledger adopted`) but
    ALWAYS run 6c — the stale-head hazard predates the ledger.
 
+   ⚠ Step 6a's scope rule is a recorded release delta: see `docs/DECLARED-DELTAS.md`.
+
    a. **Daemon liveness (F4).** ⚠ **Scope rule first: the clock-sweep
       daemon does not ship in this release** (`docs/PLAN-LEDGER.md`, part-4
       status), so this check runs only in a workspace whose BINDINGS.md
