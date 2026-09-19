@@ -9,19 +9,22 @@ supported hop, CHAINED in a single run.
 
 WHICH HOPS RUN (the decision tree, derived from `HOPS` — see `_hop_chain`):
 
-    pinned v3.2  ->  no-op, exit 0 (idempotent; safe to re-run)
-    pinned v3.1  ->  one hop:    v3.1 -> v3.2
-    pinned v3.0  ->  TWO hops:   v3.0 -> v3.1 -> v3.2
-    pinned v2.9  ->  THREE hops: v2.9 -> v3.0 -> v3.1 -> v3.2
-    pinned v2.8  ->  FOUR hops:  v2.8 -> v2.9 -> v3.0 -> v3.1 -> v3.2
-    pinned v2.7  ->  FIVE hops:  v2.7 -> ... -> v3.2
-    pinned v2.6  ->  SIX hops:   v2.6 -> ... -> v3.2
-    pinned v2.5  ->  SEVEN hops: v2.5 -> v2.6 -> v2.7 -> v2.8 -> v2.9 -> v3.0 ->
-                     v3.1 -> v3.2, in ONE run of
-                     THIS checkout — you do NOT need an older checkout for the
-                     earlier legs, and you do NOT run the tool once per hop
-    anything else -> unsupported, exit 1 (the message names the supported
-                     starting versions)
+    THE RULE, not a roster: a workspace pinned at any version in HOPS walks EVERY
+    hop from its pin up to NEWEST, in ONE run of ONE checkout. A pin already at
+    NEWEST is a no-op, exit 0 (idempotent; safe to re-run).
+
+    `--hops` prints the enumeration, DERIVED from HOPS at runtime. It used to
+    live here as eight hand-written lines, and every stamp bump had to edit all
+    of them plus two more rosters elsewhere in this file -- which is how those
+    two came to disagree, and then to be wrong together. None of the three is
+    here any more: a rule cannot go stale against the table it reads, while an
+    enumeration can, silently, and still read plausibly. See
+    test_rule_over_roster.py, which is what stops one coming back.
+
+    Every supported pin migrates to NEWEST in ONE run of THIS checkout -- you
+    do NOT need an older checkout for the earlier legs, and you do NOT run the
+    tool once per hop. Any other pin -> unsupported, exit 1, and the message
+    names the supported starting versions.
 
 Chaining is oldest-hop-first and the operator never supplies a version: the
 tool reads the workspace's own pin and derives the ladder. `--dry-run` previews
@@ -72,8 +75,9 @@ WHAT IT DOES NOT DO (judgement — it PRINTS what to do, never does it):
     version token inside one (a PROXY_AUTH change is first-hand-only). If the
     workspace's PROXY_AUTH predates v2.6's canonical super-class wording it
     prints the reword to apply by hand.
-  - it never adds binding slots. v2.9, v3.0, v3.1 and v3.2 introduce NO new
-    slots; the v2.6 slot
+  - it never adds binding slots. Which versions DID introduce one is recorded
+    once, in SLOT_INTRODUCED_IN, and every claim about it in this file is derived
+    from that table rather than written out again; the v2.6 slot
     family (TRANSPORT / WORKSPACE_REMOTE / SECRETS / AUTONOMY / WATCHER /
     ROLE_ALIASES) remains advisory — it prints any not yet present, flagged by
     whether they apply to this workspace's profile, so the principal adds the
@@ -171,13 +175,45 @@ _STAMP_LINE_PREFIXES = ("#", "<!--", '"""', "'''")
 # text-mode CRLF<->LF rewrite.
 _LINE_SPLIT = re.compile(r"(\r\n|\r|\n)")
 
-# The v2.6 slot family a workspace may still lack — printed as "consider
-# adding", never stamped. None of v2.8, v2.9, v3.0, v3.1 or v3.2 introduces
-# new binding slots, so this list is unchanged across every later hop.
-# (name, one-line note, applicability):
-# "always" = add on any workspace; "git-sync" = only when the transport is
-# git-sync; "if-*" = a conditional the operator judges.
-NEW_V26_SLOTS = [
+# ═══════════════════════════════════════════════════════════════════════════════
+# THE SLOT TABLE — the single place this file records which stamp version first
+# introduced each advisory binding slot. Every "no new slots since X" statement in
+# this module is DERIVED from it (see slots_introduced_since / newest_slot_version).
+#
+# ⛔ WHAT THIS REPLACED, and why a rule rather than tidier prose: two hand-written
+# rosters stood here and at the docstring, each asserting that no binding slots had
+# arrived since some version, and they disagreed about which version that was. The
+# disagreement was the SYMPTOM. Measured against CHANGELOG.md, BOTH were wrong, and
+# wrong about the same version -- release 1.7.0, stamp v2.9, added NON_ROLE_DIRS,
+# which binding-slots.md carries as a slot and conformance_check.py reads.
+#
+# Their exact wording is preserved in tests/test_rule_over_roster.py and in the
+# commit that removed them -- deliberately NOT here. Quoting a false claim inside
+# the file that a guard scans makes the quotation indistinguishable from a live
+# claim, and the alternative is a quote-exemption in the guard, which is how a
+# guard dies. History belongs where it is on the record without being re-asserted.
+#
+# That false claim was not decoration. It is the sentence that licensed omitting
+# NON_ROLE_DIRS from the advisory list below, so a workspace migrating from v2.5
+# through v2.8 was never told the slot existed -- while conformance BLOCKS on an
+# undeclared directory under memory/ that the slot is the declared cure for. A
+# roster does not merely go stale; it goes stale in a direction that suppresses
+# advice, and it reads correctly while doing so.
+#
+# Applicability: "always" = add on any workspace; "git-sync" = only when the
+# transport is git-sync; "if-*" = a conditional the operator judges.
+# ═══════════════════════════════════════════════════════════════════════════════
+SLOT_INTRODUCED_IN = {
+    "TRANSPORT": "v2.6",
+    "WORKSPACE_REMOTE": "v2.6",
+    "SECRETS": "v2.6",
+    "AUTONOMY": "v2.6",
+    "WATCHER": "v2.6",
+    "ROLE_ALIASES": "v2.6",
+    "NON_ROLE_DIRS": "v2.9",
+}
+
+ADVISORY_SLOTS = [
     ("TRANSPORT", "name the transport explicitly (local-fs / git-sync)",
      "always"),
     ("WORKSPACE_REMOTE", "remote URL + branch", "git-sync"),
@@ -186,7 +222,58 @@ NEW_V26_SLOTS = [
      "always"),
     ("WATCHER", "per-role monitor + lanes + cadence", "if-never-idle"),
     ("ROLE_ALIASES", "display->role map", "if-renamed"),
+    # v2.9. Absent from this list until the rule-over-roster rewrite, suppressed by
+    # the false claim the roster above used to make -- the operational defect the
+    # rewrite fixes, as distinct from the stale prose that hid it.
+    ("NON_ROLE_DIRS", "declare directories under memory/ that are NOT role memory",
+     "if-non-role-dirs"),
 ]
+
+# Kept as an alias: the old name says v2.6 and the list no longer is v2.6-only.
+# Nothing in-tree reads it, and a name that states a version it no longer means is
+# the same defect one layer down.
+NEW_V26_SLOTS = ADVISORY_SLOTS
+
+
+def newest_slot_version():
+    """The LATEST stamp version that introduced a binding slot, per the table.
+
+    Derived so that "no new slots since X" can never disagree with the table, and
+    so a future slot only has to be added in ONE place to correct every statement.
+    Ordering is by HOPS position, not string comparison: "v2.10" < "v2.9"
+    lexically, and a version scheme that will eventually reach two digits must not
+    have its ordering depend on not having done so yet."""
+    order = {v: i for i, v in enumerate([HOPS[0][0]] + [to for _f, to in HOPS])}
+    known = [v for v in SLOT_INTRODUCED_IN.values() if v in order]
+    if not known:
+        return None
+    return max(known, key=lambda v: order[v])
+
+
+def slots_introduced_since(pinned):
+    """Slots a workspace pinned at `pinned` has never been told about.
+
+    A migrating workspace needs the slots introduced AFTER its pin -- which is a
+    function of the pin, not a constant, and was previously stated as a constant."""
+    order = {v: i for i, v in enumerate([HOPS[0][0]] + [to for _f, to in HOPS])}
+    if pinned not in order:
+        return []
+    return sorted(n for n, v in SLOT_INTRODUCED_IN.items()
+                  if v in order and order[v] > order[pinned])
+
+
+def hop_table():
+    """The hop enumeration the docstring used to hard-code, derived from HOPS."""
+    rows = []
+    starts = [HOPS[0][0]] + [to for _f, to in HOPS]
+    for v in starts:
+        chain = [(f, to) for f, to in HOPS if starts.index(f) >= starts.index(v)]
+        if not chain:
+            rows.append(f"pinned {v}  ->  no-op, exit 0 (already newest)")
+        else:
+            path = " -> ".join([chain[0][0]] + [to for _f, to in chain])
+            rows.append(f"pinned {v}  ->  {len(chain)} hop(s): {path}")
+    return rows
 
 
 def _is_git_sync(slots):
@@ -311,11 +398,12 @@ def _plan_file(p, from_ver, to_ver, text=None):
 def migrate(ws, dry_run=False):
     """Carry a workspace up the version ladder to NEWEST. Pure of argparse.
 
-    Chains every hop the workspace's pin requires, oldest first, in ONE run: a
-    v2.5 workspace runs v2.5->v2.6, then v2.6->v2.7, then v2.7->v2.8, then
-    v2.8->v2.9, then v2.9->v3.0, then v3.0->v3.1, then v3.1->v3.2,
-    without
-    the operator knowing the ordering. Returns a result dict: {status, ...}.
+    Chains every hop the workspace's pin requires, oldest first, in ONE run,
+    without the operator knowing the ordering. The ladder is HOPS and `--hops`
+    prints it for the current checkout; it is deliberately NOT restated here,
+    because a prose ladder is the same roster defect this module was rewritten
+    to remove -- it simply sat one function away from the two that were found.
+    Returns a result dict: {status, ...}.
     status is one of
       'migrated' | 'dry-run' | 'already' | 'unsupported' | 'error'.
 
@@ -394,8 +482,18 @@ def proxy_auth_gaps(slots):
     return gaps
 
 
-def print_manual_steps(ws, slots, roles):
-    """Print the judgement steps the tool deliberately does NOT do."""
+def print_manual_steps(ws, slots, roles, pinned_from):
+    """Print the judgement steps the tool deliberately does NOT do.
+
+    `pinned_from` is REQUIRED. It defaulted to None, and the heading carried a
+    third wording for that case -- but every early status (`error`, `unsupported`,
+    `already`) returns before this function is called, and the one surviving path
+    always passes the `pinned` value that just cleared `SUPPORTED_FROM`. So that
+    branch could not render on any run: a sentence with no reader, unreachable by
+    the arms and therefore never graded, stating the same fact a fourth way. The
+    default is removed rather than the branch alone, so a caller that has no pin
+    fails loudly at the call instead of silently selecting dead wording.
+    """
     print("\n=== MANUAL STEPS (the tool does not touch these) ===")
 
     # 1. PROXY_AUTH reword — authority, first-hand only.
@@ -417,13 +515,25 @@ def print_manual_steps(ws, slots, roles):
         else:
             print("\n1. No PROXY_AUTH slot (no orchestrator) — nothing to reword.")
 
-    # 2. New v2.6 slots to consider (advisory — none are required for a green
-    #    conformance run). Flag each not-present slot by whether it APPLIES to
-    #    this workspace's profile, so "which apply" is honest, not a blanket list.
+    # 2. Advisory slots to consider.
+    #
+    # ⛔ "Advisory" describes the DEFAULT case and is NOT a blanket exemption.
+    # NON_ROLE_DIRS is optional only while memory/ holds nothing but role
+    # directories; once it holds anything else, conformance BLOCKS on the
+    # undeclared one and the slot is REQUIRED. The heading below used to say
+    # "none are required for conformance" while its range was v2.6-scoped, and
+    # the rule-over-roster rewrite widened that range through v2.9 WITHOUT
+    # changing its words -- so it became false three lines above a bullet that
+    # says conformance BLOCKS. A sentence whose SCOPE widens while its wording
+    # stays is a NEW claim and gets graded as one, which is why the heading now
+    # names this slot's status instead of generalizing over all of them.
+    #
+    # Flag each not-present slot by whether it APPLIES to this workspace's
+    # profile, so "which apply" is honest, not a blanket list.
     present = set(slots or {})
     git_sync = _is_git_sync(slots)
     add, na, cond = [], [], []
-    for n, note, applic in NEW_V26_SLOTS:
+    for n, note, applic in ADVISORY_SLOTS:
         if n in present:
             continue
         if applic == "always":
@@ -434,9 +544,55 @@ def print_manual_steps(ws, slots, roles):
             cond.append((n, note + " — only if this workspace runs never-idle"))
         elif applic == "if-renamed":
             cond.append((n, note + " — only if a side is renamed"))
+        elif applic == "if-non-role-dirs":
+            cond.append((n, note + " — only if memory/ holds a directory that is "
+                                   "not a role (conformance BLOCKS on an "
+                                   "undeclared one)"))
     if add or cond:
-        print("\n2. v2.6 binding slots not yet present (none are required for "
-              "conformance; add the ones this deployment wants):")
+        # `slots_introduced_since` is the whole point of the table replacing the
+        # roster -- what a migrating workspace has NOT been told is a function of
+        # its pin -- so it is read here, at the one place an operator sees the
+        # answer. Left uncalled it was a derivation nobody consumed, which is a
+        # roster's failure mode with the arithmetic done correctly.
+        listed = [n for n, _ in add + cond]
+        unseen = set(slots_introduced_since(pinned_from))
+        # Intersect: `unseen` spans slots introduced after the pin PRESENT OR NOT,
+        # and this is the heading of the NOT-PRESENT list. Printing the wider
+        # count over the narrower list would assert they are the same set without
+        # saying so -- the widened-scope defect fixed three lines above.
+        new_here = [n for n in listed if n in unseen]
+        # ⛔ THE STAMP IS COARSER THAN THE RELEASE. `slots_introduced_since` is
+        # strictly-after by design and must stay that way -- a workspace that
+        # really is at v2.9-with-the-slot must not be told the slot is new. But a
+        # PROTOCOL stamp is shared by every release that carries it, and
+        # NON_ROLE_DIRS arrived in 1.7.0 partway through v2.9, so a v2.9-pinned
+        # workspace may sit on EITHER side of it and the pin cannot say which.
+        # Saying "all predate this workspace's v2.9 pin" there is a false
+        # operator-facing chronology -- and it contradicted, in the same printed
+        # sentence, the clause that named NON_ROLE_DIRS as required. The honest
+        # answer is that this is not decidable from the stamp, so say so and let
+        # the row below carry it.
+        at_pin = [n for n in listed if SLOT_INTRODUCED_IN.get(n) == pinned_from]
+        if new_here:
+            scope = (f"{len(new_here)} of the {len(listed)} arrived after this "
+                     f"workspace's {pinned_from} pin: " + ", ".join(new_here))
+            if at_pin:
+                scope += (f"; {', '.join(at_pin)} arrived DURING {pinned_from}, "
+                          f"which the pin alone cannot place")
+        elif at_pin:
+            scope = (f"{', '.join(at_pin)} arrived DURING {pinned_from} and the "
+                     f"pin alone cannot say whether this workspace predates it; "
+                     f"the rest predate the {pinned_from} pin")
+        else:
+            scope = f"all predate this workspace's {pinned_from} pin"
+        # ⛔ The clause that used to stand here named NON_ROLE_DIRS and its
+        # condition by hand -- a roster of one, in the heading of the list the
+        # rows below already carry, and it went stale the moment the heading's
+        # scope moved under it. The rule is stated; each conditional row states
+        # its own condition, including that conformance BLOCKS.
+        print(f"\n2. Binding slots not yet present ({scope}). Optional UNLESS a "
+              "row below states a condition -- a conditional row is REQUIRED "
+              "once its condition holds. Add the ones this deployment wants:")
         for n, note in add + cond:
             print(f"     - {n}: {note}")
     if na:
@@ -467,11 +623,27 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--workspace", required=True,
+    ap.add_argument("--workspace",
                     help=f"workspace root to migrate up to {NEWEST}")
     ap.add_argument("--dry-run", action="store_true",
                     help="list what would change; write nothing")
+    ap.add_argument("--hops", action="store_true",
+                    help="print the hop enumeration, derived from HOPS, and exit")
     args = ap.parse_args()
+
+    if args.hops:
+        for row in hop_table():
+            print("  " + row)
+        newest = newest_slot_version()
+        print(f"\n  advisory binding slots, newest introduced at: {newest}")
+        return 0
+
+    # --workspace is no longer argparse-required because --hops needs neither a
+    # workspace nor a stamp. The check is explicit instead, and still exits 2 with
+    # usage on stderr, so the missing-argument behaviour is unchanged for every
+    # invocation that is not --hops.
+    if not args.workspace:
+        ap.error("--workspace is required (unless --hops)")
 
     ws = Path(args.workspace)
     if not ws.is_dir():
@@ -542,7 +714,8 @@ def main():
 
     slots = cc.parse_bindings(ws)
     roles = cc.infer_roles(ws)
-    print_manual_steps(ws, slots, roles)
+    print_manual_steps(ws, slots, roles,
+                       pinned_from=result.get("version_from"))
 
     if not args.dry_run:
         print("\n=== CONFORMANCE (post-migration) ===")
