@@ -11,7 +11,7 @@ ships as the release's `docs/DESIGN.md`.
 | capability | evidence |
 |---|---|
 | Independent-review convergence | 12 Codex review rounds on the protocol itself (SYS series); every blocker fixed same-cycle; two real TOCTOU vulnerabilities in the automerge path found by review rounds 10–11 and fixed before any deployment ran them |
-| Cold-successor resume | Synthetic Phase-5 pilot (localpilot): 6 sessions, sessions killed mid-unit, successors resumed from the ⚡ working-state block + channel alone, zero integrity violations across a 7-commit replay |
+| Cold-successor resume | Synthetic Phase-5 pilot: 6 sessions, sessions killed mid-unit, successors resumed from the ⚡ working-state block + channel alone, zero integrity violations across a 7-commit replay |
 | Auth-log lane end-to-end | <private-repo> relay lane in production: GRANT → RELAY-SENT → RECEIVED(+sha) → exactly-one-landed CONSUMED → ACK, validated mechanically by `validate_auth_log.py` + CI |
 | Integrity CI | append-only channel/auth-log checks, CHANNEL_STATE monotonicity, secret scan, fail-closed automerge guard — all firing in production on <private-repo> |
 | 2-agent config | <private-repo>: 50+ working rounds under the ancestor protocol; owner-as-interface works for a single-project deployment |
