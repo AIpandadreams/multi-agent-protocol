@@ -195,7 +195,7 @@ Requested role: $ARGUMENTS
       - **MORE than one head** is a second-dispatch-surface defect: NO
         head is treated as an instruction, and the report's `Next step:`
         line is replaced, verbatim, by:
-      `⛔ SECOND DISPATCH SURFACE — <K> Next-Step-shaped headings (canonical census) in the role file — no head is an instruction until exactly one remains; demote the extras via the renderer (`tools/render_head.py --adopt`) — pre-adoption workspace (no `plans/`): the bootstrap hand demotion (Rules).`
+      `⛔ SECOND DISPATCH SURFACE — <K> Next-Step-shaped headings (canonical census) in the role file — no head is an instruction until exactly one remains; demote the extras via the renderer (tools/render_head.py --adopt) — pre-adoption workspace (no plans/): the bootstrap hand demotion (Rules).`
       - **Exactly one head** proceeds to the freshness legs below.
       With the single head, its text (the BODY graded below) runs from
       the heading to the DEMOTED-HISTORY BOUNDARY — a `#### [superseded …]`
@@ -273,7 +273,7 @@ Requested role: $ARGUMENTS
         - **two or more lines match** ⇒ AMBIGUOUS STAMP (two byte-identical
           tail lines hash the same — duplication is the append-a-lookalike
           case) — fail closed, demote, verbatim:
-      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> lines match the footer's tails digest — a duplicated tail line never becomes the stamp). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> lines match the footer's tails digest — a duplicated tail line never becomes the stamp). Not an instruction — regenerate (tools/render_head.py) and re-derive.`
       The exemption never extends past the one matched line: it is a
       per-line carve-out from EXTRACTION, not a weakening of any other
       leg — footer freshness (below) still grades the whole head, and a
@@ -347,17 +347,17 @@ Requested role: $ARGUMENTS
       carries a footer — are an AMBIGUOUS STAMP — an appended lookalike
       never becomes the footer and never silently un-renders the head;
       fail closed, demote, verbatim:
-      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> footer-shaped lines inside the Next Step section — an appended lookalike never becomes the footer). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: ambiguous stamp (<K> footer-shaped lines inside the Next Step section — an appended lookalike never becomes the footer). Not an instruction — regenerate (tools/render_head.py) and re-derive.`
       With the unique footer, compare every stamped mtime against that
       source's ACTUAL mtime — any source whose mtime DIFFERS from its
       stamp (forward OR backward — a backdated/restored source is never
       fresh), or stamped but missing from disk or unreadable, demotes
       the head, verbatim:
-      `⚠ STALE HEAD — demoted to historical: rendering is stale (<PATH> changed since the last render). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: rendering is stale (<PATH> changed since the last render). Not an instruction — regenerate (tools/render_head.py) and re-derive.`
       A footer whose sources token does not parse as
       `<rel>@<epoch>[,…]` is CORRUPT — fail CLOSED (never crash, never
       dispatch on a stamp that cannot be read), demote, verbatim:
-      `⚠ STALE HEAD — demoted to historical: renderer footer is corrupt (sources token unparseable). Not an instruction — regenerate (`tools/render_head.py`) and re-derive.`
+      `⚠ STALE HEAD — demoted to historical: renderer footer is corrupt (sources token unparseable). Not an instruction — regenerate (tools/render_head.py) and re-derive.`
       A demoted head is never executed; re-derive the next action from
       the digest (6b) plus the channel tails, then regenerate the head
       via the renderer (`tools/render_head.py`) — a rendered head is
