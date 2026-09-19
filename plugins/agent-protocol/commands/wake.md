@@ -32,6 +32,19 @@ Requested role: $ARGUMENTS
      divergence (local commits the remote lacks, or vice versa) is the FIRST
      problem to solve — un-pushable state means a later checkpoint cannot
      land, so a wake that can't reconcile must say so and stop, not read on.
+   - **Reconcile = FETCH, then MERGE (or REBASE of unpublished local commits
+     only).** In a shared live tree — one another seat may commit to between
+     your check and your act — the reconcile is `git fetch origin` followed
+     by `git merge --no-edit origin/<branch>`. A branch-ref reset of any form
+     on the live tree is FORBIDDEN as a reconcile: `git checkout -B <branch>
+     origin/<branch>`, `git reset --hard`, `git branch -f`, `git switch -C`,
+     and any stash/`--autostash` choreography that moves the ref over work it
+     did not merge. A reset discards every concurrent peer commit that landed
+     inside the check→act window; a merge carries them forward.
+     A divergence the merge cannot resolve is a STOP — report it on the lane
+     and wait — never a reset. The rule binds machine actors too (scheduled
+     wakes, tick fires): a headless wake that finds a divergence it cannot
+     merge aborts loudly.
    - **No workspace present on a headless wake = ABORT, loudly.** A scheduled
      / cold-successor session that finds no checkout does NOT self-clone
      (credentials live in the host env / connector per the `SECRETS` binding,
@@ -107,6 +120,25 @@ Requested role: $ARGUMENTS
    `start/START_SESSION.<role>.md`, top to bottom, no steps skipped:
    bind to BINDINGS.md, verify integrity, read `memory/<role>/MEMORY.md`
    (⚡ working-state block FIRST), poll the channel for unacked peer entries.
+   - **Peer presence is asserted from a probe, never from a lane's silence.**
+     A seat asserts a peer's presence, absence, liveness or attention ONLY
+     from a probe it ran and names (a heartbeat file it read with its stamp,
+     a process it listed by PID, a lane entry it read by id and time) — never
+     from a lane's silence. Silence on a lane measures the LANE (unpolled,
+     unmerged, a monitor not armed, a file not rotated), not the peer; a seat
+     that reports "the peer is down / idle / has not read X" without a probe
+     is reporting its own instrument. The report names the probe, its time,
+     and what it can and cannot see.
+   - **Presence assertion on `LIVE-ONLY` / `KEEP` / "no change" rows.** Every
+     `LIVE-ONLY`, `KEEP`, or "no change" row of a ruled execution table
+     carries a PRESENCE ASSERTION the executor must run at execution time and
+     the receipt must print: the path exists at the named extent, its blob
+     equals the pinned blob (or its named lines are present verbatim). A
+     `keep` instruction has no failure mode of its own — an executor that
+     does nothing is correct at every step and never learns the subject was
+     destroyed — so the assertion is the row's only red state. A row whose
+     assertion fails is a STOP for that row, reported as a defect against the
+     ruling, never silently re-read as a supersession.
 
 6. **Verify against the machine ledger (`plans/`).** Records protect only
    the agent that reads them; this step is the mechanical read — it runs on
