@@ -80,7 +80,7 @@ Other bindings, cloud flavor:
   authorization travels ONLY as auth-log events the receiver verifies in the
   orchestrator's committed log and mirrors into its own (proxy-auth-core.md);
   channel entries at most announce grant/relay ids.
-- **SECRETS** = cloud env secrets only (e.g. the pinned Supabase project's
+- **SECRETS** = cloud env secrets only (e.g. the pinned cloud-DB project's
   key); never in any committed file; secret-scan CI on every push.
 - **COST** = heartbeats run only at the bound cadence; the orchestrator's
   always-on tick is the default presence, workers wake on demand.

@@ -195,7 +195,7 @@ you. On both decisions + your go: `python tools/adopt_v25_local.py`
 - First-hand only, forever: outward-facing actions, new-money/new-recipient,
   destructive actions on others' artifacts, email SENDING, canonical-repo
   merges, changes to PROXY_AUTH / ground rules / embargoes.
-- Supabase: agents may touch ONLY the <private-repo> project
+- Cloud DB: agents may touch ONLY the <private-repo> project
   (<project-id>). Every other project is forbidden.
 - Secrets: env/connector settings only; never committed; CI secret-scan
   backstops.
@@ -209,7 +209,7 @@ you. On both decisions + your go: `python tools/adopt_v25_local.py`
 | `<workspace-root>\<private-repo>` (3-agent local PA) | BUILT, awaiting your first orchestrator session |
 | `<private-repo>` (3-agent cloud PA) | live state repo + working relay lane + automerge; heartbeat PENDING your routine creation (repos attached) + fired-and-delivered proof |
 | <private-repo> (2.5 local) | running its original skills; v2.5 offer open (builder ADOPT, engine decision/input requested) |
-| localpilot (validation) | synthetic Phase-5 cycle PASSED end-to-end; disposable |
+| synthetic pilot (validation) | synthetic Phase-5 cycle PASSED end-to-end; disposable |
 
 ## 9. Deeper references
 

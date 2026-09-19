@@ -1,7 +1,7 @@
 // intake base-origin resolver -- the ONE implementation of what `BASE` may become.
 //
 // ⭐ WHY THIS FILE EXISTS (O-F-3, card row 3). The 09-09 round found that
-// workpapers/p2-cutover-convergence-2026-09-08/fastpath_base_resolution_controls.mjs
+// its battery (fastpath_base_resolution_controls.mjs)
 // graded a HAND-WRITTEN MODEL of this resolver -- a model that returned the pinned
 // origin where the shipped one REFUSES -- so a green battery was evidence about the
 // model and was read as evidence about the guard. `<private-oid>` got those legs executing
@@ -23,7 +23,7 @@
 // file the code departed becomes an orphan nobody can act on.
 //
 // ⚠ CARD CITATIONS MOVED WITH IT. Rows 4, 9 and 10 of
-// workpapers/cb-dispositions-2026-09-11/CARD_C-b_DISPOSITIONS_v2.md cite lines that now
+// the C-b dispositions card (CARD_C-b_DISPOSITIONS_v2.md) cite lines that now
 // live HERE; the card and CARD_v2_GRADE_CHECK.py were re-pointed in the same commit,
 // because a card citing the file a line used to be in is worse than no citation at all.
 // ⛔ AND THIS NOTE DELIBERATELY DOES NOT SPELL THOSE IDS OUT. Row 9's claim is about

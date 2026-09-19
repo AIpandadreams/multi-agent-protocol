@@ -27,7 +27,7 @@ Star counts approximate [VERIFY before citing externally].
   Constraint: the gateway couples to Hermes's own agent loop; run it purely
   as intake handing text to the orchestrator (or reimplement thinly on one
   messaging API). The auto-executing Hermes agent is NEVER the controller
-  (audit-PII, Supabase hard rules, role separation).
+  (audit-PII, cloud-DB hard rules, role separation).
 
 ## 2. MQTT bus via Wyoming / HA Assist — device + LAN ACTUATION (borrow pattern)
 
