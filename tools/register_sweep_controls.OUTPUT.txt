@@ -1,0 +1,37 @@
+# Public-release copy: fleet record ids and private paths in this saved output are redacted ([redacted]) or shortened to their repo-relative form; nothing else is changed.
+CHECK 1 -- positional field read
+  ok    C1a positional read returns the row's OWN cursor (41345), not the quoted 12977
+  ok    C1b MUTATION (findall over the row) reaches the quoted 12977  -- so the corpus CAN distinguish the two reads
+  ok    C1c malformed field[3] RAISES (loud) rather than falling back to a search
+
+CHECK 2 -- <= own offset: three states, never collapsed
+  ok    C2a PINNED  -- value 934 == own offset - appended at exactly the snapshot end, so the file's 
+  ok    C2b NOT-FALSIFIED  -- value 434 < own offset 934 (500 B of peer appends in between) - consistent wit
+  ok    C2c TRIPPED  -- value 5934 EXCEEDS the row's own offset 934 - a row cannot sit below the snaps
+  ok    C2d equality and strict-inequality yield DIFFERENT verdicts  -- ['NOT-FALSIFIED', 'PINNED']
+  ok    C2e a TRIPPED row exits 1 and names the defect  -- rc=1
+
+CHECK 3 -- heuristic prompt, at the SEAT grain
+  ok    C3a same-seat decrease 1000->900 fires the prompt
+  ok    C3b the prompt does NOT fail the run (rc=0) -- heuristic, not a gate
+  ok    C3c cross-seat decrease (creator 1000, owner 900) does NOT prompt
+  ok    C3d MUTATION (cross-seat comparison) DOES fire on that fixture  -- so C3c's silence is the correction, not an inert check
+
+BYTES MODE ([redacted]-tick) and argument discipline
+  ok    C4a fixture creates a real char/byte divergence  -- 306 B at the CLOSED row
+  ok    C4b the instrument reports the CLOSED row at its BYTE offset (689)
+  ok    C4c MUTATION (char offsets) places the row 306 B LOW -- the skipping direction
+  ok    C5 --cursor without --cursor-reason is refused (rc=2)
+  ok    C6 a seat with no SWEEP row refuses to derive (rc=2), never defaults to 0
+
+CHECK 7 -- DUTY-1 routing is by the OWNER field, not by the id token
+  ok    C7a a row RAISED by orch and OWNED by creator surfaces to --seat creator
+  ok    C7b ...and does NOT surface to --seat orch (the id prefix is provenance)
+  ok    C7c an orch-owned row still surfaces to orch -- the cure is not a swap
+  ok    C7d a layout-B row is REPORTED as exposing no owner, never routed by id
+  ok    C7e a row owned by the principal is OWNED, not unroutable -- no false alarm
+  ok    C7f owner-routing and id-routing DISAGREE on this fixture -- the control has an independent difference to detect
+  ok    C7g --seat orchestrator resolves to the register's `orch` token -- a canonical seat name does not read as 'no duties'
+  ok    C7h an unknown --seat is REFUSED (rc=2), never swept to an empty list that reads like a clean one
+
+-------- 25 passed, 0 failed --------

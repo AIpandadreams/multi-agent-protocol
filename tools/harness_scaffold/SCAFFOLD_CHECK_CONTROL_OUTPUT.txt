@@ -1,0 +1,74 @@
+# Public-release copy: fleet record ids and private paths in this saved output are redacted ([redacted]) or shortened to their repo-relative form; nothing else is changed.
+============================================================================================
+PROVENANCE — this output was produced by:
+  harness      : tools/harness_scaffold/scaffold_check_control.py
+  sha256(disk) : 9f8447c8c2a282576e081cc3  (25214 B)
+  git blob     : 34b6bcb9b8b4   [committed]
+  repo HEAD    : 7f680f0d7
+  subject      : tools/harness_scaffold/scaffold_check.py
+============================================================================================
+
+ARM 0 — the classifier both readers share
+   PASS  a script whose whole body is bare calls is a HARNESS -- the v1 census defect
+   PASS  a module with no top-level work is a LIBRARY and owes nothing
+   PASS  a stamped harness reads as stamped
+   PASS  an unstamped harness reads as unstamped
+   PASS  ⭐ an UNPARSEABLE file reports UNKNOWN, not unstamped -- a tooling failure is never a finding about the file  -- invalid syntax (<unknown>, line 1)
+   PASS  the shared library is itself a LIBRARY -- if it ever gains top-level work it would classify ITSELF as owing a stamp
+
+ARM 1 — a real git repo, built here, where every date is known
+   PASS  the cutoff is DERIVED from the check's own add-date, not pinned  -- cutoff=1590969600
+   PASS  ⭐ NEGATIVE: the pre-existing unstamped harness is OUT of the cohort and is NOT charged -- the ruling's 'no back-fill' survives contact with the instrument  -- cohort=['tools/harness_scaffold/scaffold_check.py']
+   PASS  ...and it IS still counted in the repo-wide harness total, so it is excused, not invisible  -- total=2
+
+ARM 2 — ⭐ POSITIVE CONTROL: seed a new unstamped harness, demand the RED
+   PASS  ⭐ the new unstamped harness IS in the cohort and IS reported  -- offenders=['[redacted]']
+   PASS  ⭐ and the CHECK ITSELF exits 1 -- the finding reaches the exit code, not just the transcript [[collected-is-not-reported]]  -- rc=1
+   PASS  ⭐ ...and it exits 1 for the RIGHT REASON: the offender is named and nothing raised  --    tools/harness_scaffold/NEW_HARNESS.py.tmpl
+   PASS  ⭐ ...and it survives a redirect to a FILE: the finding is written, not a UnicodeEncodeError -- correctness that depends on how the caller redirected is not correctness  -- rc=1, 1007 B, traceback=False
+
+ARM 3 — the red clears when the stamp is added, and only then
+   PASS  the offender is STILL in the cohort -- it did not clear by falling out of the population
+   PASS  ⭐ and it is no longer an offender  -- offenders=[]
+
+ARM 4 — an uncommitted check reports that it cannot tell, and does not pass
+   PASS  ⭐ with no add-date of its own the cutoff is None, so the cohort is UNDEFINED rather than empty
+   PASS  ⭐ and it exits 2 -- NOT 0, and NOT 1 either: a check that cannot tell must read neither as clean nor as a finding  -- rc=2
+   PASS  and it says so in words a reader cannot mistake for a pass, with nothing raised
+
+ARM 5 — the scaffold a new harness is copied from
+   PASS  the template compiles -- a scaffold that does not parse teaches nothing
+   PASS  ⭐ and a harness copied from it reads as STAMPED by the very check that would charge it
+   PASS  the template is not itself in the population -- it is `.tmpl`, not `.py`
+
+ARM 6 — ⭐ a BOM'd file is decoding noise, not a finding
+   PASS  ⭐ the retrieved blob really does carry a UTF-8 BOM -- the input under test is the defect, not a stand-in for it  -- [redacted] 1746 B
+   PASS  ⭐ the PRE-CURE STACK is pinned at BOTH layers -- reader and grammar -- so this arm reproduces the state that actually existed at `2c16a4434` rather than whatever the deepest layer happens to be today  -- grammar 2578462fd438 + reader 53d3d94fccb8
+   PASS  the pre-cure module reads plain utf-8 and the shipping one reads utf-8-sig -- the two differ AT the point this arm compares  -- pre=53d3d94fccb8 cur=scaffold_check.py
+   PASS  ⭐ THE PRE-CURE READER REALLY BOUND THE PRE-CURE GRAMMAR -- proven at the loaded module, not assumed from the file layout [[mutation-test-discipline]]  -- %USERPROFILE%\AppData\Local\Temp\claude\scaffold-check-control-ra38s9lj\precure_stack\tools\harness_scaffold\harness_kind.py
+   PASS  ⭐ RED, PRE-CURE: the BOM'd file lands in EXCLUDED AND SAID SO -- honestly reported, and still never classified. This is the state the six were in  -- invalid non-printable character U+FEFF (<unknown>, line 1)
+   PASS  ⭐ GREEN, CURED: the same bytes, the same repo, the same cutoff -- and the file is no longer unparseable. The only difference between this row and the one above is the encoding the reader asks for  -- unparseable now: none
+   PASS  ...and it did not clear by vanishing from the population either -- it is classified and counted, just not charged (backdated out of the cohort by construction) [[empty-result-needs-its-count]]  -- total pre=3 cured=4
+   PASS  ...and the grammar now has an actual opinion about it rather than UNKNOWN  -- kind=HARNESS stamped=False
+   PASS  ⭐ THE SECOND READER OF THE SAME GRAMMAR STILL OPENS PLAIN `utf-8` -- AND THAT IS NO LONGER A DEFECT. Mint (21) put a leading-BOM strip inside classify() itself, below every reader, so stamp_census agrees with this check about a BOM'd file WITHOUT an edit of its own. The per-reader `utf-8-sig` above is kept as defence-in-depth, not as the thing that makes the two agree. The agreement itself is driven in [redacted], which is where it belongs [[emitter-and-verifier-are-one-grammar]]  -- census plain-utf8 5892 B; grammar strips the mark
+   PASS  the control's own scratch is gone  -- %USERPROFILE%\AppData\Local\Temp\claude\scaffold-check-control-ra38s9lj
+
+⚠ CARRIED OUT OF THIS RUN RATHER THAN SWALLOWED BY IT:
+   - The check imports `provenance.py` from a WORKPAPER. A tool depending upward on a
+     workpaper is the wrong direction; moving the module would break every harness
+     that imports it by path, so it is disclosed rather than done under this mint.
+   - The live cohort is small by design, so the LIVE green is weak on its own. That
+     is what this control is for, and the check's own output says as much.
+   - ⭐ [redacted] §3 asked whether the six-BOM-file loop CLOSES. It did, in two
+     steps, and the first step alone was not enough. The six were stripped at (19),
+     and utf-8-sig here made THIS reader immune -- but it also made this check and
+     stamp_census DISAGREE about the same file, so the loop had MOVED rather than
+     closed. Mint (21) put the strip inside classify() itself, below both readers,
+     and the agreement is driven in [redacted]. A third
+     future reader of this grammar inherits it with no edit of its own.
+   - ⚠ The utf-8-sig read above is now DEFENCE-IN-DEPTH, not the load-bearing cure.
+     It is kept deliberately (byte-identical on a file without a BOM, and narrowing
+     it back would need its own blast-radius check) -- said here so nobody removes it
+     as redundant without doing that check first.
+
+SCAFFOLD CHECK CONTROL: GREEN

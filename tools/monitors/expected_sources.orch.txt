@@ -1,0 +1,77 @@
+# EXPECTED LANE FAMILIES for the orchestrator seat's channel watcher.
+#
+# Read by tools/monitors/watch_channel.v2.sh. A declared family that resolves
+# ZERO files ABORTS the arm (per an orchestrator ruling). Admission AND
+# retirement are both edits to this file, under that same auth class.
+#
+# MEASURED AT THE ORCHESTRATOR SEAT, 2026-08-10, from the live
+# channel/ tree, canaries excluded by the same is_canary predicate the guard
+# uses. Declared, not derived at arm time: a manifest generated from what
+# currently resolves records an already-dark family as legitimately absent
+# [[sweep-seeded-from-the-fix-is-not-a-sweep]].
+#
+# Counts at declaration time are recorded for the record only -- the guard
+# checks presence, never a count threshold.
+#
+#   builder_to_orch               30
+#   creator_to_orch               22
+#   owner_to_orch                 15
+#   sentinel_wake_to_orch          8
+#   intake_to_orch_alerts          6
+#   clock_to_orchestrator          2
+#   sentinel_wake_to_orchestrator  1   (dormant legacy form, single file,
+#                                       2026-08-02 -- the sentinel moved to
+#                                       sentinel_wake_to_orch from 08-03. It is
+#                                       the likeliest silent loss on this seat,
+#                                       which is exactly why it is declared;
+#                                       retiring it is a deliberate edit here,
+#                                       never a quiet disappearance.)
+#
+# MESH CENSUS (added per owner E1285 s1 -- enumerating what resolves and
+# stopping is luck, not method; the other question is what routes EXIST and do
+# not arrive). Asked 2026-08-10:
+#   NEVER-REACHED inbound routes (lifetime 0, correctly UNDECLARED -- declaring
+#   aborts every arm forever; first file is the admission trigger via the
+#   arrival-side RESOLVED-BUT-UNDECLARED warn): intake_to_orch (non-alerts
+#   short form) · clock_to_orch (short form; the _orchestrator long form is
+#   declared above).
+#   CONSIDERED AND EXCLUDED (exist, but not lane traffic): verdict_ORCH_* /
+#   review_request_ORCH_* -- reviewer-ledger artifacts under a different naming
+#   grammar, outside the ruled arm subject (per the arm ruling), not senders.
+#
+# NOT declared HERE: the T2 relay-inbox inbound pattern (*_to_paorch_*.md). Its
+# filenames carry unique subject slugs, so lane_family() yields one family per
+# FILE -- the manifest grain does not fit that leg. ⚠ SEAM ANSWERED (rewritten
+# 2026-08-11 in an orchestrator round; the prior "waits on that answer" had been false
+# since a builder entry answered it): the relay leg lives in its OWN
+# instrument at stream grain -- tools/monitors/expected_relay_streams.orch.txt
+# (this seat's lifetime measurement) armed via RELAY_STREAMS_MANIFEST on
+# watch_relay_inbox.sh. This channel-side manifest stays lane-grain and never
+# declares relay files; the relay manifest never declares lanes.
+
+# RETIRED 2026-08-10 (owner E1287): clock_to_orchestrator -- 2 files
+# on disk, ZERO tracked. NEVER PUBLISHED is the third reading of declared+zero
+# (E1287 s4): the declaration travels with this committed manifest while the
+# evidence exists only on this machine, so any fresh checkout aborts on a
+# family nothing happened to. The clock daemon writes locally and does not
+# commit; until its lane is published, local traffic surfaces as the
+# arrival-side RESOLVED-BUT-UNDECLARED warn, which is the honest state.
+# READMISSION TRIGGER: the family's first file lands tracked in the published
+# corpus. Declarability keys to tracked>0, not disk>0 (E1287 s5).
+#
+# Remaining declared families all have tracked>0 (E1287 s1 measurement:
+# intake_to_orch_alerts 3 tracked of 6 · sentinel_wake_to_orch 6 of 8 ·
+# sentinel_wake_to_orchestrator 1 of 2 · the three seat lanes fully tracked).
+
+# READMITTED 2026-08-28 00:1x (orch, post-restart wake hygiene): clock_to_orchestrator.
+# E1287's readmission trigger is satisfied in the SAME commit that makes this edit —
+# the clock lane's 2026-08-27 file lands tracked with it (tracked>0 holds
+# from this commit forward; the 2026-08-27 arm's RESOLVED-BUT-UNDECLARED warn was the
+# arrival-side trigger firing exactly as designed).
+builder_to_orch
+creator_to_orch
+owner_to_orch
+sentinel_wake_to_orch
+intake_to_orch_alerts
+clock_to_orchestrator
+sentinel_wake_to_orchestrator

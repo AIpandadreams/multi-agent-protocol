@@ -1,0 +1,44 @@
+# C-2 REPLAY FIXTURE B. Second, INDEPENDENT plan whose constraint matches the
+# same call for a different reason under a different authority. Waiving A must
+# not waive B. B's pattern is a strict PREFIX of A's, so one call matches both
+# and neither scan order can be called the "right" one — the cure must
+# re-evaluate remaining matches, not merely pick a better first match.
+schema_version: 1
+project_id: dual-constraint-b-2026-08-13
+title: "Dual-constraint replay B (fixture)"
+state: open
+commissioned:
+  by: "proxy:SYN-2955"
+  auth: "SYN-2955"
+  date: "2026-08-13"
+owner_seat: builder
+workspace: 'C:\example-workspace'
+coordinates:
+  repos: []
+  paths: []
+  branches: []
+  ids: []
+constraints:
+  - id: CB1
+    rule: "RULE B: the probe token is embargoed under a separate authority"
+    blocks:
+      tool: "Bash|PowerShell"
+      arg_pattern: "cure-probe"
+    until: close
+gates: []
+clocks: []
+authorities:
+  - auth: "SYN-2955"
+    scope: "fixture only"
+steps:
+  - id: S1
+    desc: "Fixture-only step (never executed)"
+    owner: builder
+    preconditions: []
+    done_when:
+      cmd: "echo ok"
+      shell: bash
+      expect: "exit:0"
+    status: pending
+    evidence: null
+    superseded_by: null

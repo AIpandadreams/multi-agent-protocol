@@ -1,0 +1,150 @@
+# -*- coding: utf-8 -*-
+"""<ONE LINE: what this harness MEASURES, and what its green would license.>
+
+⛔ WHAT IT CANNOT DO. <State the residual before anyone credits the green with more than it
+earned. A harness that lists no limits is claiming it has none.>
+"""
+# ⚠ THIS FILE IS `.tmpl`, NOT `.py`, ON PURPOSE. As a `.py` it would be classified by
+# `scaffold_check.py` as a harness in the cohort, and a template is not a harness -- it
+# produces no output and measures nothing. `scaffold_check_control.py` compiles it, so it is
+# still syntax-checked; it is simply not counted as a member of a population it is not in
+# [[protected-class-keyed-to-artifacts-own-signal]].
+import io
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+# ⛔ TEMPLATES GET TEMPLATED (per an orchestrator ruling). This line used to hardcode the private workspace path,
+# and that is a different class of defect from a hardcoded path in an ordinary file: this
+# file MINTS OTHER FILES. Rewriting the tree once does not fix it -- it re-emits the literal
+# into every harness anyone generates afterwards, including on a machine where that drive
+# does not exist. A cure has to land where the next author walks, and for a template that
+# is the text it produces, not the copy you happen to be holding.
+# [[cures-live-on-the-path-the-next-author-walks]] [[position-is-normative]]
+#
+# Resolution order, most explicit first. The LITERAL IS GONE from the emitted text: the last
+# rung is now the shared resolver, tools/fleet_paths.py, which owns rules 1-4 (env, walk-up,
+# config.json, fallback) for the whole fleet. In-fleet behaviour is unchanged because on this
+# machine the walk-up below finds BINDINGS.md and the later rungs are never reached; on a
+# machine that has neither, the resolver answers instead of a drive letter that does not exist.
+# ⛔ AND IF NOTHING ANSWERS, THIS RAISES. A generated harness that silently adopts a wrong
+# root writes its artifacts somewhere nobody looks and still prints green.
+# [[honest-failure-outcomes]] [[lookup-failure-needs-own-outcome]]
+def _find_repo():
+    env = os.environ.get("PA_WORKSPACE")
+    if env and os.path.isdir(env):
+        return env
+    here = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(8):                      # bounded: an unbounded walk exits the workspace
+        if os.path.isfile(os.path.join(here, "BINDINGS.md")):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:                  # filesystem root
+            break
+        here = parent
+    # Shared resolver. BOTH placements are probed: a harness minted INTO tools/ sees
+    # `fleet_paths.py` beside it, one minted under workpapers/ sees `<root>/tools/`.
+    import pathlib as _pl
+    _self = _pl.Path(__file__).resolve()
+    for _p in [_self] + list(_self.parents):
+        for _cand in (_p / "fleet_paths.py", _p / "tools" / "fleet_paths.py"):
+            if _cand.is_file():
+                if str(_cand.parent) not in sys.path:
+                    sys.path.insert(0, str(_cand.parent))
+                from fleet_paths import workspace_root
+                return workspace_root(__file__)
+    raise RuntimeError(
+        "cannot locate the workspace root: PA_WORKSPACE is unset, no BINDINGS.md was found "
+        "within 8 rungs of %s, and tools/fleet_paths.py is not on any parent. Set "
+        "PA_WORKSPACE." % os.path.abspath(__file__))
+
+
+REPO = _find_repo()
+
+# ⚠ AND THIS IMPORT IS WHY A RELOCATABLE REPO IS NECESSARY BUT NOT SUFFICIENT. `provenance`
+# lives under `workpapers/`, which is OUT of the package census scope -- so a harness minted
+# from this template on any machine that does not have this workspace dies here, at the
+# import, before the path above is ever consulted. Fixing the literal removes a propagating
+# defect; it does not make a generated harness portable, and this comment exists so nobody
+# reads the fix as more than it is. [[disclosed-residual-is-still-a-hole]]
+# ⛔ KI-3. THE PIN STAYS, AND THAT IS THE RULING, NOT AN OVERSIGHT. `provenance.py` really
+# does live in that folder and really does ship in the package, so a harness generated on a
+# normal install imports it fine. Removing the pin would break every working install to improve
+# a message on a broken one. What was actually wrong was the FAILURE MODE: renaming or removing
+# that folder produced a bare `ModuleNotFoundError: No module named 'provenance'` -- three lines
+# below the hardcoded folder name that caused it, naming only the module and never the path. An
+# author who renamed their own workpapers folder had no way to connect the two.
+#
+# Named constant + an explicit precondition, so the failure says what broke and what to do.
+# [[lookup-failure-needs-own-outcome]] [[cures-live-on-the-path-the-next-author-walks]]
+PROVENANCE_DIR = os.path.join(REPO, "workpapers", "dp-consumer-1-2026-08-19", "_harness")
+if not os.path.isfile(os.path.join(PROVENANCE_DIR, "provenance.py")):
+    raise RuntimeError(
+        "generated harness: provenance.py is not at %r. This harness pins its provenance "
+        "helper to one specific past unit of work in the workspace it was minted from. If "
+        "that folder was renamed or removed, edit PROVENANCE_DIR in this file; if the "
+        "workspace itself resolved wrong, set PA_WORKSPACE. Resolved REPO = %r."
+        % (PROVENANCE_DIR, REPO))
+sys.path.insert(0, PROVENANCE_DIR)
+from provenance import stamp                                                    # noqa: E402
+
+# ⭐ FIRST STATEMENT, BEFORE ANY MEASUREMENT. A run that dies halfway still produced an
+# artifact, and an unattributed artifact is worse than none -- so the header must survive the
+# abort. This is the call `scaffold_check.py` requires; a harness without it emits numbers
+# nobody can trace back to the code that made them.
+# ⛔ THIS LINE IS LOAD-BEARING AND IT IS NOT COSMETIC. Every non-ASCII marker below
+# -- and the one inside `stamp()` -- raises UnicodeEncodeError when stdout is a FILE or a
+# PIPE, because that is cp1252 on this machine; only a CONSOLE is UTF-8. Without this
+# line the check dies on its OFFENDER branch, which is the only branch that has anything
+# to say: it exits 1 with a traceback where the finding should be, and 1 is exactly what
+# a real finding exits with, so a caller reading rc alone scores the crash as a finding
+# [[control-passing-for-the-wrong-reason]]. Set here rather than demanded of the caller:
+# a harness whose output depends on how it was invoked cannot be banked as evidence.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+stamp(__file__, subject_head=subprocess.run(
+    ["git", "-C", REPO, "rev-parse", "--short", "HEAD"],
+    capture_output=True, text=True, encoding="utf-8").stdout.strip(),
+    subject_label="repo HEAD")
+
+fails = 0
+
+
+def check(label, ok, detail=""):
+    """One row, one claim. The label states what is TRUE when it passes, not what was run."""
+    global fails
+    if not ok:
+        fails += 1
+    print("   %s  %s%s" % ("PASS" if ok else "FAIL", label,
+                           ("  -- %s" % detail) if detail else ""))
+
+
+# ⚠ NEVER a bare %TEMP% (per a fleet ruling), and the directory goes on SUCCESS AND ON FAILURE --
+# a harness that only cleans up when it passes leaves its worst runs on disk.
+SCRATCH = tempfile.mkdtemp(prefix="<harness-name>-",
+                           dir=os.path.join(os.environ.get("TEMP", tempfile.gettempdir()),
+                                            "claude"))
+try:
+    print("\nARM 1 — <what this arm establishes>")
+    check("<the claim, stated as the thing that is true>", False, "<the measured value>")
+
+    # ⭐ POLARITY. Every arm above measures the CURED state. At least one arm must measure
+    # the state with the cure REMOVED and show the failure coming back. Without it a green
+    # cannot distinguish "the cure works" from "the fixture lost its hazard"
+    # [[mutation-test-discipline]].
+    print("\nARM 2 — polarity: with the cure removed, the defect returns")
+    check("<the mutant actually mutated -- assert it, do not assume it>", False)
+    check("<and the failure the cure exists for comes back>", False)
+finally:
+    shutil.rmtree(SCRATCH, ignore_errors=True)
+    print("   %s  the harness's own scratch is gone  -- %s"
+          % ("PASS" if not os.path.isdir(SCRATCH) else "FAIL", SCRATCH))
+
+print("\n⚠ CARRIED OUT OF THIS RUN RATHER THAN SWALLOWED BY IT:")
+print("   - <every open this run did not close. An empty list here is a claim in itself.>")
+
+print("\n<HARNESS NAME>: %s" % ("GREEN" if not fails else "RED (%d)" % fails))
+sys.exit(1 if fails else 0)

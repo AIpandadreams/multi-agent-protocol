@@ -1,0 +1,31 @@
+# Public-release copy: fleet record ids and private paths in this saved output are redacted ([redacted]) or shortened to their repo-relative form; nothing else is changed.
+<unknown>:4: SyntaxWarning: invalid escape sequence '\d'
+<unknown>:183: SyntaxWarning: invalid escape sequence '\.'
+<unknown>:187: SyntaxWarning: invalid escape sequence '\.'
+<unknown>:16: SyntaxWarning: invalid escape sequence '\s'
+<unknown>:82: SyntaxWarning: invalid escape sequence '\d'
+<unknown>:47: SyntaxWarning: invalid escape sequence '\*'
+<unknown>:49: SyntaxWarning: invalid escape sequence '\{'
+============================================================================================
+PROVENANCE — this output was produced by:
+  harness      : tools/harness_scaffold/scaffold_check.py
+  sha256(disk) : 124745981588ce6e17f897ff  (11930 B)
+  git blob     : 639b588755ce   [committed]
+  repo HEAD    : 7f680f0d7
+  root         : [private workspace]
+============================================================================================
+cutoff (this file's own add-date) : 1787745499
+tracked .py harnesses, repo-wide  : 2536
+IN COHORT (added at or after me)  : 11
+  ...unstamped                    : 4
+
+⛔ 4 NEW HARNESS(ES) WITH NO PROVENANCE STAMP:
+   !! [redacted]
+   !! [redacted]
+   !! [redacted]
+   !! [redacted]
+
+   Each of these emits output nobody can attribute to the code that made it.
+   Cure: import `stamp` from the provenance module and call `stamp(__file__)`
+   as the FIRST statement, before any measurement -- see
+   tools/harness_scaffold/NEW_HARNESS.py.tmpl
