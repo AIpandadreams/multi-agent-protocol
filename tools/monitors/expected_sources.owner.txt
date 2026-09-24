@@ -1,0 +1,30 @@
+# EXPECTED LANE FAMILIES for the owner seat's channel watcher.
+#
+# Read by tools/monitors/watch_channel.v2.sh. A declared family that resolves
+# ZERO files ABORTS the arm (per an orchestrator ruling and a fleet ruling). Admission AND
+# retirement are both edits to this file, under that same auth class.
+#
+# WHY DECLARED AND NOT DERIVED: a manifest generated from what currently
+# resolves would record an already-dark family as legitimately absent, and the
+# guard could never fire for it -- the population defined by the property under
+# test [[sweep-seeded-from-the-fix-is-not-a-sweep]]. The content below was
+# MEASURED AT THE OWNER SEAT and handed over on the orchestrator's lane; it was not
+# re-derived here.
+#
+# Counts at declaration time (owner, 2026-08-10) are recorded for the record
+# only -- the guard checks presence, never a count threshold.
+#
+#   orch_to_owner           28
+#   sentinel_wake_to_owner   8
+#   builder_to_owner         5
+#   creator_to_owner         1
+#
+# ALL FOUR are declared, including the single-file family. Append-only lanes
+# never dry up; they vanish only by rename, glob drift or file loss, and the
+# single-file family is the likeliest silent loss. Declaring costs nothing;
+# omitting it hand-reintroduces the blindness at the manifest.
+
+orch_to_owner
+sentinel_wake_to_owner
+builder_to_owner
+creator_to_owner

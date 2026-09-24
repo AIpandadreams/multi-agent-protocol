@@ -1,0 +1,56 @@
+# CONSTRAINT fixture — C1 active (until: close) blocks wrangler deploy for
+# tool "Bash|PowerShell" (the pilot-2 propose-only boundary, as code; the
+# regex-tool form is the W-9 cure). C2 points at a RULED gate: inactive.
+schema_version: 1
+project_id: worker-cure-2026-08-01
+title: "Worker cure propose-only boundary (fixture)"
+state: open
+commissioned:
+  by: "proxy:SYN-1347"
+  auth: "SYN-1347"
+  date: "2026-08-01"
+owner_seat: builder
+workspace: 'C:\example-workspace'
+coordinates:
+  repos: []
+  paths: []
+  branches: []
+  ids: ["intake-pwa"]
+constraints:
+  - id: C1
+    rule: "PROPOSE-ONLY: no deploy, no secret read, no request to the live worker"
+    blocks:
+      tool: "Bash|PowerShell"
+      arg_pattern: "(?i)wrangler (deploy|publish|secret)"
+    until: close
+  - id: C2
+    rule: "Frozen until G1 rules - G1 IS ruled, so this constraint is inactive"
+    blocks:
+      tool: "Bash|PowerShell"
+      arg_pattern: "forbidden-cmd"
+    until: "gate:G1"
+gates:
+  - id: G1
+    ruler: principal-first-hand
+    question: "Release the frozen surface?"
+    unblocks: [S1]
+    ruled:
+      auth: SYN-9002
+      date: "2026-08-01"
+      outcome: "released"
+clocks: []
+authorities:
+  - auth: "SYN-1347"
+    scope: "diagnose + propose only; deploy excluded"
+steps:
+  - id: S1
+    desc: "Post-release leg (unblocked by the ruled G1)"
+    owner: builder
+    preconditions: [G1]
+    done_when:
+      cmd: "echo ok"
+      shell: bash
+      expect: "exit:0"
+    status: pending
+    evidence: null
+    superseded_by: null

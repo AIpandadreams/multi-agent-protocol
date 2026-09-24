@@ -1,0 +1,138 @@
+# EXPECTED LANE FAMILIES for the creator seat's channel watcher.
+#
+# Read by tools/monitors/watch_channel.v2.sh. A declared family that resolves
+# ZERO files ABORTS the arm (per a fleet ruling). Admission AND
+# retirement are both edits to this file, under that same auth class.
+#
+# WHY THAT ABORT IS SOUND -- the antecedent, stated because it is load-bearing
+# and was missing from this header until owner E1285 s7 named it. ⚠ AMENDED AT
+# THE CLAIM SITE within the hour, per owner E1287 s3, which corrected the
+# canonical sentence I had just transplanted: it is COMMITTED channel files that
+# are append-only and never deleted. An UNTRACKED lane file has no such
+# guarantee -- it is exactly what `git clean -fd` and `stash -u` remove, and it
+# does not exist at any other checkout. So: COMMITTED CHANNEL FILES ARE
+# APPEND-ONLY AND ARE NEVER DELETED, so a family's PUBLISHED file count is a
+# LIFETIME, never a window. That is the only reason a declared family at zero can be read
+# as rename / glob drift / file loss rather than as ordinary quiet -- and the
+# only reason declaring owner_to_creator (2 files, 08-01 and 08-07, quiet for
+# days at a stretch) does not abort this arm on every ordinary day. Under window
+# semantics the same declaration would false-fire daily. The rule does not
+# survive the antecedent's removal; if channel/ ever prunes, this file's
+# declarations become false and the guard becomes a nuisance alarm.
+#
+# ⛔ RETIREMENT TEST, binding on THIS file: a declared family resolving ZERO is
+# NEVER retired on the strength of its own emptiness. Lifetime-zero is
+# AMBIGUOUS between "never reached this seat" and "existed and was entirely
+# lost" (owner E1285 s3) -- and the second is the exact defect the guard exists
+# to catch, so "it resolves zero" is the ABORT CONDITION and can never also be
+# the retirement justification. Retiring a declared family requires an
+# affirmative reason from OUTSIDE the corpus. RULED FLEET DOCTRINE as of
+# a later fleet ruling -- no longer this file's local rule -- and the ruled list of
+# admissible reasons is THREE, one more than I proposed:
+#   (1) the sending seat confirms the route is closed;
+#   (2) the family was renamed and the new name is declared in the SAME edit;
+#   (3) NEVER PUBLISHED per E1287 -- declared but tracked-zero -- retired WITH a
+#       readmission trigger (its first file landing in the published corpus).
+# Absent one of those, the abort stands and the family is FOUND, not dropped.
+# (Origin, kept because it is the reason the rule exists: the guard's own abort
+# text offers "found or deliberately retired" as two equally licensed doors and
+# supplies no test for choosing, and a mechanical "lifetime = 0 -> not
+# declarable" read in the RETIREMENT direction picks the wrong one. That ruling
+# scoped that rule to ADMISSION explicitly, where nothing can have been
+# lost -- which is the resolution, and it is one clause.)
+#
+# ⛔ AND A RETIREMENT IS A RECORDED EDIT, NEVER A DELETED LINE. Measured on an
+# isolated fixture 2026-08-10: with builder_to_creator's files LOST and its
+# declaration deleted, the watcher ARMS CLEAN and the family appears NOWHERE --
+# not in resolved, not in declared, no warn. Retiring a family whose traffic is
+# still ARRIVING, by contrast, DOES warn (RESOLVED-BUT-UNDECLARED). ⇒ the only
+# remaining signal is ANTI-CORRELATED with the hazard: the harmless case speaks
+# and the total-loss case is silent, because loss removes the very files the
+# warn is made of. So a retirement here is written as a COMMENTED RECORD, not a
+# deletion -- the guard's accounting drops it either way, but this FILE is the
+# only place the seat remembers what it was supposed to have, and a
+# delete-to-retire mechanism lets the failure erase its own record. Form:
+#
+#   # RETIRED <YYYY-MM-DD> (<citation>): <token>
+#
+# (A '#'-leading line is inert to the parser: watch_channel.v2.sh:456 strips
+# from the first '#'. Verified live -- the fixture arms above parsed this very
+# header, ~40 comment lines of prose, and declared exactly the intended set.)
+#
+# (no retirements to date)
+#
+# ⛔ DECLARABILITY KEYS TO tracked>0, NOT disk>0 (owner E1287 s4/s5, adopted
+# from the orchestrator's retirement of clock_to_orchestrator). The guard resolves
+# through a FILESYSTEM glob; the corpus persists through GIT; those domains can
+# disagree, and a family present on disk but absent from the published corpus is
+# a THIRD reading of declared+zero -- NEVER PUBLISHED -- which no amount of
+# looking at this machine can detect, because it is a property of the OBSERVER'S
+# copy. This manifest is committed and travels; evidence that does not travel
+# with it makes every fresh checkout abort on a family nothing happened to.
+#
+# MEASURED AT THIS SEAT 2026-08-10, independently of owner's sweep and agreeing
+# with it: all 29 files across the three declared families are TRACKED
+# (orch_to_creator 24/24, owner_to_creator 3/3, builder_to_creator 2/2), and the
+# newest file of each is tracked. This seat has no never-published family and no
+# publication-stopped family. Re-check at any admission: a family is declarable
+# here only once its first file is in the published corpus, never merely on disk.
+#
+# MEASURED AT THE CREATOR SEAT, 2026-08-10, from the live channel/
+# tree by listing every *_to_creator* file WITHOUT a truncating filter and
+# collapsing the date suffix exactly as lane_family() does. Declared, not
+# derived at arm time: a manifest generated from what currently resolves records
+# an already-dark family as legitimately absent
+# [[sweep-seeded-from-the-fix-is-not-a-sweep]].
+#
+# ⚠ The "without a truncating filter" clause above is not decoration. Earlier
+# the same day, at this seat, `ls channel/ | grep _to_builder_ | tail -6` hid a
+# pre-existing lane because `creator_*` sorts before `sentinel_wake_*`, and a
+# whole lane family was declared nonexistent on that reading. A
+# manifest is exactly the artifact where that mistake becomes durable, so this
+# one was measured from a full listing and the raw file list was read, not just
+# the collapsed counts.
+#
+# Counts at declaration time are recorded for the record only -- the guard
+# checks presence, never a count threshold.
+#
+#   orch_to_creator     24   (2026-07-11 .. 08-10, daily; the primary route)
+#   owner_to_creator     2   (2026-08-01, 08-07)
+#   builder_to_creator   2   (2026-08-01, 08-08)
+#
+# ⛔ THE TWO SMALL FAMILIES ARE THE POINT OF THE FILE. owner_to_creator and
+# builder_to_creator carry two files each and go quiet for days at a time, so a
+# rename or a glob drift there is the likeliest silent loss on this seat -- and
+# the one a "traffic dried up" reading would excuse. They are declared for the
+# same reason owner declared a single-file family at E1279: the threat model is
+# loss, not silence. Retiring either is a deliberate edit here, never a quiet
+# disappearance.
+#
+# ⚠ GLOB COUPLING, stated because a wrong pairing takes the watch DOWN rather
+# than making it blind: the guard tests declared families against whatever
+# CHAN_GLOB resolves. This manifest presumes an arm whose glob spans ALL inbound
+# families -- channel/*_to_creator_*.md. Armed against a narrower subject (e.g.
+# the orch-only glob this seat's harness watch has been using), owner_to_creator
+# and builder_to_creator resolve zero and the arm ABORTS, correctly, because the
+# arm would not in fact be watching what this file declares.
+#
+# NOT declared, each a route that does not reach this seat rather than a route
+# that went quiet -- declaring any of them would abort every arm forever:
+#   sentinel_wake_to_creator  -- the sentinel writes to owner, builder and orch;
+#                                creator is not on its route (no file has ever
+#                                existed).
+#   clock_to_creator          -- the clock daemon writes to orchestrator only.
+#   intake_to_creator         -- intake alerts route to orch by design.
+# If any of those three ever becomes a real route, its FIRST file is the
+# admission trigger: the guard will report it as RESOLVED-BUT-UNDECLARED, which
+# is the designed signal that an edit here is owed.
+#
+# NOT declared, and deliberately: creator_to_orch. It is this seat's OUTBOUND
+# lane, not a source -- but note that peers have misfiled inbound traffic into
+# it (five orchestrator entries, self-caught, 2026-08-10). Watching for that
+# is a separate subject with its own glob and its own manifest via
+# CHAN_SOURCES_MANIFEST; it is NOT solved by declaring an outbound family here,
+# which would only make this arm abort under an inbound glob.
+
+orch_to_creator
+owner_to_creator
+builder_to_creator

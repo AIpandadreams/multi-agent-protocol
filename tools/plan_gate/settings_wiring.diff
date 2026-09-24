@@ -1,0 +1,168 @@
+STAGED — NOT APPLIED in r1 (round manifest: landing is a separate, gated act).
+Wiring for the M2 pre-action gate + M4 compaction-boundary injection pair.
+Commands reference the ADOPTION home tools/plan_gate/ (per GAP_TESTS
+cross-cutting req 1: "fixtures live with the code: tools/plan_gate/...");
+at landing, stream-c/{plan_common.py,plan_gate.py,compaction_inject.py,tests/}
+are copied to tools/plan_gate/ first, then this diff applies to
+.claude/settings.json. Harness "timeout" values (seconds) are the OUTER
+backstop above the hooks' internal 2.5s watchdog; the harness-timeout expiry
+direction is fail-open (OPEN_ITEMS OI-5). Verified `git apply --check` clean
+against the live worktree file at staging time (see ACCEPTANCE.md).
+
+r1 CURE AMENDMENT (C6-1 / codex F-5, wiring honesty): the PreToolUse matcher
+now names EVERY surface classify() handles — the two command runners, the
+Monitor tool, the file-writing tools (LANE checks), and the scheduled-task
+MCP tools (schtask class without a shell). The honest remainder — any OTHER
+tool capable of a gated side effect (future MCP servers, Agent-spawned
+surfaces) is NOT matched and therefore not constrained — is a named residual
+(OPEN_ITEMS OI-12), not an implied coverage.
+
+r2 CURE-2 AMENDMENT (opus D5-1, project-dir binding): the PreToolUse command
+now passes `--project-dir "$CLAUDE_PROJECT_DIR"` on ARGV. OI-11 previously
+asked the round lead to "decide" whether the harness exports
+CLAUDE_PROJECT_DIR into the hook ENV — an unmeasured input nobody can rule
+on, and load-bearing, because a seat working in a scratch cwd is silently
+UNENFORCED without it. This diff already depends on the harness EXPANDING
+$CLAUDE_PROJECT_DIR in the command string (a different mechanism from
+os.environ), so binding it on argv makes the question moot. The hook still
+falls back to the environment variable when the flag is absent (hand runs).
+Timeout note: the harness `timeout` below is the WALL backstop, and the
+shipping bar ruled at the delta round is p99(spawn) + BUDGET_S < timeout —
+10s here vs 2.5s internal budget + 2–4s measured spawn (ACCEPTANCE §3a).
+Raising either number without re-deriving the other breaks the ordering and
+the fixture suite fails (TestCure2WallCap).
+
+DECLARED-SUBSET CONTRACT (an orchestrator ruling, condition (b)). This file
+is a DECLARED SUBSET of the deployed .claude/settings.json, never a mirror
+of it, and never an inventory of the wiring. RE-MEASURED 2026-09-03
+(per an orchestrator review): the deployed file carries ELEVEN hook commands; this diff
+stages FIVE and the SIX it does not stage are NAMED below. The prior line read
+NINE and FOUR, measured 2026-08-15 and never re-measured across two later
+wirings (git_guard and rm_guard, each under a fleet ruling) -- a counted claim in a
+contract file ages exactly as fast as the thing it counts
+[[measured-numbers-discipline]]. The NAMES below are enforced by the test;
+these totals are prose and are not, which is why only they drifted, and tests/test_settings_wiring_contract.py
+enforces the contract in BOTH directions — a deployed hook that is neither
+staged nor named FAILS, and a name below that resolves to no deployed hook
+FAILS. Silence is what let four-of-nine read as the wiring: C-21 §(iii)
+and ORCH031_SITE_CENSUS.md §5(iii) both point at the SessionStart pair
+listed here, which this file had never mentioned.
+Format: NOT-STAGED: <event> | <matcher, or (none)> | <script that identifies it>
+
+NOT-STAGED: PreToolUse | .* | tools/custody/custody_emit_wrapper.sh
+NOT-STAGED: PreToolUse | Bash|PowerShell | tools/custody/rm_guard_hook.py
+NOT-STAGED: PreToolUse | Bash|PowerShell | tools/custody/opus_effort_guard_hook.py
+NOT-STAGED: PreToolUse | Write|Edit | tools/custody/lane_append_hook.py
+NOT-STAGED: PostToolUse | Skill | tools/plan_gate/seat_binder.py
+NOT-STAGED: Stop | (none) | tools/plan_gate/stop_guard_wrapper.py
+NOT-STAGED: SessionStart | startup | tools/plan_gate/render_debt_guard.py
+NOT-STAGED: SessionStart | resume | tools/plan_gate/render_debt_guard.py
+
+⚠ The two SessionStart entries invoke render_debt_guard.py --emit with NO
+PYTHONIOENCODING pin, while every dispatch site in the fixture suite pins it
+(ten in test_plan_gate.py, one in test_stop_guard.py, one _child_env helper
+in test_render_debt_guard_classes.py). Naming them here does not cure that —
+a declared residual is still a hole — it stops the diff from concealing it.
+
+⛔ CORRECTION, measured 2026-08-15 after the paragraph above was written and
+published: these two callers were NOT exposed. --emit writes its banner
+through json.dumps, whose default ensure_ascii=True escapes U+26A1 to
+\u26a1, so its output is pure ASCII (measured: 797 B, zero non-ASCII chars)
+and cannot raise on any codepage. The codepage crash is real and replayed at
+render_debt_guard.py:1563, but on --scan, which NO hook in this file runs. A
+real defect was attached to the wrong callers. Cured at the SUBJECT anyway
+(render_debt_guard.py self-pins its streams on the script path), which covers
+--scan, hand runs, and any future wiring; and a pending ruling proposes
+wiring --scan into /wake, which would have wired the crashing path into every
+wake had it landed first. The unpinned-caller note stands as a fact about the
+wiring; it no longer stands as a statement of exposure.
+
+AMENDMENT (the destructive-git-verb guard wiring, a fleet ruling). The PreToolUse array above now stages a
+SECOND entry: tools/custody/git_guard_hook.py, matcher Bash|PowerShell, timeout 30.
+It is D-1's live caller -- the destructive-git-verb guard that until 2026-08-24 was a
+correct wrapper nothing called. Timeout 30 is not a round number: a PreToolUse hook
+killed at its budget does NOT block, so a tight budget makes this guard fail OPEN, and
+the spawn cost measured on this box the same day was 2.4-5.7 s wall for a hook that
+does no subprocess work at all.
+
+FINDING, reported at that amendment and CURED (2026-09-03): git_guard is STAGED
+rather than NOT-STAGED-declared because the declaration grammar's matcher field was
+`[^|]*?` and could not hold a pipe. The first staged hook above matches
+`Bash|PowerShell|Monitor|...`, so the declaration form was narrower than what it
+declares and any alternation-matcher hook was undeclarable BY CONSTRUCTION. The second
+instance arrived exactly as that note predicted: tools/custody/rm_guard_hook.py
+(under a fleet ruling, matcher `Bash|PowerShell`) could be neither staged nor declared, surfaced
+as the contract's only orphan, and was reported onward as "untracked and undeclared"
+when it is in fact tracked at 64b0c4013 and declared at .claude/settings.json:58 -- a
+grammar gap reported as a custody gap. The grammar now accepts alternation and rm_guard
+is declared above. git_guard is left STAGED: it is correctly covered either way, and
+re-classifying a working declaration is a change with no defect behind it.
+
+--- a/.claude/settings.json
++++ b/.claude/settings.json
+@@ -22,7 +22,65 @@
+       "Bash(gh run view:*)",
+       "Bash(python tools/validate_auth_log.py)"
+     ]
+   },
++  "hooks": {
++    "PreToolUse": [
++      {
++        "matcher": "Bash|PowerShell|Monitor|Write|Edit|NotebookEdit|mcp__scheduled-tasks__(create|update|delete)_scheduled_task",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python \"$CLAUDE_PROJECT_DIR/tools/plan_gate/plan_gate.py\" --project-dir \"$CLAUDE_PROJECT_DIR\"",
++            "timeout": 10
++          }
++        ]
++      },
++      {
++        "matcher": "Bash|PowerShell",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python \"$CLAUDE_PROJECT_DIR/tools/custody/git_guard_hook.py\"",
++            "timeout": 30
++          }
++        ]
++      }
++    ],
++    "PreCompact": [
++      {
++        "matcher": "auto",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python \"$CLAUDE_PROJECT_DIR/tools/plan_gate/compaction_inject.py\" --mark",
++            "timeout": 10
++          }
++        ]
++      },
++      {
++        "matcher": "manual",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python \"$CLAUDE_PROJECT_DIR/tools/plan_gate/compaction_inject.py\" --mark",
++            "timeout": 10
++          }
++        ]
++      }
++    ],
++    "SessionStart": [
++      {
++        "matcher": "compact",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python \"$CLAUDE_PROJECT_DIR/tools/plan_gate/compaction_inject.py\" --inject",
++            "timeout": 15
++          }
++        ]
++      }
++    ]
++  },
+   "enabledPlugins": {
+     "codex@openai-codex": false,
+     "agent-protocol@multiagent": true

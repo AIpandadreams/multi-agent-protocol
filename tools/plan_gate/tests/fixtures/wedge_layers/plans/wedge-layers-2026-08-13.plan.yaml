@@ -1,0 +1,61 @@
+# wedge_layers fixture — C-3 (opus p2r1 F1): does a NON-action-class gating
+# layer fail OPEN when the gate wedges before that layer runs?
+#
+# Two constraints, chosen so the ONLY difference between them is whether the
+# command they match carries a literal sniff token:
+#
+#   WS1  matches "git status"           -> _sniff_gated TRUE   (curable)
+#   WS2  matches "cure-probe-alpha"     -> _sniff_gated FALSE  (residual)
+#
+# Neither command is an action class (measured: classify() returns 0 hits for
+# both), so `_state["gated"]` is False for both and the wedge handler's old
+# `else` branch called both "non-gated tool call". That is the defect.
+#
+# The pair is the whole point: a fixture carrying only WS1 would show the cure
+# working and hide the fact that it does not close the hole. A fixture carrying
+# only WS2 would show the hole and hide the cure. Both ship.
+schema_version: 1
+project_id: wedge-layers-2026-08-13
+title: "Wedge-layer fixture - constraint layer vs the pre-constraint wedge"
+state: open
+commissioned:
+  by: principal-first-hand
+  auth: SYN-0850
+  date: "2026-08-13"
+owner_seat: orchestrator
+workspace: 'C:\example-workspace'
+coordinates:
+  repos: []
+  paths: []
+  branches: ["main"]
+  ids: ["SYN-0850"]
+constraints:
+  - id: WS1
+    rule: "sniff-POSITIVE constraint: matches a command carrying a literal sniff token but no action class"
+    blocks:
+      tool: "Bash|PowerShell"
+      arg_pattern: "git status"
+    until: close
+  - id: WS2
+    rule: "sniff-NEGATIVE constraint: matches a command with no sniff token at all - the declared residual"
+    blocks:
+      tool: "Bash|PowerShell"
+      arg_pattern: "cure-probe-alpha"
+    until: close
+gates: []
+clocks: []
+authorities:
+  - auth: SYN-0850
+    scope: "fixture only; nothing here licenses any act"
+steps:
+  - id: S1
+    desc: "Fixture carrier - no work is performed under this plan"
+    owner: orchestrator
+    preconditions: []
+    done_when:
+      cmd: "true"
+      shell: bash
+      expect: "exit:0"
+    status: pending
+    evidence: null
+    superseded_by: null

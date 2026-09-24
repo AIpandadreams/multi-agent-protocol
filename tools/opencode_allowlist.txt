@@ -1,0 +1,20 @@
+# opencode_allowlist.txt — ALLOWLIST of routes the opencode lane may dispatch to.
+#
+# ⛔ PLACEHOLDER, and deliberately EMPTY of live routes. Built 2026-07-30 per
+#    an orchestrator ruling so the wrapper and its controls exist before the policy does.
+#
+# ⚠ WHY NO IDS ARE PRE-FILLED HERE, unlike the OpenRouter placeholder: I have not
+#   determined which providers this opencode install is actually authenticated
+#   against. `opencode providers` manages credentials, and probing it was out of
+#   scope tonight (it can surface credential state, and no seat should be reading
+#   that). Guessing ids would put unverified routes in a file whose entire purpose
+#   is that every line in it is permission to spend.
+#
+# FORMAT — whitespace separated:
+#     <provider/model>
+#
+# Only the route column is read; no per-run cost is read, printed or ledgered by the lane.
+#
+# ⇒ With this file empty, EVERY live opencode dispatch refuses with rc=2. That is
+#   the correct state until the principal ratifies the list (DESIGN-PACKAGE §6.2) and the
+#   provider question is answered.

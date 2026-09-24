@@ -1,0 +1,50 @@
+# C-2 REPLAY FIXTURE A (p2r1 codex finding #2, HIGH). TWO independently
+# active constraints, in DIFFERENT plans under DIFFERENT authorities, both
+# matching the SAME call. Defect under replay: check_constraints returns on
+# first match, so ONE override waives the second constraint silently.
+#
+# Patterns are deliberately INERT tokens, not a real gated class: the class
+# under test is "N matches, one waiver", and pairing it with a live
+# publish-deploy string would make the control depend on the license layer
+# too (one control per clause). The first draft of this fixture DID copy the
+# neighbouring fixture's deploy strings — which is charge-2's own defect, a
+# check seeded from the examples that prompted it. Rebuilt from the class.
+schema_version: 1
+project_id: dual-constraint-a-2026-08-13
+title: "Dual-constraint replay A (fixture)"
+state: open
+commissioned:
+  by: "proxy:SYN-2955"
+  auth: "SYN-2955"
+  date: "2026-08-13"
+owner_seat: creator
+workspace: 'C:\example-workspace'
+coordinates:
+  repos: []
+  paths: []
+  branches: []
+  ids: []
+constraints:
+  - id: CA1
+    rule: "RULE A: the alpha token is refused while the cure round is open"
+    blocks:
+      tool: "Bash|PowerShell"
+      arg_pattern: "cure-probe-alpha"
+    until: close
+gates: []
+clocks: []
+authorities:
+  - auth: "SYN-2955"
+    scope: "fixture only"
+steps:
+  - id: S1
+    desc: "Fixture-only step (never executed)"
+    owner: creator
+    preconditions: []
+    done_when:
+      cmd: "echo ok"
+      shell: bash
+      expect: "exit:0"
+    status: pending
+    evidence: null
+    superseded_by: null
