@@ -140,6 +140,23 @@ Requested role: $ARGUMENTS
      assertion fails is a STOP for that row, reported as a defect against the
      ruling, never silently re-read as a supersession.
 
+5b. **Re-arm session instruments and verify persistent ones** (principal's
+   standing instruction, 2026-09-16, both workspaces: "rearm all crons and
+   monitors when you wake"). Read `memory/<role>/REARM.md` (written by
+   /sleep step 4b). For every block of kind `monitor | cron | background`,
+   re-arm it now with the recorded command — a Monitor's self-deadline
+   means it is re-armed on every expiry notice thereafter; for every
+   `leg` block, read the recorded output path and grade the finished leg
+   (or confirm the process is still alive) before anything depends on it;
+   for every `verify:` entry (OS scheduled tasks), query the scheduler and
+   report name, state, last run, next run — a task that is disabled or
+   failed its first post-boot run is reported in the wake report as a
+   line of its own, not silently re-enabled (re-enabling a scheduled task
+   is a first-hand act unless the ledger records the principal's word for
+   it). An absent or empty REARM.md is reported as such ("REARM: none
+   recorded at sleep"). Nothing in REARM.md grants authorization — it
+   restores instruments, not permissions.
+
 6. **Verify against the machine ledger (`plans/`).** Records protect only
    the agent that reads them; this step is the mechanical read — it runs on
    every wake, whether or not anything looks wrong. Three checks, fixed
