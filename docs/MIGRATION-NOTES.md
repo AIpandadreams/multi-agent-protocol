@@ -20,3 +20,12 @@ differences from the canonical text travel with this port and are recorded in `D
 (rows dated 2026-09-20): the renderer bullet's "step 3" cites a canonical step this file does not
 carry, the ported step keeps its canonical number `4b` after the published step 3, and one phrase in
 step 4b names a cloud-synced share generically where the canonical text names a vendor.
+
+## 2026-10-03 — correction: the 2026-09-20 note's count of register rows
+
+The 2026-09-20 note above counts three rows dated 2026-09-20 in `DECLARED-DELTAS.md`; five rows carry
+that date. Four record deliberate differences from the canonical text that travel with that port: the three
+the note lists, and the note after the intro of `/sleep` that points a reader to that register; the note's
+"Three" should read four. The fifth corrects the stated reason of an earlier row (the 2026-09-12 row on `/wake`
+step 4) and records no new difference. The rows dated 2026-10-03 correct earlier rows and likewise
+record no new difference. This note corrects a count only; no command changes what it does.
