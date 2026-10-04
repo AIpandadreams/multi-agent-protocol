@@ -10,12 +10,14 @@ land it in git, and tell the principal it is safe to close the window.
 Sleep is the flip side of `/wake <role>` — together they replace recall-line
 pasting entirely.
 
+Note: deliberate differences from the canonical deployment are recorded in `docs/DECLARED-DELTAS.md`.
+
 Optional note from the principal to weave into the handover: $ARGUMENTS
 
 ## Steps (in order — do not skip)
 
 1. **Identify your role.** You are role-locked for this session
-   (owner | builder | orchestrator). If this session never bound a role,
+   (owner | builder | orchestrator | creator). If this session never bound a role,
    say so and stop — /sleep is for role sessions inside an agent workspace
    (a directory with `BINDINGS.md` and `memory/<role>/`).
 
@@ -53,7 +55,7 @@ Optional note from the principal to weave into the handover: $ARGUMENTS
 
 2. **Checkpoint memory** (`memory/<role>/MEMORY.md`), per the memory
    discipline (`plugins/agent-protocol/skills/agent-core/references/memory-discipline.md`). Your role here
-   is the CANONICAL role (owner / builder / orchestrator) even if the
+   is the CANONICAL role (owner / builder / orchestrator / creator) even if the
    workspace binds a different display name for your side — the
    `memory/<role>/` path and your commit identity always use the canonical
    role, never the display name:
@@ -144,7 +146,9 @@ Optional note from the principal to weave into the handover: $ARGUMENTS
 
 - Sleep changes STATE only. It never grants, extends, or implies
   authorization; open gates stay open and are listed in the ⚡ block.
-- If nothing new happened this session, still refresh `## Next Step` and
-  print the handover block.
+- If nothing new happened this session, still re-run the renderer
+  (`tools/render_head.py` — idempotent: when the ledger and lanes are
+  unchanged it reports CURRENT and rewrites nothing) and print the
+  handover block. Never hand-refresh the head.
 - Mid-pipeline sleep is fine — that is exactly what the ⚡ block is for —
   but checkpoint BEFORE any risky long operation, not after it fails.

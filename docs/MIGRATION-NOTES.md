@@ -1,14 +1,14 @@
 # Migration notes — published protocol text
 
 Dated notes for readers of the published commands when a batch changes what a command DOES, not only
-what it says. Each note names the canonical lines it ports. Rows are appended, never edited.
+what it says. Each note names the canonical lines it ports. Notes are appended as dated sections, never edited.
 
 ## 2026-09-20 — `/sleep` routes the head through the renderer; the REARM unit lands (steps 1b / 4b / 5b)
 
 Public `/sleep` now routes every write of the volatile head — the ⚡ working-state block and the
 `## Next Step` section — through the renderer, `tools/render_head.py <workspace> <role>` [canonical
 `sleep.md` L60–63], and forbids hand-authoring the head: not the ⚡ block, not the `## Next Step`, not a
-"small refresh" [L64–65]. A head that is still hand-authored (no `render_head` footer) migrates once via
+"small refresh", outside one bootstrap exception [L64–68]. A head that is still hand-authored (no `render_head` footer) migrates once via
 `tools/render_head.py --adopt`, which demotes the old head byte-intact under a `####` historical heading
 and renders the single new head [L69–73]. State a successor needs goes into the ledger
 (`plans/*.plan.yaml` step status / evidence / clocks), then render — never into hand-written head prose
